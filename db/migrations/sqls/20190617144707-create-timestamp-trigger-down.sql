@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS charging.set_timestamp();

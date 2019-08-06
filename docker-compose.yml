@@ -1,0 +1,35 @@
+version: '3.6'
+
+networks:
+  sroc:
+    driver: bridge
+    name: sroc-net
+
+services:
+  api:
+    build: .
+    image: charging-service:latest
+    container_name: charging-service
+    networks:
+      - sroc
+    volumes:
+      - ./:/charging-service
+    working_dir: /charging-service
+    ports:
+      - "3003:3000"
+    depends_on:
+      - postgres
+    env_file: .env-docker
+    environment:
+     - BUNDLE_PATH=/charging-service/vendor/linux/bundle
+
+  postgres:
+    image: postgres:9.4-alpine
+    networks:
+      - sroc
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    container_name: postgres
+    env_file: .env-docker

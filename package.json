@@ -1,0 +1,48 @@
+{
+  "name": "charging-module-api",
+  "version": "0.0.1",
+  "description": "API that provides charge calculation, transaction queuing, transaction file generation and transport",
+  "main": "index.js",
+  "scripts": {
+    "dbcreate": "docker run --name chargedb -e POSTGRES_PASSWORD=password -v ${PWD}/db/pgdata:/var/lib/postgresql/data -p 9876:5432 -d postgres:9.4-alpine",
+    "dbstart": "docker start chargedb",
+    "dbstop": "docker stop chargedb",
+    "psql": "docker exec -it -u postgres chargedb psql",
+    "lint": "eslint .",
+    "unit-test": "PGDATABASE=chargedb_test lab -c -r console -o stdout -r html -o coverage.html -r lcov -o lcov.info -v",
+    "test": "npm run lint && npm run unit-test"
+  },
+  "author": "",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "dependencies": {
+    "@hapi/boom": "^7.4.2",
+    "@hapi/hapi": "^18.3.1",
+    "@hapi/joi": "^15.1.0",
+    "airbrake-js": "^2.0.0-beta.2",
+    "aws-sdk": "^2.502.0",
+    "db-migrate": "^0.11.6",
+    "db-migrate-pg": "^1.0.0",
+    "dotenv": "^8.0.0",
+    "pg": "^7.11.0",
+    "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "@hapi/code": "^5.3.1",
+    "@hapi/good": "^8.2.0",
+    "@hapi/good-console": "^8.1.0",
+    "@hapi/good-squeeze": "^5.2.0",
+    "@hapi/lab": "^19.1.0",
+    "blipp": "^4.0.0",
+    "eslint": "^6.1.0",
+    "eslint-config-standard": "^13.0.1",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^9.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.0"
+  },
+  "standard": {
+    "ignore": [
+      "db/migrations/"
+    ]
+  }
+}

@@ -1,0 +1,4 @@
+.vscode/*
+db/**/*
+coverage.html
+database.json
