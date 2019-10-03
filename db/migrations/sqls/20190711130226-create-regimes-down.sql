@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS charging.regimes;
+DROP TABLE IF EXISTS regimes;

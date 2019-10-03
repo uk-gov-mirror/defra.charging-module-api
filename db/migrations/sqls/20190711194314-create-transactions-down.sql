@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS charging.transactions;
+DROP TABLE IF EXISTS transactions;

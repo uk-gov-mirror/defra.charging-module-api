@@ -4,6 +4,7 @@
   "description": "API that provides charge calculation, transaction queuing, transaction file generation and transport",
   "main": "index.js",
   "scripts": {
+    "seed": "node ./db/seeds/seeds.js",
     "dbcreate": "docker run --name chargedb -e POSTGRES_PASSWORD=password -v ${PWD}/db/pgdata:/var/lib/postgresql/data -p 9876:5432 -d postgres:9.4-alpine",
     "dbstart": "docker start chargedb",
     "dbstop": "docker stop chargedb",

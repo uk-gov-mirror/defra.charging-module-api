@@ -11,9 +11,9 @@ pool.on('acquire', client => {
   }
 })
 
-pool.on('connect', client => {
-  client.query("SET SCHEMA 'charging'")
-    .catch(err => logger.error(err.stack))
-})
+// pool.on('connect', client => {
+//   client.query("SET SCHEMA 'charging'")
+//     .catch(err => logger.error(err.stack))
+// })
 
 exports.pool = pool

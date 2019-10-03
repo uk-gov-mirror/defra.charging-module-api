@@ -1,78 +1,87 @@
 /* Transaction table */
-CREATE TABLE IF NOT EXISTS charging.transactions (
-    id SERIAL PRIMARY KEY,
-    slug character varying NOT NULL,
-    regime_id bigint NOT NULL REFERENCES charging.regimes(id) ON DELETE CASCADE,
-    transaction_file_id bigint REFERENCES charging.transaction_files(id) ON DELETE SET NULL,
-    -- Start of file attributes
-    sequence_number integer,
-    customer_reference character varying NOT NULL,
-    transaction_date date,
-    transaction_type character varying,
-    transaction_reference character varying,
-    related_reference character varying,
-    currency_code character varying DEFAULT 'GBP'::character varying,
-    header_narrative character varying,
-    header_attr_1 character varying,
-    header_attr_2 character varying,
-    header_attr_3 character varying,
-    header_attr_4 character varying,
-    header_attr_5 character varying,
-    header_attr_6 character varying,
-    header_attr_7 character varying,
-    header_attr_8 character varying,
-    header_attr_9 character varying,
-    header_attr_10 character varying,
-    currency_line_amount integer,
-    line_vat_code character varying,
-    line_area_code character varying,
-    line_description character varying,
-    line_income_stream_code character varying,
-    line_context_code character varying,
-    line_attr_1 character varying,
-    line_attr_2 character varying,
-    line_attr_3 character varying,
-    line_attr_4 character varying,
-    line_attr_5 character varying,
-    line_attr_6 character varying,
-    line_attr_7 character varying,
-    line_attr_8 character varying,
-    line_attr_9 character varying,
-    line_attr_10 character varying,
-    line_attr_11 character varying,
-    line_attr_12 character varying,
-    line_attr_13 character varying,
-    line_attr_14 character varying,
-    line_attr_15 character varying,
-    line_quantity integer DEFAULT 1,
-    unit_of_measure character varying DEFAULT 'Each'::character varying,
-    unit_of_measure_price integer,
-    -- End of file attributes
+CREATE TABLE IF NOT EXISTS transactions (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    regime_id uuid NOT NULL REFERENCES regimes(id) ON DELETE CASCADE,
+    transaction_file_id uuid REFERENCES transaction_files(id) ON DELETE SET NULL,
     created_at timestamp with time zone DEFAULT NOW() NOT NULL,
     updated_at timestamp with time zone DEFAULT NOW() NOT NULL,
-    status character varying DEFAULT 'unbilled'::character varying NOT NULL,
-    source_reference_1 character varying,  -- queryable source reference values
-    source_reference_2 character varying,
-    source_reference_3 character varying,
-    source_reference_4 character varying,
+    status varchar NOT NULL DEFAULT 'unbilled',
+
+    -- Start of file attributes
+    sequence_number integer,
+    customer_reference varchar NOT NULL,
+    transaction_date date,
+    transaction_type varchar,
+    transaction_reference varchar,
+    related_reference varchar,
+    currency_code varchar NOT NULL DEFAULT 'GBP',
+    header_narrative varchar,
+    header_attr_1 varchar,
+    header_attr_2 varchar,
+    header_attr_3 varchar,
+    header_attr_4 varchar,
+    header_attr_5 varchar,
+    header_attr_6 varchar,
+    header_attr_7 varchar,
+    header_attr_8 varchar,
+    header_attr_9 varchar,
+    header_attr_10 varchar,
+    currency_line_amount integer,
+    line_vat_code varchar,
+    line_area_code varchar,
+    line_description varchar,
+    line_income_stream_code varchar,
+    line_context_code varchar,
+    line_attr_1 varchar,
+    line_attr_2 varchar,
+    line_attr_3 varchar,
+    line_attr_4 varchar,
+    line_attr_5 varchar,
+    line_attr_6 varchar,
+    line_attr_7 varchar,
+    line_attr_8 varchar,
+    line_attr_9 varchar,
+    line_attr_10 varchar,
+    line_attr_11 varchar,
+    line_attr_12 varchar,
+    line_attr_13 varchar,
+    line_attr_14 varchar,
+    line_attr_15 varchar,
+    line_quantity integer NOT NULL DEFAULT 1,
+    unit_of_measure varchar NOT NULL DEFAULT 'Each',
+    unit_of_measure_price integer,
+    -- End of file attributes
+
+    -- Common transaction attributes
+    region varchar,
+    pre_sroc boolean NOT NULL DEFAULT false,
+    approved_for_billing boolean NOT NULL DEFAULT false,
+    approved_for_billing_at timestamp with time zone,
     charge_period_start timestamp with time zone,
     charge_period_end timestamp with time zone,
     charge_calculation json,    -- response from charge calculation call
-    charge_financial_year character varying,    -- e.g. FY1819
-    charge_credit boolean DEFAULT false NOT NULL,
-    region character varying,
-    approved_for_billing boolean DEFAULT false NOT NULL,
-    approved_for_billing_at timestamp with time zone
+    charge_financial_year varchar,    -- e.g. FY1819
+    charge_credit boolean NOT NULL DEFAULT false,
+
+    -- Regime specific extra attributes
+    regime_value_1 varchar,
+    regime_value_2 varchar,
+    regime_value_3 varchar,
+    regime_value_4 varchar,
+    regime_value_5 varchar,
+    regime_value_6 varchar,
+    regime_value_7 varchar,
+    regime_value_8 varchar,
+    regime_value_9 varchar,
+    regime_value_10 varchar,
+    regime_value_11 varchar,
+    regime_value_12 varchar,
+    regime_value_13 varchar,
+    regime_value_14 varchar,
+    regime_value_15 varchar
 );
 
-CREATE UNIQUE INDEX idx_transactions_slug
-ON charging.transactions(slug);
-
-ALTER TABLE charging.transactions
-ADD CONSTRAINT uni_transactions_slug
-UNIQUE USING INDEX idx_transactions_slug;
-
 CREATE TRIGGER trg_transactions_updated
-BEFORE UPDATE ON charging.transactions
+BEFORE UPDATE ON transactions
 FOR EACH ROW
-EXECUTE PROCEDURE charging.set_timestamp();
+EXECUTE PROCEDURE set_timestamp();

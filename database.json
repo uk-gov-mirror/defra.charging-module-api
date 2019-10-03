@@ -1,17 +1,14 @@
 {
     "dev": {
         "driver": "pg",
-        "database": "chargedb",
-        "schema": "charging"
+        "database": "chargedb"
     },
     "test": {
         "driver": "pg",
-        "database": "chargedb_test",
-        "schema": "charging"
+        "database": "chargedb_test"
     },
     "production": {
         "driver": "pg",
-        "database": "chargedb",
-        "schema": "charging"
+        "database": "chargedb"
     }
 }

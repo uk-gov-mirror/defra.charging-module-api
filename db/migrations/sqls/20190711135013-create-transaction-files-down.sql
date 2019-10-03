@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS charging.transaction_files;
+DROP TABLE IF EXISTS transaction_files;
