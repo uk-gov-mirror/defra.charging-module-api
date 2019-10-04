@@ -23,9 +23,7 @@ async function search (regimeId, query = {}) {
     subsel.push(`${dataMap[k]} as "${k}"`)
   })
 
-  console.log(subsel.join(','))
-
-  // where clause uses DB names
+  // where clause uses DB names not mapped names
   const where = []
   const values = []
   let attrCount = 2
@@ -49,10 +47,11 @@ async function search (regimeId, query = {}) {
   // filter values: financial year, region
   // search values: any other?
   // pagination: page, per_page
-  // /v1/transaction_queue?line_attr_1=123&regime_value_1]=21
+  // /v1/transaction_queue?line_attr_1=123&regime_value_1=21
   // /v1/transaction_queue?fy=1819&region=A&customer_reference=ABC*
   const whr = where.join(' AND ')
 
+  // order clause uses mapped names
   const order = []
   // default sort order for WRLS is customer_reference
   let sortCol = 'customer_reference'
