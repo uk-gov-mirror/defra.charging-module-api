@@ -10,6 +10,11 @@ const routes = [
   ...transactionQueue,
   ...srocTransactionQueue,
   {
+    method: 'GET',
+    path: '/health',
+    handler: (request, h) => 'ok'
+  },
+  {
     method: '*',
     path: '/{any*}',
     handler: (request, h) => {
