@@ -11,7 +11,7 @@
     "node": "10.x"
   },
   "scripts": {
-    "start": "node index.js",
+    "start": "npm run migrate && node index.js",
     "migrate": "node node_modules/db-migrate/bin/db-migrate up -m db/migrations",
     "migrate-test": "node node_modules/db-migrate/bin/db-migrate up -m db/migrations -e test",
     "seed": "node ./db/seeds/seeds.js",

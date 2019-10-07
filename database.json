@@ -1,7 +1,7 @@
 {
     "dev": {
         "driver": "pg",
-        "database": "chargedb"
+        "database": { "ENV": "PGDATABASE" }
     },
     "test": {
         "driver": "pg",
@@ -9,6 +9,6 @@
     },
     "production": {
         "driver": "pg",
-        "database": "chargedb"
+        "database": { "ENV": "PGDATABASE" }
     }
 }
