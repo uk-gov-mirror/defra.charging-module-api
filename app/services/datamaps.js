@@ -85,7 +85,9 @@ async function getRegimeMap (regimeId, mapType) {
     return result.rows[0].data_map
   }
 
-  throw new Error(`No '${mapType}' data map found for regime '${regimeId}'`)
+  // TODO: Replace this with seeds once the mechanism is sorted out
+  return DEFAULT_TRANSACTION_MAP
+  // throw new Error(`No '${mapType}' data map found for regime '${regimeId}'`)
 }
 
 async function seedTransactionMaps () {
