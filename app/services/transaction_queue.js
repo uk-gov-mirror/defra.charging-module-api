@@ -1,9 +1,8 @@
 // pre-sroc transaction queue operations
 const { pool } = require('../lib/connectors/db')
 const config = require('../../config/config')
-const DataMap = require('./datamaps')
 
-async function search (regimeId, query = {}) {
+async function search (regime, query = {}) {
   const { page, perPage, sort, sortDir, ...q } = query
 
   const pagination = {
@@ -16,22 +15,18 @@ async function search (regimeId, query = {}) {
 
   // build where clause
   // regime name, database name
-  const dataMap = await DataMap.regimeTransactionMap(regimeId)
-
-  const subsel = ['id']
-  Object.keys(dataMap).forEach(k => {
-    subsel.push(`${dataMap[k]} as "${k}"`)
-  })
+  const transactions = require(`../schema/${regime.slug}_transaction`)
+  const select = transactions.select()
 
   // where clause uses DB names not mapped names
   const where = []
   const values = []
   let attrCount = 2
   where.push('regime_id = $1')
-  values.push(regimeId)
+  values.push(regime.id)
 
   Object.keys(q).forEach(k => {
-    const col = dataMap[k]
+    const col = transactions.ATTRIBUTE_MAP[k]
     if (col) {
       let val = q[k]
       if (val && val.indexOf('*') !== -1) {
@@ -58,7 +53,7 @@ async function search (regimeId, query = {}) {
   let sortDirection = 'asc'
 
   if (sort) {
-    const col = dataMap[sort]
+    const col = transactions.ATTRIBUTE_MAP[sort]
     if (col) {
       sortCol = col
     }
@@ -76,7 +71,7 @@ async function search (regimeId, query = {}) {
 
   const promises = [
     pool.query('SELECT count(*) FROM transactions WHERE ' + whr, values),
-    pool.query('SELECT ' + subsel.join(',') + ' FROM transactions WHERE ' +
+    pool.query(select + ' WHERE ' +
       whr + ' ORDER BY ' + order.join(',') + ` OFFSET $${attrCount++} LIMIT $${attrCount++}`,
     [...values, offset, limit])
   ]
@@ -97,6 +92,37 @@ async function search (regimeId, query = {}) {
   }
 }
 
+// Add a new transaction record to the queue
+// Assumes at this point that the attrs are in DB naming
+async function addTransaction (attrs) {
+  const names = []
+  const values = []
+  const data = []
+  let attrCount = 1
+
+  Object.keys(attrs).forEach((k) => {
+    names.push(k)
+    values.push(`$${attrCount++}`)
+    data.push(attrs[k])
+  })
+
+  const stmt = `insert into transactions (${names.join(',')}) values (${values.join(',')}) returning id`
+  const result = await pool.query(stmt, data)
+  return result.rows[0].id
+}
+
+// Remove a transaction from the queue
+// The transaction will only be removed if it belongs to the given regime
+// and has the 'unbilled' status.
+async function removeTransaction (regime, id) {
+  // only remove the transaction if it hasn't been billed and belongs to the calling regime
+  const stmt = "DELETE from transactions where id=$1::uuid and regime_id=$2::uuid and status='unbilled'"
+  const result = await pool.query(stmt, [id, regime.id])
+  return result.rowCount
+}
+
 module.exports = {
-  search
+  search,
+  addTransaction,
+  removeTransaction
 }

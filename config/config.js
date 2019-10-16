@@ -7,7 +7,8 @@ const config = {
     name: environment,
     development: environment === 'development',
     test: environment === 'test',
-    production: environment === 'production'
+    production: environment === 'production',
+    serviceUrl: process.env.SERVICE_URL
   },
 
   server: {
@@ -83,7 +84,8 @@ const schema = {
     name: joi.string().valid('development', 'test', 'production').default('development'),
     development: joi.boolean().default(true),
     test: joi.boolean().default(false),
-    production: joi.boolean().default(false)
+    production: joi.boolean().default(false),
+    serviceUrl: joi.string().required()
   }),
   server: joi.object({
     port: joi.number().default(3000).required(),

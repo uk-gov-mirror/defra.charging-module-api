@@ -4,6 +4,8 @@ const transactions = require('../controllers/v1/transactions_controller').routes
 const transactionQueue = require('../controllers/v1/transaction_queue_controller').routes
 const srocTransactionQueue = require('../controllers/v1/sroc_transaction_queue_controller').routes
 
+const status = (request, h) => 'ok'
+
 const routes = [
   ...regimes,
   ...transactions,
@@ -12,7 +14,12 @@ const routes = [
   {
     method: 'GET',
     path: '/status',
-    handler: (request, h) => 'ok'
+    handler: status
+  },
+  {
+    method: 'GET',
+    path: '/',
+    handler: status
   },
   {
     method: '*',

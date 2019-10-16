@@ -1,8 +1,8 @@
-const Joi = require('@hapi/joi')
 const query = require('../services/query/transaction.js')
 
-function Transaction () {
-  this.attrs = null
+function Transaction (regime = null, attrs = null) {
+  this.regime = regime
+  this.attrs = attrs
   this.errors = null
 }
 
@@ -14,13 +14,6 @@ Transaction.findByRegime = function (regimeId, params = {}) {
   return query.findByRegime(regimeId, params)
 }
 
-Transaction.schema = function () {
-  return {
-    slug: Joi.string().required(),
-    name: Joi.string().required()
-  }
-}
-
 // instance methods
 Transaction.prototype = {
   save: function () {
@@ -29,17 +22,7 @@ Transaction.prototype = {
   update: function () {
   },
 
-  validate: function () {
-    const { error, value } = Joi.validate(this.attrs, Transaction.schema(),
-      { abortEarly: false })
-    if (error) {
-      this.errors = error.details
-      return false
-    } else {
-      Object.assign(this.attrs, value)
-      this.errors = null
-      return true
-    }
+  isValid: function () {
   }
 }
 
