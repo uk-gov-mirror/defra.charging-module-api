@@ -6,11 +6,11 @@ async function checkRegimeValid (slug) {
   const regime = await Regime.find(slug)
 
   if (!regime) {
-    return Boom.notFound(`Regime '${slug}' not found`)
+    throw Boom.notFound(`Regime '${slug}' not found`)
   }
 
   if (!isAuthorisedRegime(regime.id)) {
-    return Boom.forbidden(`Unauthorised for regime '${slug}'`)
+    throw Boom.forbidden(`Unauthorised for regime '${slug}'`)
   }
 
   return regime
@@ -22,6 +22,5 @@ function isAuthorisedRegime (regimeId) {
 }
 
 module.exports = {
-  checkRegimeValid,
-  isAuthorisedRegime
+  call: checkRegimeValid
 }
