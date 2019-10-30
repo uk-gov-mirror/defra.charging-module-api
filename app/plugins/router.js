@@ -3,6 +3,7 @@ const regimes = require('../controllers/v1/regimes_controller').routes
 const transactions = require('../controllers/v1/transactions_controller').routes
 const transactionQueue = require('../controllers/v1/transaction_queue_controller').routes
 const srocTransactionQueue = require('../controllers/v1/sroc_transaction_queue_controller').routes
+const calculateCharge = require('../controllers/v1/calculate_charge_controller').routes
 
 const status = (request, h) => 'ok'
 
@@ -11,6 +12,7 @@ const routes = [
   ...transactions,
   ...transactionQueue,
   ...srocTransactionQueue,
+  ...calculateCharge,
   {
     method: 'GET',
     path: '/status',

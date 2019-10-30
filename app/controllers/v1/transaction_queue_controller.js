@@ -1,10 +1,13 @@
-const path = require('path')
+// const path = require('path')
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
-const utils = require('../../lib/utils')
-const Security = require('../../lib/security')
-const TransactionQueue = require('../../services/transaction_queue')
+const SecurityCheckRegime = require('../../services/security_check_regime')
+const SearchTransactionQueue = require('../../services/search_transaction_queue')
+const AddTransaction = require('../../services/add_transaction')
+const RemoveTransaction = require('../../services/remove_transaction')
+const CalculateCharge = require('../../services/calculate_charge')
+const Schema = require('../../schema')
 
 const basePath = '/v1/{regime_id}/transaction_queue'
 
@@ -12,14 +15,10 @@ async function index (req, h) {
   try {
     // check regime valid and caller has access to regime
     // regime_id is part of routing so must be defined to get here
-    const regime = await Security.checkRegimeValid(req.params.regime_id)
-
-    if (Boom.isBoom(regime)) {
-      return regime
-    }
+    const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
     // select all transactions matching search criteria for the regime
-    return TransactionQueue.search(regime, req.query)
+    return SearchTransactionQueue.call(regime, req.query)
   } catch (err) {
     logger.error(err.stack)
     return Boom.boomify(err)
@@ -28,11 +27,7 @@ async function index (req, h) {
 
 async function create (req, h) {
   try {
-    const regime = await Security.checkRegimeValid(req.params.regime_id)
-
-    if (Boom.isBoom(regime)) {
-      return regime
-    }
+    const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
     // process and add transaction(s) in payload
     const payload = req.payload
@@ -41,10 +36,11 @@ async function create (req, h) {
       return Boom.badRequest('No payload')
     }
 
-    // load the correct validator for the regime
-    const validator = require(path.resolve(__dirname, `../../schema/${regime.slug}_transaction.js`))
+    // load the correct schema for the regime
+    const schema = Schema[regime.slug]
+
     // validate the payload
-    const validData = validator.validate(payload)
+    const validData = schema.validateTransaction(payload)
 
     if (validData.error) {
       // get the better formatted message(s)
@@ -54,14 +50,21 @@ async function create (req, h) {
       return Boom.badData(msg)
     }
 
-    // translate regime naming scheme into DB schema
-    const transData = validator.translate(validData)
+    // calculate charge
+    const chargeData = schema.extractChargeParams(validData)
+    const charge = await CalculateCharge.call(chargeData)
+    if (charge.calculation.messages) {
+      return Boom.badData(charge.calculation.messages)
+    }
 
-    // add the association to the regime
-    transData['regime_id'] = regime.id
+    // translate regime naming scheme into DB schema
+    const transData = schema.translateTransaction(validData)
+
+    // add charge data to transaction
+    const combinedData = addChargeDataToTransaction(transData, chargeData)
 
     // create the transaction
-    const tId = await TransactionQueue.addTransaction(transData)
+    const tId = await AddTransaction.call(regime, combinedData)
     const result = {
       transaction: {
         id: tId
@@ -82,36 +85,27 @@ async function create (req, h) {
 async function remove (req, h) {
   // remove (delete) transaction
   try {
-    const regime = await Security.checkRegimeValid(req.params.regime_id)
+    const regime = await SecurityCheckRegime.call(req.params.regime_id)
+    await RemoveTransaction.call(regime, req.params.id)
 
-    if (Boom.isBoom(regime)) {
-      return regime
-    }
-    const tId = req.params.id
-
-    // postgres explodes if we don't pass a valid uuid in a query
-    if (utils.isValidUUID(tId)) {
-      const result = await TransactionQueue.removeTransaction(regime, tId)
-      console.log(result)
-
-      if (result !== 1) {
-        // didn't remove a transaction matching the criteria
-        return Boom.notFound(`No queued transaction found with id '${tId}'`)
-      }
-
-      // HTTP 204 No Content
-      return h.response().code(204)
-    } else {
-      return Boom.notFound(`Transaction Id '${tId}' not found`)
-    }
+    // HTTP 204 No Content
+    return h.response().code(204)
   } catch (err) {
-    logger.error(err.stack)
     return Boom.boomify(err)
   }
 }
 
 function regimeTransactionPath (regime, transactionId) {
   return `${config.environment.serviceUrl}/v1/${regime.slug}/transactions/${transactionId}`
+}
+
+function addChargeDataToTransaction (transaction, charge) {
+  const chargeValue = charge.calculation.chargeValue * (transaction.charge_credit ? -1 : 1)
+  transaction.charge_value = chargeValue
+  transaction.currency_line_amount = chargeValue
+  transaction.unit_of_measure_price = chargeValue
+  transaction.charge_calculation = charge
+  return transaction
 }
 
 const routes = [

@@ -65,6 +65,30 @@ const config = {
     host: process.env.AIRBRAKE_HOST,
     projectKey: process.env.AIRBRAKE_KEY,
     projectId: 1
+  },
+
+  decisionService: {
+    url: process.env.DECISION_SERVICE_URL,
+    username: process.env.DECISION_SERVICE_USER,
+    password: process.env.DECISION_SERVICE_PASSWORD,
+    endpoints: {
+      cfd: {
+        application: process.env.CFD_APP,
+        ruleset: process.env.CFD_RULESET
+      },
+      pas: {
+        application: process.env.PAS_APP,
+        ruleset: process.env.PAS_RULESET
+      },
+      wml: {
+        application: process.env.WML_APP,
+        ruleset: process.env.WML_RULESET
+      },
+      wrls: {
+        application: process.env.WRLS_APP,
+        ruleset: process.env.WRLS_RULESET
+      }
+    }
   }
 }
 
@@ -117,6 +141,29 @@ const schema = {
     host: joi.string().required(),
     projectKey: joi.string().required(),
     projectId: joi.number().required()
+  }),
+  decisionService: joi.object({
+    url: joi.string().required(),
+    username: joi.string().required(),
+    password: joi.string().required(),
+    endpoints: joi.object({
+      cfd: {
+        application: joi.string().required(),
+        ruleset: joi.string().required()
+      },
+      pas: {
+        application: joi.string().required(),
+        ruleset: joi.string().required()
+      },
+      wml: {
+        application: joi.string().required(),
+        ruleset: joi.string().required()
+      },
+      wrls: {
+        application: joi.string().required(),
+        ruleset: joi.string().required()
+      }
+    })
   })
 }
 

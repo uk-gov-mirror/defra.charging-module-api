@@ -1,10 +1,11 @@
 const Boom = require('@hapi/boom')
 const Transaction = require('../../models/transaction')
 const { logger } = require('../../lib/logger')
-const utils = require('../../lib/utils')
-const TransactionQueue = require('../../services/transaction_queue')
-const Security = require('../../lib/security')
-const Transactions = require('../../services/transactions')
+const SecurityCheckRegime = require('../../services/security_check_regime')
+const ApproveTransaction = require('../../services/approve_transaction')
+const UnapproveTransaction = require('../../services/unapprove_transaction')
+const RemoveTransaction = require('../../services/remove_transaction')
+const FindTransaction = require('../../services/find_transaction')
 
 const basePath = '/v1/{regime_id}/transactions'
 
@@ -12,11 +13,7 @@ async function index (req, h) {
   // check regime valid
   // select all transactions matching search criteria for the regime
   try {
-    const regime = await Security.checkRegimeValid(req.params.regime_id)
-
-    if (Boom.isBoom(regime)) {
-      return regime
-    }
+    const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
     return Transaction.findByRegime(regime.id, req.params)
       .then(result => {
@@ -35,27 +32,13 @@ async function index (req, h) {
 
 async function show (req, h) {
   try {
-    const regime = await Security.checkRegimeValid(req.params.regime_id)
+    const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
-    if (Boom.isBoom(regime)) {
-      return regime
+    const transaction = await FindTransaction.call(regime, req.params.id)
+
+    return {
+      transaction: transaction
     }
-
-    const tId = req.params.id
-    if (utils.isValidUUID(tId)) {
-      const transaction = await Transactions.find(regime, req.params.id)
-
-      if (transaction.error) {
-        return Boom.notFound(transaction.error)
-      }
-
-      return {
-        transaction: transaction
-      }
-    } else {
-      return Boom.notFound(`Transaction Id '${tId}' not found`)
-    }
-
   } catch (err) {
     logger.error(err.stack)
     return Boom.boomify(err)
@@ -65,27 +48,42 @@ async function show (req, h) {
 async function remove (req, h) {
   // remove (delete) transaction
   try {
-    const regime = await Security.checkRegimeValid(req.params.regime_id)
+    const regime = await SecurityCheckRegime.call(req.params.regime_id)
+    await RemoveTransaction.call(regime, req.params.id)
 
-    if (Boom.isBoom(regime)) {
-      return regime
+    // HTTP 204 No Content
+    return h.response().code(204)
+  } catch (err) {
+    console.log(err)
+    return Boom.boomify(err)
+  }
+}
+
+async function approve (req, h) {
+  // approve transaction for billing
+  try {
+    const regime = await SecurityCheckRegime.call(req.params.regime_id)
+
+    await ApproveTransaction.call(regime, req.params.id)
+
+    return {
+      status: 'success'
     }
+  } catch (err) {
+    logger.error(err.stack)
+    return Boom.boomify(err)
+  }
+}
 
-    const tId = req.params.id
+async function unapprove (req, h) {
+  // unapprove/withhold transaction for billing
+  try {
+    const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
-    // postgres explodes if we don't pass a valid uuid in a query
-    if (utils.isValidUUID(tId)) {
-      const result = await TransactionQueue.removeTransaction(regime, tId)
+    await UnapproveTransaction.call(regime, req.params.id)
 
-      if (result !== 1) {
-        // didn't remove a transaction matching the criteria
-        return Boom.notFound(`No queued transaction found with id '${tId}'`)
-      }
-
-      // HTTP 204 No Content
-      return h.response().code(204)
-    } else {
-      return Boom.notFound(`Transaction Id '${tId}' not found`)
+    return {
+      status: 'success'
     }
   } catch (err) {
     logger.error(err.stack)
@@ -103,6 +101,16 @@ const routes = [
     method: 'GET',
     path: basePath + '/{id}',
     handler: show
+  },
+  {
+    method: 'PATCH',
+    path: basePath + '/{id}/approve',
+    handler: approve
+  },
+  {
+    method: 'PATCH',
+    path: basePath + '/{id}/unapprove',
+    handler: unapprove
   },
   {
     method: 'DELETE',
