@@ -61,7 +61,7 @@ async function create (req, h) {
     const transData = schema.translateTransaction(validData)
 
     // add charge data to transaction
-    const combinedData = addChargeDataToTransaction(transData, chargeData)
+    const combinedData = addChargeDataToTransaction(transData, charge)
 
     // create the transaction
     const tId = await AddTransaction.call(regime, combinedData)
