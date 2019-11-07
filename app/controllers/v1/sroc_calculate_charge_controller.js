@@ -1,11 +1,11 @@
-// const path = require('path')
+// SRoC Calculate Charge ===============
 const Boom = require('@hapi/boom')
 const { logger } = require('../../lib/logger')
 const SecurityCheckRegime = require('../../services/security_check_regime')
-const CalculateCharge = require('../../services/calculate_charge')
-const Schema = require('../../schema/pre_sroc')
+const SrocCalculateCharge = require('../../services/sroc_calculate_charge')
+const Schema = require('../../schema/sroc')
 
-const basePath = '/v1/{regime_id}/calculate_charge'
+const basePath = '/v1/{regime_id}/sroc_calculate_charge'
 
 async function calculate (req, h) {
   // check regime valid
@@ -38,7 +38,7 @@ async function calculate (req, h) {
     const chargeData = validator.translateCharge(validData)
 
     // submit charge calculation request
-    const charge = await CalculateCharge.call(regime, chargeData)
+    const charge = await SrocCalculateCharge.call(regime, chargeData)
     const amount = charge.calculation.chargeValue * (chargeData.credit ? -1 : 1)
     const result = {
       charge: {

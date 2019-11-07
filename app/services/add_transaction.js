@@ -11,8 +11,6 @@ async function call (regime, attrs) {
   // add the association with the regime
   attrs['regime_id'] = regime.id
 
-  console.log(attrs)
-
   Object.keys(attrs).forEach((k) => {
     names.push(k)
     values.push(`$${attrCount++}`)

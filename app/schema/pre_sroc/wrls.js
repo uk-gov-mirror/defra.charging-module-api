@@ -1,5 +1,7 @@
 const Joi = require('@hapi/joi')
 
+// Pre-SRoC Data Maps ===================
+
 const ATTRIBUTE_MAP = {
   region: 'region',
   periodStart: 'charge_period_start',
@@ -74,8 +76,8 @@ const periodSchema = {
 // wrls data scheme and validation
 const chargeSchema = {
   ...periodSchema,
-  billableDays: Joi.number().integer().positive().max(366).required(),
-  authorisedDays: Joi.number().integer().positive().max(366).required(),
+  billableDays: Joi.number().integer().min(0).max(366).required(),
+  authorisedDays: Joi.number().integer().min(0).max(366).required(),
   volume: Joi.number().positive().required(),
   source: Joi.string().required(),
   season: Joi.string().required(),

@@ -1,9 +1,9 @@
 // search transaction queue
 const { pool } = require('../lib/connectors/db')
 const config = require('../../config/config')
-const Schema = require('../schema')
+// const Schema = require('../schema')
 
-async function call (regime, query = {}) {
+async function call (regime, schema, preSroc, query = {}) {
   const { page, perPage, sort, sortDir, ...q } = query
 
   const pagination = {
@@ -17,15 +17,20 @@ async function call (regime, query = {}) {
   // build where clause
   // regime name, database name
   // const transactions = require(`../schema/${regime.slug}_transaction`)
-  const schema = Schema[regime.slug]
+  // const schema = Schema[regime.slug]
   const select = schema.transactionQuery()
 
   // where clause uses DB names not mapped names
   const where = []
   const values = []
-  let attrCount = 2
   where.push('regime_id = $1')
   values.push(regime.id)
+  // add pre/post Sroc condition
+  where.push('pre_sroc = $2')
+  values.push(preSroc)
+
+  // start at 3 because regime_id and pre_sroc already items 1 and 2
+  let attrCount = 3
 
   Object.keys(q).forEach(k => {
     const col = schema.ATTRIBUTE_MAP[k]
