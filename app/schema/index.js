@@ -1,4 +1,4 @@
-// regime transaction and charge attribute maps
 module.exports = {
-  wrls: require('./wrls')
+  preSroc: require('./pre_sroc'),
+  sroc: require('./sroc')
 }

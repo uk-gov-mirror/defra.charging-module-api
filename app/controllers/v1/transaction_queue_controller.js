@@ -1,4 +1,4 @@
-// const path = require('path')
+// Pre-SRoC Transaction Queue =====================
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
@@ -7,7 +7,7 @@ const SearchTransactionQueue = require('../../services/search_transaction_queue'
 const AddTransaction = require('../../services/add_transaction')
 const RemoveTransaction = require('../../services/remove_transaction')
 const CalculateCharge = require('../../services/calculate_charge')
-const Schema = require('../../schema')
+const Schema = require('../../schema/pre_sroc')
 
 const basePath = '/v1/{regime_id}/transaction_queue'
 
@@ -17,8 +17,11 @@ async function index (req, h) {
     // regime_id is part of routing so must be defined to get here
     const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
-    // select all transactions matching search criteria for the regime
-    return SearchTransactionQueue.call(regime, req.query)
+    // load the correct schema for the regime
+    const schema = Schema[regime.slug]
+
+    // select all transactions matching search criteria for the regime (pre-sroc only)
+    return SearchTransactionQueue.call(regime, schema, true, req.query)
   } catch (err) {
     logger.error(err.stack)
     return Boom.boomify(err)
@@ -52,13 +55,16 @@ async function create (req, h) {
 
     // calculate charge
     const chargeData = schema.extractChargeParams(validData)
-    const charge = await CalculateCharge.call(chargeData)
+    const charge = await CalculateCharge.call(regime, chargeData)
     if (charge.calculation.messages) {
       return Boom.badData(charge.calculation.messages)
     }
 
     // translate regime naming scheme into DB schema
     const transData = schema.translateTransaction(validData)
+
+    // set sroc flag correctly
+    transData.pre_sroc = true
 
     // add charge data to transaction
     const combinedData = addChargeDataToTransaction(transData, charge)
