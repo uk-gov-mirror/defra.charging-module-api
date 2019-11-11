@@ -43,7 +43,8 @@ const ATTRIBUTE_MAP = {
   areaCode: 'line_area_code',
   lineDescription: 'line_description',
   transactionStatus: 'status',
-  approvedForBilling: 'approved_for_billing'
+  approvedForBilling: 'approved_for_billing',
+  calculation: 'charge_calculation'
 }
 
 const CHARGE_PARAMS_MAP = {
@@ -65,6 +66,39 @@ const CHARGE_PARAMS_MAP = {
   eiucSource: 'eiucSource',
   waterUndertaker: 'waterUndertaker',
   regionalChargingArea: 'region'
+}
+
+const CHARGE_RULES_MAP = {
+  charge_period_start: 'charge_period_start',
+  charge_period_end: 'charge_period_end',
+  charge_credit: 'charge_credit',
+  billableDays: 'billableDays',
+  abstractableDays: 'abstractableDays',
+  volume: 'volume',
+  source: 'source',
+  season: 'season',
+  loss: 'loss',
+  section130Agreement: 's130Agreement',
+  section126Agreement: 's126Agreement',
+  abatementAdjustment: 'abatementAdjustment',
+  section127Agreement: 's127Agreement',
+  secondPartCharge: 'secondPartCharge',
+  compensationCharge: 'compensationCharge',
+  eiucSource: 'eiucSource',
+  waterUndertaker: 'waterUndertaker',
+  region: 'region'
+}
+
+const CALCULATION_MAP = {
+  sourceFactor: 'sourceFactor',
+  seasonFactor: 'seasonFactor',
+  lossFactor: 'lossFactor',
+  s130Agreement: 'section130Factor',
+  abatementAdjustment: 'section126Factor',
+  s127Agreement: 'section127Factor',
+  eiucSourceFactor: 'eiucSource',
+  eiucFactor: 'eiuc',
+  sucFactor: 'suc'
 }
 
 const periodSchema = {
@@ -116,7 +150,9 @@ function _translate (data, map) {
   const keys = Object.keys(data)
   for (let n = 0; n < keys.length; n++) {
     const mk = map[keys[n]]
-    mappedData[mk] = data[keys[n]]
+    if (mk) {
+      mappedData[mk] = data[keys[n]]
+    }
   }
   return mappedData
 }
@@ -129,7 +165,8 @@ function _validateFinancialYear (data) {
   const sy = ps.getFullYear()
   const sm = ps.getMonth()
 
-  const efy = new Date(Date.UTC((sm < 3 ? sy : sy + 1), 2, 31))
+  const efy = Date.UTC((sm < 3 ? sy : sy + 1), 2, 31)
+  // const efy = new Date(Date.UTC((sm < 3 ? sy : sy + 1), 2, 31))
 
   if (pe > efy) {
     // spoof a Joi style validation error message so we can be consistent
@@ -206,6 +243,47 @@ function translateCharge (data) {
 }
 
 /**
+ * Translate charge calculation data scheme into WRLS naming
+ * @param  {object} data   An object containing charge calculation params
+ * @return {object}    Object containing charge calculation with translated names
+ */
+function translateCalculation (data) {
+  return _translate(data, CALCULATION_MAP)
+}
+
+/**
+ * Translate charge data DB scheme into payload for chare request
+ * @param  {object} data   An object containing charge params in DB naming
+ * @return {object}    Charge request payload
+ */
+function buildChargeRulesPayload (data) {
+  return {
+    WRLSChargingRequest: _translate(data, CHARGE_RULES_MAP)
+  }
+}
+
+/**
+ * Extracts charge calculation data from rules service response payload
+ * @param  {object} data   An object containing charge response
+ * @return {object}    Calculation data
+ */
+function extractCalculation (data, isCredit) {
+  const value = Math.round(data.WRLSChargingResponse.chargeValue * 100.0)
+
+  const result = {
+    uuid: data.__DecisionID__,
+    generatedAt: new Date(),
+    calculation: data.WRLSChargingResponse
+  }
+
+  if (!data.WRLSChargingResponse.messages) {
+    result.calculatedValue = (isCredit ? value * -1 : value)
+  }
+
+  return result
+}
+
+/**
  * Generate basic query to select transaction data using translated naming
  * @return {string}    SQL SELECT statement of attributes mapped to source schema naming
  */
@@ -239,5 +317,8 @@ module.exports = {
   translateTransaction,
   transactionQuery,
   extractChargeParams,
+  buildChargeRulesPayload,
+  extractCalculation,
+  translateCalculation,
   ATTRIBUTE_MAP
 }

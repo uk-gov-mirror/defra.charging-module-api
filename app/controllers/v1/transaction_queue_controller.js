@@ -6,7 +6,6 @@ const SecurityCheckRegime = require('../../services/security_check_regime')
 const SearchTransactionQueue = require('../../services/search_transaction_queue')
 const AddTransaction = require('../../services/add_transaction')
 const RemoveTransaction = require('../../services/remove_transaction')
-const CalculateCharge = require('../../services/calculate_charge')
 const Schema = require('../../schema/pre_sroc')
 
 const basePath = '/v1/{regime_id}/transaction_queue'
@@ -53,24 +52,8 @@ async function create (req, h) {
       return Boom.badData(msg)
     }
 
-    // calculate charge
-    const chargeData = schema.extractChargeParams(validData)
-    const charge = await CalculateCharge.call(regime, chargeData)
-    if (charge.calculation.messages) {
-      return Boom.badData(charge.calculation.messages)
-    }
-
-    // translate regime naming scheme into DB schema
-    const transData = schema.translateTransaction(validData)
-
-    // set sroc flag correctly
-    transData.pre_sroc = true
-
-    // add charge data to transaction
-    const combinedData = addChargeDataToTransaction(transData, charge)
-
     // create the transaction
-    const tId = await AddTransaction.call(regime, combinedData)
+    const tId = await AddTransaction.call(regime, schema, validData, true)
     const result = {
       transaction: {
         id: tId
@@ -83,8 +66,15 @@ async function create (req, h) {
     response.header('Location', regimeTransactionPath(regime, tId))
     return response
   } catch (err) {
-    logger.error(err.stack)
-    return Boom.boomify(err)
+    if (Boom.isBoom(err)) {
+      // status 500 squashes error message for some reason
+      if (err.output.statusCode === 500) {
+        err.output.payload.message = err.message
+      }
+      return err
+    } else {
+      return Boom.boomify(err)
+    }
   }
 }
 
@@ -103,15 +93,6 @@ async function remove (req, h) {
 
 function regimeTransactionPath (regime, transactionId) {
   return `${config.environment.serviceUrl}/v1/${regime.slug}/transactions/${transactionId}`
-}
-
-function addChargeDataToTransaction (transaction, charge) {
-  const chargeValue = charge.calculation.chargeValue * (transaction.charge_credit ? -1 : 1)
-  transaction.charge_value = chargeValue
-  transaction.currency_line_amount = chargeValue
-  transaction.unit_of_measure_price = chargeValue
-  transaction.charge_calculation = charge
-  return transaction
 }
 
 const routes = [

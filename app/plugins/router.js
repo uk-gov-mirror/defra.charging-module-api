@@ -6,7 +6,7 @@ const srocTransactionQueue = require('../controllers/v1/sroc_transaction_queue_c
 const calculateCharge = require('../controllers/v1/calculate_charge_controller').routes
 const srocCalculateCharge = require('../controllers/v1/sroc_calculate_charge_controller').routes
 
-const status = (request, h) => 'ok'
+const status = (request, h) => request.headers
 
 const routes = [
   ...regimes,

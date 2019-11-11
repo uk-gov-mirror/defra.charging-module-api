@@ -20,11 +20,11 @@ async function calculate (req, h) {
       return Boom.badRequest('No payload')
     }
 
-    // load the correct charge validator for the regime
-    const validator = Schema[regime.slug]
+    // load the correct charge schema for the regime
+    const schema = Schema[regime.slug]
 
     // validate the payload
-    const validData = validator.validateCharge(payload)
+    const validData = schema.validateCharge(payload)
 
     if (validData.error) {
       // get the better formatted message(s)
@@ -35,23 +35,35 @@ async function calculate (req, h) {
     }
 
     // translate regime naming scheme into DB schema
-    const chargeData = validator.translateCharge(validData)
+    const chargeData = schema.translateCharge(validData)
 
     // submit charge calculation request
-    const charge = await CalculateCharge.call(regime, chargeData)
-    const amount = charge.calculation.chargeValue * (chargeData.credit ? -1 : 1)
+    const charge = await CalculateCharge.call(regime, schema, chargeData)
+
     const result = {
-      charge: {
-        amount: amount,
-        calculation: charge.calculation
+      calculation: {
+        calculatedValue: charge.calculatedValue,
+        ...schema.translateCalculation(charge.calculation)
       }
     }
 
-    // return result with status HTTP 200 OK
+    if (charge.calculation.messages) {
+      result.messages = charge.calculation.messages
+    }
+
     return result
+    // return result with status HTTP 200 OK
+    // return result
   } catch (err) {
     logger.error(err.stack)
-    return Boom.boomify(err)
+    if (Boom.isBoom(err)) {
+      if (err.output.statusCode === 500) {
+        err.output.payload.message = err.message
+      }
+      return err
+    } else {
+      return Boom.boomify(err)
+    }
   }
 }
 
