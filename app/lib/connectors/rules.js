@@ -1,118 +1,64 @@
-// const rp = require('request-promise')
-// const config = require('../../../config/config')
+const rp = require('request-promise-native')
+const config = require('../../../config/config')
 
-async function calculateCharge (regime, chargeParams) {
-  // mock this for now until rules are ready
-  // return rp(buildRequest(regime, chargeParams))
-  return {
-    __DecisionID__: '46b5777c-8de0-40d0-823d-3d8583aaa287',
-    tcmChargingResponse: {
-      chargeValue: 1234,
-      messages: null,
-      standardUnitCharge: 100,
-      volumeFactor: 100,
-      sourceFactor: 100,
-      seasonFactor: 100,
-      lossFactor: 100,
-      abatementAdjustment: 'wigwam',
-      s127Agreement: 'peanut',
-      s130Agreement: 'windmill',
-      eiucSource: 100,
-      eiucFactor: 100
-    }
-  }
+const YEAR_SUFFIX = {
+  2000: '_2000_01',
+  2001: '_2001_02',
+  2002: '_2002_03',
+  2003: '_2003_04',
+  2004: '_2004_05',
+  2005: '_2005_06',
+  2006: '_2006_07',
+  2007: '_2007_08',
+  2008: '_2008_09',
+  2009: '_2009_10',
+  2010: '_2010_11',
+  2011: '_2011_12',
+  2012: '_2012_13',
+  2013: '_2013_14',
+  2014: '_2014_15',
+  2015: '_2015_16',
+  2016: '_2016_17',
+  2017: '_2017_18',
+  2018: '_2018_19',
+  2019: '_2019_20'
 }
 
-// async function replyWithError (error) {
-//   let payload = {}
+async function calculateCharge (regime, financialYear, chargeParams) {
+  // Rules service details
+  const service = config.decisionService
 
-//   try {
-//     if (typeof(error.error) !== "undefined" && error.error !== null) {
-//       payload = { calculation: { messages: error.error.message } }
-//     } else {
-//       payload = { calculation: { messages: error.message } }
-//     }
-//     console.log("========== Handling error from Rules service ==========")
-//     console.log(payload)
-//     console.log("=======================================================")
-//     this.reply(payload).code(500)
-//   } catch (err) {
-//     console.log(err)
-//   }
-// }
+  // The rules service end-points are per regime
+  const options = {
+    method: 'POST',
+    uri: makeRulesPath(regime, financialYear),
+    body: chargeParams,
+    timeout: 1500,
+    json: true,
+    auth: {
+      username: service.username,
+      password: service.password
+    }
+  }
 
-/**
- * Build the request to the decision service endpoint
- * @param  {object} regime    The regime making the request
- * @param  {object} payload    Charge parameters
- * @return {object} Request options for call to decision service
- */
-// function buildRequest (regime, payload) {
-//   // Rules service details
-//   const service = config.decisionService
-//   // The rules service end-points are per regime
-//   // Charge financial year is used to infer version of end-point application
-//   const year = payload.financialYear
-//   // Charge request data to pass to rules service
-//   const chargeRequest = payload.chargeRequest
+  if (config.httpProxy) {
+    options['proxy'] = config.httpProxy
+  }
 
-//   const options = {
-//     method: 'POST',
-//     uri: makeRulesPath(regime, year),
-//     body: {},
-//     json: true,
-//     auth: {
-//       username: service.username,
-//       password: service.password
-//     }
-//   }
+  return rp(options)
+}
 
-//   if (regime.slug === 'wrls') {
-//     options.body['request'] = chargeRequest
-//   } else {
-//     options.body['tcmChargingRequest'] = chargeRequest
-//   }
+function makeRulesPath (regime, year) {
+  // generate the url for the correct regime, year and ruleset
+  const endpoint = config.decisionService.endpoints[regime.slug.toLowerCase()]
+  // const fy = '_' + year + '_' + (year + 1).toString().slice(2)
+  const suffix = YEAR_SUFFIX[year]
 
-//   if (config.httpProxy) {
-//     options['proxy'] = config.httpProxy
-//   }
-
-//   return options
-// }
-
-// buildReply (data) {
-//   return ({
-//     uuid: data.__DecisionID__,
-//     generatedAt: new Date(),
-//     calculation: data.tcmChargingResponse
-//   })
-// }
-
-// function makeRulesPath (regime, year) {
-//   // generate the url for the correct regime, year and ruleset
-//   const endpoint = config.decisionService.endpoints[regime.slug.toLowerCase()]
-//   const fy = '_' + year + '_' + (year - 1999)
-//   return (
-//     config.decisionService.url + '/' + endpoint.application + '/' + endpoint.ruleset + fy
-//   )
-// }
-
-// makeOldRulesPath (regime, year) {
-//   // generate the url for the correct regime, year and ruleset
-//   const endpoint = config.endpoints[regime.toLowerCase()]
-//   return (
-//     config.decisionService.url + '/' + endpoint.application + '/' + endpoint.ruleset
-//   )
-// }
+  return (
+    config.decisionService.url + '/' + endpoint.application + '/' + endpoint.ruleset + suffix
+  )
+}
 
 module.exports = {
   calculateCharge
 }
-
-// Example usage:
-//
-// list('upload', { Prefix: 'export'}).then(items => console.log(items, items.length)).catch(err => console.error(err))
-
-// download('upload', 'export/wml/WMLTI50016T.DAT', 'myfile.txt')
-
-// upload('archive', 'tony.txt', './Dockerfile').then(v => console.log(v)).catch(err => console.log(err.message))
