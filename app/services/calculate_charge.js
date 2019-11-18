@@ -1,9 +1,6 @@
 const Boom = require('@hapi/boom')
 const RuleService = require('../lib/connectors/rules')
-
-function financialYearFromDate (date) {
-  return (date.getMonth() < 3 ? date.getFullYear() - 1 : date.getFullYear())
-}
+const utils = require('../lib/utils')
 
 async function call (regime, schema, params) {
   try {
@@ -13,7 +10,7 @@ async function call (regime, schema, params) {
     // const endDate = params.charge_period_end
     const credit = params.charge_credit
 
-    const fy = financialYearFromDate(startDate)
+    const fy = utils.financialYearFromDate(startDate)
 
     const pp = Object.entries(params).reduce((result, [k, v]) => {
       if (k !== 'charge_period_start' && k !== 'charge_period_end' && k !== 'charge_credit') {
@@ -22,6 +19,10 @@ async function call (regime, schema, params) {
       return result
     }, {})
 
+    // TODO: remove these once rules are updated
+    pp.section130Agreement = 'NULL'
+    pp.section127Agreement = 'NULL'
+
     const chargePayload = schema.buildChargeRulesPayload(pp)
 
     const result = await RuleService.calculateCharge(regime, fy, chargePayload)
@@ -29,6 +30,7 @@ async function call (regime, schema, params) {
     return schema.extractCalculation(result, credit)
   } catch (err) {
     if (err.name === 'StatusCodeError') {
+      console.log(err)
       throw Boom.internal('Rule Service Error: ' + err.error.message)
     } else if (err.name === 'RequestError') {
       throw Boom.internal(`Error communicating with the Rule Service (${err.message})`)

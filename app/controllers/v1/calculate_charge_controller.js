@@ -42,7 +42,7 @@ async function calculate (req, h) {
 
     const result = {
       calculation: {
-        calculatedValue: charge.calculatedValue,
+        chargeValue: charge.chargeValue,
         ...schema.translateCalculation(charge.calculation)
       }
     }
