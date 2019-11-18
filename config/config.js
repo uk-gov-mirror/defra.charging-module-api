@@ -39,7 +39,7 @@ const config = {
 
   pagination: {
     page: 1,
-    perPage: 10
+    perPage: 50
   },
 
   s3: {
@@ -131,7 +131,7 @@ const schema = {
   }),
   pagination: joi.object({
     page: joi.number().default(1),
-    perPage: joi.number().default(10)
+    perPage: joi.number().default(50)
   }),
   s3: joi.object({
     upload: bucketSchema,

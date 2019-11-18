@@ -1,5 +1,5 @@
 const Boom = require('@hapi/boom')
-const Transaction = require('../../models/transaction')
+// const Transaction = require('../../models/transaction')
 const { logger } = require('../../lib/logger')
 const SecurityCheckRegime = require('../../services/security_check_regime')
 const ApproveTransaction = require('../../services/approve_transaction')
@@ -9,27 +9,31 @@ const FindTransaction = require('../../services/find_transaction')
 
 const basePath = '/v1/{regime_id}/transactions'
 
-async function index (req, h) {
-  // check regime valid
-  // select all transactions matching search criteria for the regime
-  try {
-    const regime = await SecurityCheckRegime.call(req.params.regime_id)
+// TODO: future search/list of all transactions possibly
+// async function index (req, h) {
+//   // check regime valid
+//   // select all transactions matching search criteria for the regime
+//   try {
+//     const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
-    return Transaction.findByRegime(regime.id, req.params)
-      .then(result => {
-        return {
-          pagination: result.pagination,
-          data: {
-            transactions: result.data.transactions
-          }
-        }
-      })
-  } catch (err) {
-    logger.error(err.stack)
-    return Boom.boomify(err)
-  }
-}
+//     return Transaction.findByRegime(regime.id, req.params)
+//       .then(result => {
+//         return {
+//           pagination: result.pagination,
+//           data: {
+//             transactions: result.data.transactions
+//           }
+//         }
+//       })
+//   } catch (err) {
+//     logger.error(err.stack)
+//     return Boom.boomify(err)
+//   }
+// }
 
+//
+// GET /v1/{regime_id}/transactions/{id}
+//
 async function show (req, h) {
   try {
     const regime = await SecurityCheckRegime.call(req.params.regime_id)
@@ -45,6 +49,9 @@ async function show (req, h) {
   }
 }
 
+//
+// DELETE /v1/{regime_id}/transactions/{id}
+//
 async function remove (req, h) {
   // remove (delete) transaction
   try {
@@ -59,6 +66,9 @@ async function remove (req, h) {
   }
 }
 
+//
+// PATCH /v1/{regime_id}/transactions/{id}/approve
+//
 async function approve (req, h) {
   // approve transaction for billing
   try {
@@ -66,15 +76,17 @@ async function approve (req, h) {
 
     await ApproveTransaction.call(regime, req.params.id)
 
-    return {
-      status: 'success'
-    }
+    // HTTP 204 No Content
+    return h.response().code(204)
   } catch (err) {
     logger.error(err.stack)
     return Boom.boomify(err)
   }
 }
 
+//
+// PATCH /v1/{regime_id}/transactions/{id}/unapprove
+//
 async function unapprove (req, h) {
   // unapprove/withhold transaction for billing
   try {
@@ -82,9 +94,8 @@ async function unapprove (req, h) {
 
     await UnapproveTransaction.call(regime, req.params.id)
 
-    return {
-      status: 'success'
-    }
+    // HTTP 204 No Content
+    return h.response().code(204)
   } catch (err) {
     logger.error(err.stack)
     return Boom.boomify(err)
@@ -92,11 +103,11 @@ async function unapprove (req, h) {
 }
 
 const routes = [
-  {
-    method: 'GET',
-    path: basePath,
-    handler: index
-  },
+  // {
+  //   method: 'GET',
+  //   path: basePath,
+  //   handler: index
+  // },
   {
     method: 'GET',
     path: basePath + '/{id}',

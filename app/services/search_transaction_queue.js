@@ -54,27 +54,7 @@ async function call (regime, schema, preSroc, query = {}) {
   const whr = where.join(' AND ')
 
   // order clause uses mapped names
-  const order = []
-  // default sort order for WRLS is customer_reference
-  let sortCol = 'customer_reference'
-  let sortDirection = 'asc'
-
-  if (sort) {
-    const col = schema.ATTRIBUTE_MAP[sort]
-    if (col) {
-      sortCol = col
-    }
-  }
-
-  if (sortDir && sortDir.toUpperCase() === 'DESC') {
-    sortDirection = 'desc'
-  }
-
-  order.push(`${sortCol} ${sortDirection}`)
-  if (sortCol.toLowerCase() !== 'customer_reference') {
-    order.push(`customer_reference ${sortDirection}`)
-  }
-  order.push(`created_at ${sortDirection}`)
+  const order = schema.orderQuery(sort, sortDir)
 
   const promises = [
     pool.query('SELECT count(*) FROM transactions WHERE ' + whr, values),

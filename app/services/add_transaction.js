@@ -17,31 +17,31 @@ async function call (regime, schema, attrs, preSroc) {
   }
 
   // translate calculation elements from rules schema to regime schema
-  const transCalc = schema.translateCalculation(charge.calculation)
+  // const transCalc = schema.translateCalculation(charge.calculation)
 
   // add translated charge data to transaction
-  const combinedData = Object.assign(attrs, transCalc)
-
+  // const combinedData = Object.assign(attrs, transCalc)
+  const transaction = schema.buildTransactionRecord(attrs, charge)
   // translate regime naming scheme into DB schema
-  const transData = schema.translateTransaction(combinedData)
+  // const transData = schema.translateTransaction(combinedData)
 
   // set sroc flag correctly
-  transData.pre_sroc = preSroc
+  // transData.pre_sroc = preSroc
 
   // populate calculation json and charge values
-  const transaction = addChargeDataToTransaction(transData, charge)
+  // const transaction = addChargeDataToTransaction(transData, charge)
 
   return save(regime, transaction)
 }
 
-function addChargeDataToTransaction (transaction, charge) {
-  const chargeValue = charge.calculatedValue
-  transaction.charge_value = chargeValue
-  transaction.currency_line_amount = chargeValue
-  transaction.unit_of_measure_price = chargeValue
-  transaction.charge_calculation = charge
-  return transaction
-}
+// function addChargeDataToTransaction (transaction, charge) {
+//   const chargeValue = charge.chargeValue
+//   transaction.charge_value = chargeValue
+//   transaction.currency_line_amount = chargeValue
+//   transaction.unit_of_measure_price = chargeValue
+//   transaction.charge_calculation = charge
+//   return transaction
+// }
 
 // Assumes at this point that the attrs are in DB naming scheme
 async function save (regime, transaction) {
