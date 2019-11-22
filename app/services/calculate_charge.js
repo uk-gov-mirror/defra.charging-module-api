@@ -20,14 +20,21 @@ async function call (regime, schema, params) {
     }, {})
 
     // TODO: remove these once rules are updated
-    pp.section130Agreement = 'NULL'
-    pp.section127Agreement = 'NULL'
+    // pp.section130Agreement = 'NULL'
+    // pp.section127Agreement = 'NULL'
 
     const chargePayload = schema.buildChargeRulesPayload(pp)
 
-    const result = await RuleService.calculateCharge(regime, fy, chargePayload)
+    const charge = await RuleService.calculateCharge(regime, fy, chargePayload)
 
-    return schema.extractCalculation(result, credit)
+    const result = schema.extractCalculation(charge, credit)
+
+    const messages = result.calculation.messages
+    if (Array.isArray(messages) && messages.length) {
+      throw Boom.badData(messages.join(', '))
+    }
+
+    return result
   } catch (err) {
     if (err.name === 'StatusCodeError') {
       console.log(err)

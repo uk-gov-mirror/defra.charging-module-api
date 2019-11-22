@@ -1,9 +1,9 @@
-const Boom = require('@hapi/boom')
+// const Boom = require('@hapi/boom')
 const { pool } = require('../lib/connectors/db')
 const CalculateCharge = require('./calculate_charge')
 
 // Add a new transaction record to the queue
-async function call (regime, schema, attrs, preSroc) {
+async function call (regime, schema, attrs) {
   // extract charge params from the transaction data
   const chargeParams = schema.extractChargeParams(attrs)
 
@@ -12,9 +12,9 @@ async function call (regime, schema, attrs, preSroc) {
 
   // calculate charge
   const charge = await CalculateCharge.call(regime, schema, chargeData)
-  if (charge.calculation.messages) {
-    throw Boom.badData(charge.calculation.messages)
-  }
+  // if (charge.calculation.messages) {
+  //   throw Boom.badData(charge.calculation.messages)
+  // }
 
   // translate calculation elements from rules schema to regime schema
   // const transCalc = schema.translateCalculation(charge.calculation)

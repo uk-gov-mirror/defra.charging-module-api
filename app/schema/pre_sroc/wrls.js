@@ -335,9 +335,16 @@ function extractCalculation (data, isCredit) {
     calculation: data.WRLSChargingResponse
   }
 
-  if (!data.WRLSChargingResponse.messages) {
-    result.chargeValue = (isCredit ? value * -1 : value)
+  const messages = data.WRLSChargingResponse.messages
+
+  if (Array.isArray(messages) && messages.length) {
+    return result
   }
+
+  result.chargeValue = (isCredit ? value * -1 : value)
+  // if (!data.WRLSChargingResponse.messages || data.WRLSChargingResponse.message.length === 0) {
+  //   result.chargeValue = (isCredit ? value * -1 : value)
+  // }
 
   return result
 }

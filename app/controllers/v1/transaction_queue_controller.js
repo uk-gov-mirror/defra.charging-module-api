@@ -53,7 +53,7 @@ async function create (req, h) {
     }
 
     // create the transaction
-    const tId = await AddTransaction.call(regime, schema, validData, true)
+    const tId = await AddTransaction.call(regime, schema, validData)
     const result = {
       transaction: {
         id: tId
