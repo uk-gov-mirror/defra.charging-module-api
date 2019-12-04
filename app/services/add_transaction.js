@@ -1,17 +1,27 @@
 // const Boom = require('@hapi/boom')
 const { pool } = require('../lib/connectors/db')
 const CalculateCharge = require('./calculate_charge')
+const utils = require('../lib/utils')
 
 // Add a new transaction record to the queue
-async function call (regime, schema, attrs) {
+async function call (regime, transaction, schema) {
+  const charge = transaction.charge
+
+  // calculate the charge
+  const calc = await CalculateCharge.call(regime, charge, schema)
+console.log(calc)
+  transaction.setCalculation(calc)
+
+  return save(regime, transaction)
+
   // extract charge params from the transaction data
-  const chargeParams = schema.extractChargeParams(attrs)
+  // const chargeParams = schema.extractChargeParams(attrs)
 
   // translate charge params into rule engine schema
-  const chargeData = schema.translateCharge(chargeParams)
+  // const chargeData = schema.translateCharge(chargeParams)
 
   // calculate charge
-  const charge = await CalculateCharge.call(regime, schema, chargeData)
+  // const charge = await CalculateCharge.call(regime, schema, chargeData)
   // if (charge.calculation.messages) {
   //   throw Boom.badData(charge.calculation.messages)
   // }
@@ -21,7 +31,7 @@ async function call (regime, schema, attrs) {
 
   // add translated charge data to transaction
   // const combinedData = Object.assign(attrs, transCalc)
-  const transaction = schema.buildTransactionRecord(attrs, charge)
+  // const transaction = schema.buildTransactionRecord(attrs, charge)
   // translate regime naming scheme into DB schema
   // const transData = schema.translateTransaction(combinedData)
 
@@ -31,7 +41,7 @@ async function call (regime, schema, attrs) {
   // populate calculation json and charge values
   // const transaction = addChargeDataToTransaction(transData, charge)
 
-  return save(regime, transaction)
+  // return save(regime, transaction)
 }
 
 // function addChargeDataToTransaction (transaction, charge) {
@@ -45,6 +55,7 @@ async function call (regime, schema, attrs) {
 
 // Assumes at this point that the attrs are in DB naming scheme
 async function save (regime, transaction) {
+  console.log(transaction)
   const names = []
   const values = []
   const data = []

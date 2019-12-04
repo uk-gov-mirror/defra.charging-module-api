@@ -3,7 +3,7 @@ const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
 const SecurityCheckRegime = require('../../services/security_check_regime')
-const SearchTransactionQueue = require('../../services/search_transaction_queue')
+// const SearchTransactionQueue = require('../../services/search_transaction_queue')
 const AddTransaction = require('../../services/add_transaction')
 const RemoveTransaction = require('../../services/remove_transaction')
 const Schema = require('../../schema/pre_sroc')
@@ -17,10 +17,12 @@ async function index (req, h) {
     const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
     // load the correct schema for the regime
-    const schema = Schema[regime.slug]
+    // const schema = Schema[regime.slug]
+    const Transaction = Schema[regime.slug].Transaction
 
     // select all transactions matching search criteria for the regime (pre-sroc only)
-    return SearchTransactionQueue.call(regime, schema, true, req.query)
+    return Transaction.search(Object.assign(req.query, { status: 'unbilled', regime_id: regime.id, pre_sroc: true }))
+    // return SearchTransactionQueue.call(regime, Transaction, true, req.query)
   } catch (err) {
     logger.error(err.stack)
     return Boom.boomify(err)
@@ -37,23 +39,14 @@ async function create (req, h) {
       // return HTTP 400
       return Boom.badRequest('No payload')
     }
-
     // load the correct schema for the regime
     const schema = Schema[regime.slug]
 
-    // validate the payload
-    const validData = schema.validateTransaction(payload)
+    // create Transaction object, validate and translate
+    const transaction = schema.Transaction.instanceFromRequest(payload)
 
-    if (validData.error) {
-      // get the better formatted message(s)
-      const msg = validData.error.details.map(e => e.message).join(', ')
-
-      // return HTTP 422
-      return Boom.badData(msg)
-    }
-
-    // create the transaction
-    const tId = await AddTransaction.call(regime, schema, validData)
+    // add transaction to the queue (create db record)
+    const tId = await AddTransaction.call(regime, transaction, schema)
     const result = {
       transaction: {
         id: tId

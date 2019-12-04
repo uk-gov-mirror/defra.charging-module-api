@@ -1,0 +1,2 @@
+ALTER TABLE IF EXISTS transactions
+DROP COLUMN IF EXISTS bill_run;
