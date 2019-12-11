@@ -94,6 +94,9 @@ const TRANSACTION_QUERY = 'SELECT id,' +
   'line_description AS "lineDescription",' +
   'status AS "transactionStatus",' +
   'approved_for_billing AS "approvedForBilling",' +
+  'transaction_reference AS "transactionReference",' +
+  'transaction_type AS "transactionType",' +
+  'regime_value_20::int AS "billRunId",' +
   'charge_calculation AS "calculation" ' +
   'FROM transactions'
 
