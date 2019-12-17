@@ -3,7 +3,6 @@ const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
 const SecurityCheckRegime = require('../../services/security_check_regime')
-// const SearchTransactionQueue = require('../../services/search_transaction_queue')
 const AddTransaction = require('../../services/add_transaction')
 const RemoveTransaction = require('../../services/remove_transaction')
 const Schema = require('../../schema/pre_sroc')
@@ -17,12 +16,19 @@ async function index (req, h) {
     const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
     // load the correct schema for the regime
-    // const schema = Schema[regime.slug]
     const Transaction = Schema[regime.slug].Transaction
 
+    const { page, perPage, sort, sortDir, ...q } = req.query
+
+    // translate params into DB naming
+    const params = Transaction.translate(q)
+    // force these criteria
+    params.status = 'unbilled'
+    params.regime_id = regime.id
+    params.pre_sroc = 'true'
+
     // select all transactions matching search criteria for the regime (pre-sroc only)
-    return Transaction.search(Object.assign(req.query, { status: 'unbilled', regime_id: regime.id, pre_sroc: true }))
-    // return SearchTransactionQueue.call(regime, Transaction, true, req.query)
+    return Transaction.search(params, page, perPage, sort, sortDir)
   } catch (err) {
     logger.error(err.stack)
     return Boom.boomify(err)

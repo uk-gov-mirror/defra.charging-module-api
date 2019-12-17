@@ -1,4 +1,0 @@
-// schema object
-class SchemaObject {
-
-}

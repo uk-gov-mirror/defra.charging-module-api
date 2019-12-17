@@ -3,9 +3,9 @@ const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
 const SecurityCheckRegime = require('../../services/security_check_regime')
-// const RunBilling = require('../../services/run_billing')
+const GenerateBillRun = require('../../services/generate_bill_run')
 const Schema = require('../../schema/pre_sroc')
-const BillRun = require('../../schema/pre_sroc/wrls/bill_run')
+
 const basePath = '/v1/{regime_id}/billruns'
 
 // POST create a billing run
@@ -62,43 +62,24 @@ async function create (req, h) {
     // load the correct schema for the regime
     const schema = Schema[regime.slug]
 
-    const billRun = new BillRun(payload)
+    // create a BillRun object, validate and translate
+    const billRun = await schema.BillRun.instanceFromRequest(regime.id, payload)
 
-    // validate the payload
-    // const validData = schema.validateBillRun(payload)
+    const summary = await GenerateBillRun.call(billRun, schema)
 
-    // const validData = schema.validateTransaction(payload)
-
-    // if (validData.error) {
-      // get the better formatted message(s)
-      // const msg = validData.error.details.map(e => e.message).join(', ')
-
-      // return HTTP 422
-      // return Boom.badData(msg)
-    // }
-
-    // Execute the bill run
-    // const summary = await RunBilling.call(regime, schema, validData)
-
-    // create the transaction
-    // const tId = await AddTransaction.call(regime, schema, validData)
-    // const result = {
-    //   transaction: {
-    //     id: tId
-    //   }
-    // }
-
-    // return HTTP 201 Created
-    const summary = billRun.filter
+    // return HTTP 201 Created unless a draft
     const response = h.response(summary)
-    response.code(201)
-    // if not a dummy run we could provide a link to the summary
-    if (!billRun.draft) {
+
+    if (billRun.draft) {
+      response.code(200)
+    } else {
+      response.code(201)
       response.header('Location', regimeBillRunPath(regime, summary.id))
     }
+
     return response
   } catch (err) {
-    console.log(err.name)
+    logger.error(err.stack)
     if (Boom.isBoom(err)) {
       // status 500 squashes error message for some reason
       if (err.output.statusCode === 500) {
@@ -106,8 +87,6 @@ async function create (req, h) {
       }
       return err
     } else if (err.isJoi) {
-      console.log('its a validation error!')
-      console.log(err.annotate())
       return Boom.badData(err.details.map(e => e.message).join(', '))
     } else {
       return Boom.boomify(err)

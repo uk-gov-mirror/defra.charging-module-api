@@ -1,50 +1,7 @@
+const Boom = require('@hapi/boom')
 const Joi = require('@hapi/joi')
 const AttributeMap = require('./attribute_map')
 const utils = require('../../../lib/utils')
-
-// Pre-SRoC Data Maps ===================
-
-// const CHARGE_PARAMS_MAP = {
-//   periodStart: 'charge_period_start',
-//   periodEnd: 'charge_period_end',
-//   credit: 'charge_credit',
-//   billableDays: 'billableDays',
-//   authorisedDays: 'abstractableDays',
-//   volume: 'volume',
-//   source: 'source',
-//   season: 'season',
-//   loss: 'loss',
-//   section130Agreement: 'section130Agreement',
-//   section126Agreement: 'section126Agreement',
-//   section126Factor: 'abatementAdjustment',
-//   section127Agreement: 'section127Agreement',
-//   twoPartTariff: 'secondPartCharge',
-//   compensationCharge: 'compensationCharge',
-//   eiucSource: 'eiucSource',
-//   waterUndertaker: 'waterUndertaker',
-//   regionalChargingArea: 'region'
-// }
-
-// const CHARGE_RULES_MAP = {
-//   charge_period_start: 'charge_period_start',
-//   charge_period_end: 'charge_period_end',
-//   charge_credit: 'charge_credit',
-//   billableDays: 'billableDays',
-//   abstractableDays: 'abstractableDays',
-//   volume: 'volume',
-//   source: 'source',
-//   season: 'season',
-//   loss: 'loss',
-//   section130Agreement: 's130Agreement',
-//   // section126Agreement: 's126Agreement',
-//   abatementAdjustment: 'abatementAdjustment',
-//   section127Agreement: 's127Agreement',
-//   secondPartCharge: 'secondPartCharge',
-//   compensationCharge: 'compensationCharge',
-//   eiucSource: 'eiucSource',
-//   waterUndertaker: 'waterUndertaker',
-//   region: 'region'
-// }
 
 const DB_TO_PARAMS_MAP = {
   charge_period_start: 'periodStart',
@@ -89,7 +46,7 @@ class Charge {
   constructor (data) {
     const { error, value } = this.constructor.validate(data)
     if (error) {
-      throw error
+      throw Boom.badData(error)
     }
 
     Object.assign(this, this.constructor.translate(value))
@@ -116,8 +73,6 @@ class Charge {
 
   static fromTransaction (transaction) {
     // transaction in DB naming
-    const attrs = utils.translateData(transaction, DB_TO_PARAMS_MAP)
-    console.log(attrs)
     return new Charge(utils.translateData(transaction, DB_TO_PARAMS_MAP))
   }
 

@@ -1,18 +1,22 @@
 const Lab = require('@hapi/lab')
 const Code = require('@hapi/code')
+const Sinon = require('sinon')
 const lab = exports.lab = Lab.script()
 const createServer = require('../../app')
-const queue = require('../../app/services/transaction_queue')
-const Regime = require('../../app/services/query/regime')
+const Regime = require('../../app/models/regime')
+const RuleService = require('../../app/lib/connectors/rules')
+const { dummyCharge } = require('../helpers/charge_helper')
+const { addTransaction, cleanTransactions } = require('../helpers/transaction_helper')
 
 lab.experiment('Transaction Queue controller test', () => {
   let server
   let regime
 
-  // Create server before each test
+  // Create server before the tests run
   lab.before(async () => {
     server = await createServer()
-    regime = await Regime.findBySlug('wrls')
+    regime = await Regime.find('wrls')
+    await cleanTransactions()
   })
 
   lab.test('GET /v1/wrls/transaction_queue returns transactions', async () => {
@@ -32,23 +36,41 @@ lab.experiment('Transaction Queue controller test', () => {
       method: 'POST',
       url: '/v1/wrls/transaction_queue',
       payload: {
-        customer_reference: 'BB8895777A',
-        transaction_date: '20-Jul-2018',
-        invoice_date: '20-Jul-2018',
-        line_description: 'Drains within Littleport & Downham IDB',
-        licence_number: '6/33/26/*S/0453/R01',
-        charge_period: '01-APR-2018 - 31-MAR-2019',
-        prorata_days: '214/214',
-        batch_number: 'B1',
-        volume: '3.5865 Ml',
+        periodStart: '01-APR-2019',
+        periodEnd: '31-MAR-2020',
+        credit: false,
+        billableDays: 230,
+        authorisedDays: 240,
+        volume: '3.5865',
+        source: 'Supported',
+        season: 'Summer',
+        loss: 'Low',
+        twoPartTariff: false,
+        compensationCharge: false,
+        eiucSource: 'Tidal',
+        waterUndertaker: false,
+        regionalChargingArea: 'Anglian',
+        section127Agreement: false,
+        section130Agreement: false,
+        customerReference: 'TH12345678',
+        transactionDate: '20-Jul-2018',
+        invoiceDate: '20-Jul-2018',
+        lineDescription: 'Drains within Littleport & Downham IDB',
+        licenceNumber: '123/456/26/*S/0453/R01',
+        chargePeriod: '01-APR-2018 - 31-MAR-2019',
+        chargeElementId: '',
+        batchNumber: 'TEST-Transaction-Queue',
         region: 'A',
-        area_code: 'ARCA',
-        period_start: '01-APR-2018',
-        period_end: '31-MAR-2019',
-        credit: true
+        areaCode: 'ARCA'
       }
     }
+
+    const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(dummyCharge())
     const response = await server.inject(options)
+
+    const stubCalled = stub.called
+    stub.restore()
+    Code.expect(stubCalled).to.be.true()
     Code.expect(response.statusCode).to.equal(201)
   })
 
@@ -67,8 +89,6 @@ lab.experiment('Transaction Queue controller test', () => {
         volume: '3.5865 Ml',
         region: 'A',
         area_code: 'ARCA',
-        period_start: '01-APR-2018',
-        period_end: '31-MAR-2019',
         credit: true
       }
     }
@@ -79,30 +99,7 @@ lab.experiment('Transaction Queue controller test', () => {
   lab.test('DELETE /v1/wrls/transaction_queue/id removes transaction', async () => {
     const id = await addTransaction(regime)
 
-    // const options = {
-    //   method: 'POST',
-    //   url: '/v1/wrls/transaction_queue',
-    //   payload: {
-    //     customer_reference: 'BB8895777A',
-    //     transaction_date: '20-Jul-2018',
-    //     invoice_date: '20-Jul-2018',
-    //     line_description: 'Drains within Littleport & Downham IDB',
-    //     licence_number: '6/33/26/*S/0453/R01',
-    //     charge_period: '01-APR-2018 - 31-MAR-2019',
-    //     prorata_days: '214/214',
-    //     batch_number: 'B1',
-    //     volume: '3.5865 Ml',
-    //     region: 'A',
-    //     area_code: 'ARCA',
-    //     period_start: '01-APR-2018',
-    //     period_end: '31-MAR-2019',
-    //     credit: true
-    //   }
-    // }
-    // const response = await server.inject(options)
-    // Code.expect(response.statusCode).to.equal(201)
-
-    // const id = JSON.parse(response.payload).id
+    Code.expect(id).to.not.be.null()
     const opts = {
       method: 'DELETE',
       url: '/v1/wrls/transaction_queue/' + id
@@ -112,23 +109,3 @@ lab.experiment('Transaction Queue controller test', () => {
     Code.expect(response.statusCode).to.equal(204)
   })
 })
-
-async function addTransaction (regime) {
-  return queue.addTransaction({
-    regime_id: regime.id,
-    customer_reference: 'BB8895777A',
-    transaction_date: '20-Jul-2018',
-    header_attr_1: '20-Jul-2018',
-    line_description: 'Drains within Littleport & Downham IDB',
-    line_attr_1: '6/33/26/*S/0453/R01',
-    line_attr_2: '01-APR-2018 - 31-MAR-2019',
-    line_attr_3: '214/214',
-    regime_value_1: 'B1',
-    line_attr_5: '3.5865 Ml',
-    region: 'A',
-    line_area_code: 'ARCA',
-    charge_period_start: '01-APR-2018',
-    charge_period_end: '31-MAR-2019',
-    charge_credit: true
-  })
-}

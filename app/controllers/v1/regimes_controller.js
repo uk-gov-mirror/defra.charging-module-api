@@ -1,47 +1,31 @@
 const Boom = require('@hapi/boom')
-const regimes = require('../../services/query/regime')
+const Regime = require('../../models/regime')
 const { logger } = require('../../lib/logger')
 
 const basePath = '/v1/regimes'
 
-function index (req, h) {
-  return regimes.all()
-    .then(result => {
-      console.log(result)
-      return {
-        pagination: result.pagination,
-        data: {
-          regimes: result.data.regimes.map(regime => mapRegimeItem(regime))
-        }
-      }
-    }).catch(err => {
-      logger.error(err.stack)
-      return Boom.boomify(err)
-    })
+async function index (req, h) {
+  try {
+    const regimes = await Regime.all()
+    return regimes
+  } catch (err) {
+    logger.error(err.stack)
+    return Boom.boomify(err)
+  }
 }
 
-function show (req, h) {
-  return regimes.findBySlug(req.params.id)
-    .then(result => {
-      if (result) {
-        return {
-          data: {
-            regime: mapRegimeItem(result)
-          }
-        }
-      } else {
-        return Boom.notFound()
-      }
-    }).catch(err => {
-      logger.error(err.stack)
-      return Boom.boomify(err)
-    })
-}
-
-function mapRegimeItem (item) {
-  return {
-    id: item.slug,
-    name: item.name
+async function show (req, h) {
+  try {
+    const regime = await Regime.find(req.params.id)
+    if (regime === null) {
+      return Boom.notFound(`No matching regime found`)
+    }
+    return {
+      regime: regime
+    }
+  } catch (err) {
+    logger.error(err.stack)
+    return Boom.boomify(err)
   }
 }
 

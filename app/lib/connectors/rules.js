@@ -44,7 +44,6 @@ async function calculateCharge (regime, financialYear, chargeParams) {
   if (config.httpProxy) {
     options['proxy'] = config.httpProxy
   }
-
   return rp(options)
 }
 
