@@ -8,9 +8,8 @@ const Schema = require('../../schema/pre_sroc')
 const basePath = '/v1/{regime_id}/calculate_charge'
 
 async function calculate (req, h) {
-  // check regime valid
-  // select all transactions matching search criteria for the regime
   try {
+    // check regime valid
     const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
     // process the charge params in the payload
@@ -20,40 +19,15 @@ async function calculate (req, h) {
       return Boom.badRequest('No payload')
     }
 
-    // load the correct charge schema for the regime
+    // load the correct schema for the regime
     const schema = Schema[regime.slug]
-
-    // validate the payload
-    const validData = schema.validateCharge(payload)
-
-    if (validData.error) {
-      // get the better formatted message(s)
-      const msg = validData.error.details.map(e => e.message).join(', ')
-
-      // return HTTP 422
-      return Boom.badData(msg)
-    }
-
-    // translate regime naming scheme into DB schema
-    const chargeData = schema.translateCharge(validData)
+    // create a Charge from the payload
+    const charge = new schema.Charge(payload)
 
     // submit charge calculation request
-    const charge = await CalculateCharge.call(regime, schema, chargeData)
-
-    const result = {
-      calculation: {
-        chargeValue: charge.chargeValue,
-        ...schema.translateCalculation(charge.calculation)
-      }
-    }
-
-    if (charge.calculation.messages) {
-      result.messages = charge.calculation.messages
-    }
-
-    return result
+    const calc = await CalculateCharge.call(regime, charge, schema)
     // return result with status HTTP 200 OK
-    // return result
+    return calc.payload
   } catch (err) {
     logger.error(err.stack)
     if (Boom.isBoom(err)) {

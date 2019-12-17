@@ -2,21 +2,20 @@ const Lab = require('@hapi/lab')
 const Code = require('@hapi/code')
 const lab = exports.lab = Lab.script()
 const createServer = require('../../app')
-const query = require('../../app/services/query/regime')
+const Regime = require('../../app/models/regime')
+// const query = require('../../app/services/query/regime')
 
 lab.experiment('Regimes controller test', () => {
   let server
-  let pagination
   let regimes
   let mappedRegimes
 
   // Create server before each test
   lab.before(async () => {
     server = await createServer()
-    const result = await query.all()
-    pagination = result.pagination
-    regimes = result.data.regimes
-    mappedRegimes = regimes.map(({ slug, name }) => { return { id: slug, name } })
+    const result = await Regime.all()
+    regimes = result.regimes
+    mappedRegimes = regimes // .map(({ slug, name }) => { return { id: slug, name } })
   })
 
   lab.test('GET /v1/regimes returns regimes', async () => {
@@ -27,7 +26,7 @@ lab.experiment('Regimes controller test', () => {
     const response = await server.inject(options)
     Code.expect(response.statusCode).to.equal(200)
     Code.expect(response.headers['content-type']).to.include('application/json')
-    Code.expect(JSON.parse(response.payload)).to.equal({ pagination: pagination, data: { regimes: mappedRegimes } })
+    Code.expect(JSON.parse(response.payload)).to.equal({ regimes: mappedRegimes })
   })
 
   lab.test('GET /v1/regimes/{id} returns a regime', async () => {
@@ -40,7 +39,7 @@ lab.experiment('Regimes controller test', () => {
       const response = await server.inject(options)
       Code.expect(response.statusCode).to.equal(200)
       Code.expect(response.headers['content-type']).to.include('application/json')
-      Code.expect(JSON.parse(response.payload)).to.equal({ data: { regime: regime } })
+      Code.expect(JSON.parse(response.payload)).to.equal({ regime: regime })
     }
   })
 

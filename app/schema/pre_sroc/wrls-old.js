@@ -50,6 +50,9 @@ const ATTRIBUTE_MAP = {
   unitOfMeasurePrice: 'unit_of_measure_price',
   preSroc: 'pre_sroc',
   financialYear: 'charge_financial_year',
+  transactionType: 'transaction_type',
+  transactionReference: 'transaction_reference',
+  billRunId: 'bill_run',
   calculation: 'charge_calculation'
 }
 
@@ -92,6 +95,9 @@ const TRANSACTION_QUERY = 'SELECT id,' +
   'to_char(transaction_date, \'DD-MON-YYYY\') AS "transactionDate",' +
   'line_area_code AS "areaCode",' +
   'line_description AS "lineDescription",' +
+  'transaction_type AS "transactionType",' +
+  'transaction_reference AS "transactionReference",' +
+  'bill_run AS "billRunId",' +
   'status AS "transactionStatus",' +
   'approved_for_billing AS "approvedForBilling",' +
   'transaction_reference AS "transactionReference",' +
@@ -171,7 +177,7 @@ const chargeSchema = {
   loss: Joi.string().required(),
   section130Agreement: Joi.boolean(),
   section126Agreement: Joi.boolean(),
-  section126Factor: Joi.number().allow(null),
+  section126Factor: Joi.number().allow(null).empty(null).default(1.0),
   section127Agreement: Joi.boolean(),
   twoPartTariff: Joi.boolean().required(),
   compensationCharge: Joi.boolean().required(),

@@ -1,5 +1,5 @@
 const Boom = require('@hapi/boom')
-const { pool } = require('../lib/connectors/db')
+const Transaction = require('../models/transaction')
 const utils = require('../lib/utils')
 
 // Remove a transaction from the queue
@@ -11,16 +11,15 @@ async function call (regime, id) {
     throw Boom.badRequest(`Invalid transaction id: '${id}'`)
   }
 
-  // only remove the transaction if it hasn't been billed and belongs to the calling regime
-  const stmt = "DELETE FROM transactions WHERE id=$1::uuid AND regime_id=$2::uuid AND status='unbilled'"
-  const result = await pool.query(stmt, [id, regime.id])
+  const t = await Transaction.find(regime.id, id)
 
-  if (result.rowCount !== 1) {
-    // didn't remove a transaction matching the criteria
-    throw Boom.notFound(`No queued transaction found with id '${id}'`)
+  if (t === null) {
+    // didn't find a transaction matching the criteria
+    throw Boom.notFound(`No transaction found with id '${id}'`)
   }
 
-  return true
+  // only remove the transaction if it hasn't been billed and belongs to the calling regime
+  return t.remove()
 }
 
 module.exports = {

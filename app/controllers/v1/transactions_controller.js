@@ -38,7 +38,13 @@ async function show (req, h) {
   try {
     const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
-    const transaction = await FindTransaction.call(regime, req.params.id)
+    const id = req.params.id
+
+    const transaction = await FindTransaction.call(regime, id)
+
+    if (transaction === null) {
+      return Boom.notFound(`No transaction found with id '${id}'`)
+    }
 
     return {
       transaction: transaction
@@ -61,7 +67,7 @@ async function remove (req, h) {
     // HTTP 204 No Content
     return h.response().code(204)
   } catch (err) {
-    console.log(err)
+    logger.error(err.stack)
     return Boom.boomify(err)
   }
 }
