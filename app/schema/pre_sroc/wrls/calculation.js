@@ -65,11 +65,20 @@ class Calculation {
   }
 
   get chargeElementAgreement () {
-    if (this.calculation.abatementAdjustment) {
-      return this.calculation.abatementAdjustment
-    } else {
+    if (this.calculation.s127Agreement) {
       return this.calculation.s127Agreement
+    } else if (this.calculation.abatementAdjustment !== null &&
+        this.calculation.abatementAdjustment.endsWith('1.0')) {
+      return null
+    } else {
+      return this.calculation.abatementAdjustment
     }
+
+    // if (this.calculation.abatementAdjustment) {
+    //   return this.calculation.abatementAdjustment
+    // } else {
+    //   return this.calculation.s127Agreement
+    // }
   }
 
   /**
