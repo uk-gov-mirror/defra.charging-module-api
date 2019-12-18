@@ -33,6 +33,42 @@ function dummyCharge () {
   }
 }
 
+function dummyCalculation () {
+  return {
+    __DecisionID__: 'a0a4da26-3b82-4506-8a92-45919f5a4a5e0',
+    WRLSChargingResponse: {
+      chargeValue: 12.63,
+      decisionPoints: {
+        sourceFactor: 0.7173,
+        seasonFactor: 1.14768,
+        lossFactor: 1.14768,
+        volumeFactor: 3.5865,
+        abatementAdjustment: 12.629070720000001,
+        s127Agreement: 12.629070720000001,
+        s130Agreement: 12.629070720000001,
+        secondPartCharge: false,
+        waterUndertaker: false,
+        eiucFactor: 0.0,
+        compensationCharge: false,
+        eiucSourceFactor: 0.0,
+        sucFactor: 31.572676800000004
+      },
+      messages: [],
+      sucFactor: 27.51,
+      volumeFactor: 3.5865,
+      sourceFactor: 0.2,
+      seasonFactor: 1.6,
+      lossFactor: 1.0,
+      abatementAdjustment: 'S126 x 0.4',
+      s127Agreement: null,
+      s130Agreement: null,
+      eiucSourceFactor: 0.0,
+      eiucFactor: 0.0
+    }
+  }
+}
+
 module.exports = {
-  dummyCharge
+  dummyCharge,
+  dummyCalculation
 }
