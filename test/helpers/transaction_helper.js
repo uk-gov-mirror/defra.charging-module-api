@@ -27,8 +27,6 @@ async function addTransaction (regime, data = {}) {
     section127Agreement: false,
     section130Agreement: false,
     customerReference: 'TH12345678',
-    transactionDate: '20-Jul-2018',
-    invoiceDate: '20-Jul-2018',
     lineDescription: 'Drains within Littleport & Downham IDB',
     licenceNumber: '123/456/26/*S/0453/R01',
     chargePeriod: '01-APR-2018 - 31-MAR-2019',
