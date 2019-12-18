@@ -134,13 +134,19 @@ class Transaction {
 
     Object.keys(params).forEach(col => {
       if (col) {
-        let val = params[col]
-        if (val && val.indexOf('*') !== -1) {
-          val = val.replace(/\*/g, '%')
+        const val = params[col]
+
+        if (val && val.indexOf('%') !== -1) {
           where.push(`${col} like $${attrCount++}`)
         } else {
-          where.push(`${col} = $${attrCount++}`)
+          where.push(`${col}=$${attrCount++}`)
         }
+        // if (val && val.indexOf('*') !== -1) {
+        //   val = val.replace(/\*/g, '%')
+        //   where.push(`${col} like $${attrCount++}`)
+        // } else {
+        //   where.push(`${col} = $${attrCount++}`)
+        // }
         values.push(val)
       }
     })
@@ -169,6 +175,14 @@ class Transaction {
         transactions: rows
       }
     }
+  }
+
+  static orderSearchQuery (sort, sortDir) {
+    // this should be overridden
+    return [
+      'customer_reference asc',
+      'line_attr_1 asc'
+    ]
   }
 
   static get rawQuery () {
