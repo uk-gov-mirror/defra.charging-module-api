@@ -25,15 +25,33 @@ function translateData (data, map) {
 }
 
 function validatePagination (page, perPage) {
+  const cp = config.pagination
   const schema = {
-    page: Joi.number().integer().positive().default(config.pagination.page),
-    perPage: Joi.number().integer().positive().default(config.pagination.perPage)
+    page: Joi.number().integer().positive().default(cp.page),
+    perPage: Joi.number().integer().positive().max(cp.maxPerPage).default(cp.perPage)
   }
 
-  const result = Joi.validate({ page: page, perPage: perPage }, schema)
+  const result = Joi.validate({ page: page, perPage: perPage }, schema, { abortEarly: false })
 
   if (result.error) {
-    return config.pagination
+    let p = result.value.page
+    let pp = result.value.perPage
+
+    result.error.details.forEach((err) => {
+      if (err.path[0] === 'page') {
+        p = cp.page
+      } else if (err.path[0] === 'perPage') {
+        if (err.type === 'number.max') {
+          pp = cp.maxPerPage
+        } else {
+          pp = cp.perPage
+        }
+      }
+    })
+    return {
+      page: p,
+      perPage: pp
+    }
   } else {
     return result.value
   }
