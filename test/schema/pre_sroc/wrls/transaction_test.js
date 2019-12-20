@@ -1,13 +1,14 @@
 const Joi = require('@hapi/joi')
 const Lab = require('@hapi/lab')
 const Code = require('@hapi/code')
-const lab = exports.lab = Lab.script()
+const { describe, it } = exports.lab = Lab.script()
+const { expect } = Code
 const Regime = require('../../../../app/models/regime')
 const Transaction = require('../../../../app/schema/pre_sroc/wrls/transaction')
 const { addTransaction } = require('../../../helpers/transaction_helper')
 
-lab.experiment('PreSRoC Transaction (WRLS) test', () => {
-  lab.test('it validates required parameters', async () => {
+describe('PreSRoC Transaction (WRLS)', () => {
+  it('validates required parameters', async () => {
     const params = {
       periodStart: '01-APR-2019',
       periodEnd: '31-MAR-2020',
@@ -36,16 +37,16 @@ lab.experiment('PreSRoC Transaction (WRLS) test', () => {
     }
 
     const result = Transaction.validate(params)
-    Code.expect(result.error).to.not.exist()
+    expect(result.error).to.not.exist()
   })
 
-  lab.test('it returns the correct attributes when queried', async () => {
+  it('returns the correct attributes when queried', async () => {
     const regime = await Regime.find('wrls')
     const id = await addTransaction(regime)
-    Code.expect(id).to.not.be.null()
+    expect(id).to.not.be.null()
 
     const transaction = await Transaction.findRaw(regime.id, id)
-    Code.expect(transaction).to.not.be.null()
+    expect(transaction).to.not.be.null()
 
     const dateRx = /^\d\d?-(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-20\d\d$/
 
@@ -78,7 +79,7 @@ lab.experiment('PreSRoC Transaction (WRLS) test', () => {
       twoPartTariff: Joi.boolean().required(),
       compensationCharge: Joi.boolean().required(),
       eiucSource: Joi.string(),
-      eiucSourceFactor: Joi.string().allow('', null),
+      eiucSourceFactor: Joi.number().positive().required(),
       waterUndertaker: Joi.boolean().required(),
       regionalChargingArea: Joi.string().required(),
       eiuc: Joi.number().positive(),
@@ -96,6 +97,16 @@ lab.experiment('PreSRoC Transaction (WRLS) test', () => {
       calculation: Joi.object()
     }
     const result = Joi.validate(transaction, outputSchema)
-    Code.expect(result.error).to.not.exist()
+    expect(result.error).to.not.exist()
+  })
+
+  it('does not overwrite eiucSource with charge calculation attributes', async () => {
+    const regime = await Regime.find('wrls')
+    const id = await addTransaction(regime)
+    expect(id).to.not.be.null()
+
+    const t = await Transaction.find(regime.id, id)
+    expect(t).to.not.be.null()
+    expect(t.regime_value_13).to.equal('Tidal')
   })
 })

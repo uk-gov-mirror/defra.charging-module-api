@@ -41,7 +41,7 @@ class Calculation {
       line_attr_8: data.lossFactor,
       line_attr_9: data.s130Agreement,
       line_attr_10: (data.abatementAdjustment ? data.abatementAdjustment : data.s127Agreement),
-      regime_value_13: data.eiucSourceFactor,
+      line_attr_13: data.eiucSourceFactor,
       line_attr_14: data.eiucFactor
     }
   }
