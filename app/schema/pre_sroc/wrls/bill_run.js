@@ -19,7 +19,7 @@ class WrlsBillRun extends BillRun {
       this.debit_line_count += s.debit_line_count
       this.debit_line_value += s.debit_line_value
 
-      if (s.net_total > 0) {
+      if (s.net_total >= 0) {
         this.invoice_count++
         this.invoice_value += s.net_total
       } else {
