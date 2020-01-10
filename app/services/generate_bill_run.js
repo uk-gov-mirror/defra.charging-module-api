@@ -69,8 +69,8 @@ async function buildFinancialYearSummary (billRun, year, filter) {
     transactions: []
   }
 
-  filter.charge_financial_year = year
-  const { where, values } = utils.buildWhereClause(filter)
+  // filter.charge_financial_year = year
+  const { where, values } = utils.buildWhereClause({ charge_financial_year: year, ...filter })
   // assumption that 0 would be a invoice
   const creditStmt = `SELECT id,charge_value FROM transactions WHERE ${where} AND charge_value < 0`
   const invoiceStmt = `SELECT id,charge_value FROM transactions WHERE ${where} AND charge_value >= 0`
