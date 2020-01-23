@@ -1,22 +1,25 @@
 const Lab = require('@hapi/lab')
 const Code = require('@hapi/code')
-const lab = exports.lab = Lab.script()
+const { describe, it, before } = exports.lab = Lab.script()
+const { expect } = Code
 const createServer = require('../../app')
 const Regime = require('../../app/models/regime')
 const { addTransaction, cleanTransactions } = require('../helpers/transaction_helper')
+const BillRun = require('../../app/models/bill_run')
+const Transaction = require('../../app/models/transaction')
 
-lab.experiment('Billruns controller test', () => {
+describe('Billruns controller: POST /v1/wrls/billruns', () => {
   let server
   let regime
 
   // Create server before each test
-  lab.before(async () => {
+  before(async () => {
     server = await createServer()
     regime = await Regime.find('wrls')
     await cleanTransactions()
   })
 
-  lab.test('POST /v1/wrls/billruns returns billrun summary for draft', async () => {
+  it('returns billrun summary for draft', async () => {
     await addTransaction(regime)
 
     const options = {
@@ -28,10 +31,30 @@ lab.experiment('Billruns controller test', () => {
       }
     }
     const response = await server.inject(options)
-    Code.expect(response.statusCode).to.equal(200)
+    expect(response.statusCode).to.equal(200)
+    const payload = JSON.parse(response.payload)
+    expect(payload.id).not.to.exist()
+    expect(payload.filename).not.to.exist()
   })
 
-  lab.test('POST /v1/wrls/billruns returns billrun summary for non-draft', async () => {
+  it('does not include an id and filename in payload when draft', async () => {
+    await addTransaction(regime)
+
+    const options = {
+      method: 'POST',
+      url: '/v1/wrls/billruns',
+      payload: {
+        region: 'A',
+        draft: true
+      }
+    }
+    const response = await server.inject(options)
+    const payload = JSON.parse(response.payload)
+    expect(payload.id).to.not.exist()
+    expect(payload.filename).to.not.exist()
+  })
+
+  it('returns billrun summary for non-draft', async () => {
     await addTransaction(regime)
 
     const options = {
@@ -43,20 +66,70 @@ lab.experiment('Billruns controller test', () => {
       }
     }
     const response = await server.inject(options)
-    Code.expect(response.statusCode).to.equal(201)
-    Code.expect(response.headers.location).to.exist()
+    expect(response.statusCode).to.equal(201)
+    expect(response.headers.location).to.exist()
   })
 
-  lab.test('POST /v1/wrls/billruns without payload returns 400 error', async () => {
+  it('includes an id and filename in payload when non-draft', async () => {
+    await addTransaction(regime)
+
+    const options = {
+      method: 'POST',
+      url: '/v1/wrls/billruns',
+      payload: {
+        region: 'A',
+        draft: false
+      }
+    }
+    const response = await server.inject(options)
+    const payload = JSON.parse(response.payload)
+    expect(payload.id).to.exist()
+    expect(payload.filename).to.exist()
+  })
+
+  it('creates a bill run record when not draft', async () => {
+    await addTransaction(regime)
+    const options = {
+      method: 'POST',
+      url: '/v1/wrls/billruns',
+      payload: {
+        region: 'A',
+        draft: false
+      }
+    }
+    const response = await server.inject(options)
+    const payload = JSON.parse(response.payload)
+
+    const result = await BillRun.find(null, regime.id, payload.id)
+    expect(result).to.not.be.null()
+  })
+
+  it('creates an association between the transaction and bill run records when not draft', async () => {
+    const id = await addTransaction(regime)
+    const options = {
+      method: 'POST',
+      url: '/v1/wrls/billruns',
+      payload: {
+        region: 'A',
+        draft: false
+      }
+    }
+    const response = await server.inject(options)
+    const payload = JSON.parse(response.payload)
+    const transaction = await Transaction.find(regime.id, id)
+    expect(transaction.bill_run_id).to.equal(payload.id)
+  })
+
+  it('returns error 400 when no payload supplied', async () => {
     const options = {
       method: 'POST',
       url: '/v1/wrls/billruns'
     }
     const response = await server.inject(options)
-    Code.expect(response.statusCode).to.equal(400)
+    expect(response.statusCode).to.equal(400)
   })
 
-  lab.test('POST /v1/wrls/billruns with invalid payload schema returns 422 error', async () => {
+  it('returns 422 error when payload schema invalid', async () => {
     const options = {
       method: 'POST',
       url: '/v1/wrls/billruns',
@@ -66,10 +139,10 @@ lab.experiment('Billruns controller test', () => {
       }
     }
     const response = await server.inject(options)
-    Code.expect(response.statusCode).to.equal(422)
+    expect(response.statusCode).to.equal(422)
   })
 
-  lab.test('POST /v1/wrls/billruns when filter matches nothing returns 422 error', async () => {
+  it('returns 422 error when filter matches nothing', async () => {
     const options = {
       method: 'POST',
       url: '/v1/wrls/billruns',
@@ -83,6 +156,6 @@ lab.experiment('Billruns controller test', () => {
     }
 
     const response = await server.inject(options)
-    Code.expect(response.statusCode).to.equal(422)
+    expect(response.statusCode).to.equal(422)
   })
 })

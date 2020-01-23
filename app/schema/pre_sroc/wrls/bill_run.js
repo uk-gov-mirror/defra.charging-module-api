@@ -7,6 +7,7 @@ const SequenceCounter = require('../../../models/sequence_counter')
 class WrlsBillRun extends BillRun {
   constructor (regimeId, params) {
     super(regimeId, params)
+    this.preSroc = true
     this.summaries = []
     this.sequenceCounter = new SequenceCounter(regimeId, this.region)
   }
@@ -39,8 +40,29 @@ class WrlsBillRun extends BillRun {
     return this.bill_run_reference
   }
 
+  async generateFileId () {
+    if (this.draft) {
+      throw new Error('Attempted to generate draft file id')
+    } else {
+      this.file_reference = 50000 + await this.sequenceCounter.nextFileNumber()
+    }
+    return this.file_reference
+  }
+
   get billRunId () {
     return this.bill_run_reference
+  }
+
+  get fileId () {
+    return this.file_reference
+  }
+
+  get filename () {
+    return `nal${this.region.toLowerCase()}i${this.fileId}.dat`
+  }
+
+  get bucketFileKey () {
+    return `wrls/${this.filename}`
   }
 
   async generateTransactionRef (isCredit) {
@@ -99,7 +121,7 @@ class WrlsBillRun extends BillRun {
   }
 
   toJSON () {
-    return {
+    const data = {
       billRunId: this.bill_run_reference,
       region: this.region,
       draft: this.draft,
@@ -136,6 +158,13 @@ class WrlsBillRun extends BillRun {
         }
       })
     }
+
+    if (!this.draft) {
+      data.filename = this.filename
+      data.id = this.id
+    }
+
+    return data
   }
 }
 

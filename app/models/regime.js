@@ -37,6 +37,15 @@ class Regime {
     return this.build(result.rows[0])
   }
 
+  static async findById (id) {
+    const stmt = 'SELECT * FROM regimes WHERE id=$1::uuid'
+    const result = await pool.query(stmt, [id])
+    if (result.rowCount !== 1) {
+      return null
+    }
+    return this.build(result.rows[0])
+  }
+
   static async all () {
     const result = await pool.query(this.rawQuery)
     return {

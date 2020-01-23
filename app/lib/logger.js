@@ -1,16 +1,21 @@
-const config = require('../../config/config')
-const winston = require('winston')
+const { createLogger, format, transports } = require('winston')
+const { combine, timestamp, printf } = format
 
-const logger = winston.createLogger({
-  level: 'info',
-  defaultMeta: { service: 'charging-module-api' },
-  transports: [
-    new winston.transports.File({ filename: 'error.log', level: 'error' })
-  ]
+const myFormat = printf(({ level, message, timestamp, service }) => {
+  return `${timestamp} ${service} [${level}]: ${message}`
 })
 
-if (config.environment.development) {
-  logger.add(new winston.transports.Console({ level: 'debug' }))
-}
+const logger = createLogger({
+  level: 'info',
+  defaultMeta: { service: 'charging-module-api' },
+  format: combine(
+    timestamp(),
+    myFormat
+  ),
+  transports: [
+    // new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new transports.Console({ level: 'info' })
+  ]
+})
 
 module.exports.logger = logger
