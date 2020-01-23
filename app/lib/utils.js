@@ -1,6 +1,8 @@
 const Joi = require('@hapi/joi')
 const config = require('../../config/config')
 
+const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+
 function isValidUUID (id) {
   const uuid = '' + id
   return uuid.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/) !== null
@@ -8,6 +10,11 @@ function isValidUUID (id) {
 
 function financialYearFromDate (date) {
   return (date.getMonth() < 3 ? date.getFullYear() - 1 : date.getFullYear())
+}
+
+function formatDate (date) {
+  const dt = new Date(date)
+  return `${('00' + dt.getDate()).slice(-2)}-${MONTHS[dt.getMonth()]}-${dt.getFullYear()}`
 }
 
 function translateData (data, map) {
@@ -106,6 +113,7 @@ function buildWhereClause (filter) {
 module.exports = {
   isValidUUID,
   financialYearFromDate,
+  formatDate,
   translateData,
   validateFinancialYear,
   validatePagination,

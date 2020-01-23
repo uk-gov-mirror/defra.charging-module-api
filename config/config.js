@@ -11,6 +11,10 @@ const config = {
     serviceUrl: process.env.SERVICE_URL
   },
 
+  fileExportSchedule: '*/1 * * * *', // every minute for testing
+  temporaryFilePath: process.env.TMPDIR,
+  removeTemporaryFiles: process.env.REMOVE_TMP_FILES,
+
   server: {
     port: process.env.PORT,
     router: {
@@ -112,6 +116,9 @@ const schema = {
     production: joi.boolean().default(false),
     serviceUrl: joi.string().required()
   }),
+  fileExportSchedule: joi.string().required(),
+  temporaryFilePath: joi.string().default('/tmp/').required(),
+  removeTemporaryFiles: joi.boolean().default(true),
   server: joi.object({
     port: joi.number().default(3000).required(),
     router: joi.object({

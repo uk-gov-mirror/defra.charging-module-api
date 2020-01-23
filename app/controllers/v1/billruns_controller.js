@@ -18,35 +18,45 @@ const basePath = '/v1/{regime_id}/billruns'
 //  }
 // }
 //
-// response payload = {
-//   id: '123124-123123-123123',
-//   summary: {
-//     creditCount: 1,
-//     debitCount: 3,
-//     creditTotal: 1234567,
-//     debitTotal: 2124124,
-//     total: 121212
-//   },
-//   customers: [
-//    {
-//      customerReference: 'AB123545',
-//      financialYears: {
-//        2019: {
-//          creditCount: 0,
-//          debitCount: 1,
-//          creditTotal: 0,
-//          debitTotal: 32303,
-//          total: 32303,
-//          transactions: [
-//            { id: '123123123', chargeValue: -2332 }
-//          ],
-//          additionalTransactions: [
-//            { id: 'dummy123', chargeValue: 123 }
-//          ]
-//        }
-//      }
-//    }
-//   ]
+// response.payload = {
+// "billRunId": 10059,
+// "region": "A",
+// "draft": true,
+// "summary": {
+//     "creditNoteCount": 3,
+//     "creditNoteValue": -1402,
+//     "invoiceCount": 24,
+//     "invoiceValue": 501016,
+//     "creditLineCount": 3,
+//     "creditLineValue": -1402,
+//     "debitLineCount": 28,
+//     "debitLineValue": 501016,
+//     "netTotal": 499614
+// },
+// "customers": [
+//     {
+//         "customerReference": "A10656902A",
+//         "summaryByFinancialYear": [
+//             {
+//                 "financialYear": 2019,
+//                 "creditLineCount": 0,
+//                 "creditLineValue": 0,
+//                 "debitLineCount": 1,
+//                 "debitLineValue": 1346,
+//                 "netTotal": 1346,
+//                 "transactions": [
+//                     {
+//                         "id": "5bb14d9a-0a69-48ae-99b9-15a19d866bd3",
+//                         "chargeValue": 1346
+//                     }
+//                 ]
+//             }
+//         ]
+//     },
+//  ...
+//   ],
+//  "filename": "nalai50004.dat",
+//  "id": "f5a9164c-aecf-45df-9c0c-8fff70b83048"
 // }
 async function create (req, h) {
   try {
@@ -65,7 +75,7 @@ async function create (req, h) {
     // create a BillRun object, validate and translate
     const billRun = await schema.BillRun.instanceFromRequest(regime.id, payload)
 
-    const summary = await GenerateBillRun.call(billRun, schema)
+    const summary = await GenerateBillRun.call(billRun)
 
     // return HTTP 201 Created unless a draft
     const response = h.response(summary)
