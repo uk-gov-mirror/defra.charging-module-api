@@ -117,7 +117,7 @@ const schema = {
     serviceUrl: joi.string().required()
   }),
   fileExportSchedule: joi.string().required(),
-  temporaryFilePath: joi.string().default('/tmp/').required(),
+  temporaryFilePath: joi.string().default('/tmp/'),
   removeTemporaryFiles: joi.boolean().default(true),
   server: joi.object({
     port: joi.number().default(3000).required(),
