@@ -54,7 +54,7 @@ class WrlsTransaction extends Transaction {
     this.line_attr_7 = calc.calculation.seasonFactor
     this.line_attr_8 = calc.calculation.lossFactor
     this.line_attr_9 = calc.calculation.s130Agreement
-    this.line_attr_10 = calc.calculation.chargeElementAgreement
+    this.line_attr_10 = calc.chargeElementAgreement
     this.line_attr_13 = calc.calculation.eiucSourceFactor
     this.line_attr_14 = calc.calculation.eiucFactor
     this.line_attr_4 = calc.calculation.sucFactor
