@@ -16,12 +16,12 @@ async function call (billRun) {
     regime_id: billRun.regimeId,
     status: 'unbilled',
     region: billRun.region
-    // approved_for_billing: true
   }
 
-  // if (!billRun.draft) {
-  //   defaultArgs.approved_for_billing = true
-  // }
+  // transactions must be approved to be included when not a draft bill run
+  if (!billRun.draft) {
+    defaultArgs.approved_for_billing = true
+  }
 
   const filter = { ...billRun.filter, ...defaultArgs }
 
