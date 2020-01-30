@@ -4,7 +4,7 @@ const { describe, it, before } = exports.lab = Lab.script()
 const { expect } = Code
 // const createServer = require('../../app')
 const Regime = require('../../app/models/regime')
-const { addTransaction, cleanTransactions } = require('../helpers/transaction_helper')
+const { addTransaction, cleanTransactions, updateTransaction } = require('../helpers/transaction_helper')
 const { billRunCount } = require('../helpers/bill_run_helper')
 const BillRun = require('../../app/models/bill_run')
 const Transaction = require('../../app/models/transaction')
@@ -67,7 +67,8 @@ describe('Generate Bill Run: Non-draft', async () => {
   })
 
   it('returns billrun summary', async () => {
-    await addTransaction(regime)
+    const tId = await addTransaction(regime)
+    await updateTransaction(tId, { approved_for_billing: true })
 
     const summary = await GenerateBillRun.call(billRun)
 
@@ -79,7 +80,9 @@ describe('Generate Bill Run: Non-draft', async () => {
   })
 
   it('creates a bill run record', async () => {
-    await addTransaction(regime)
+    const tId = await addTransaction(regime)
+    await updateTransaction(tId, { approved_for_billing: true })
+
     const countBefore = await billRunCount()
     const summary = await GenerateBillRun.call(billRun)
     const countAfter = await billRunCount()
@@ -89,11 +92,12 @@ describe('Generate Bill Run: Non-draft', async () => {
   })
 
   it('creates an association between the transaction and bill run records', async () => {
-    const id = await addTransaction(regime)
+    const tId = await addTransaction(regime)
+    await updateTransaction(tId, { approved_for_billing: true })
 
     const summary = await GenerateBillRun.call(billRun)
 
-    const transaction = await Transaction.find(regime.id, id)
+    const transaction = await Transaction.find(regime.id, tId)
     expect(transaction.bill_run_id).to.equal(summary.id)
   })
 })

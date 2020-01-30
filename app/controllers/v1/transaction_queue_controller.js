@@ -8,6 +8,7 @@ const RemoveTransaction = require('../../services/remove_transaction')
 const Schema = require('../../schema/pre_sroc')
 const BulkApproval = require('../../services/bulk_approval')
 const BulkUnapproval = require('../../services/bulk_unapproval')
+const BulkRemoval = require('../../services/bulk_removal')
 
 const basePath = '/v1/{regime_id}/transaction_queue'
 
@@ -83,7 +84,6 @@ async function bulkApprove (req, h) {
   try {
     const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
-    // process and add transaction(s) in payload
     const payload = req.payload
     if (!payload) {
       // return HTTP 400
@@ -93,7 +93,7 @@ async function bulkApprove (req, h) {
     // load the correct schema for the regime
     const schema = Schema[regime.slug]
 
-    // create a BillRun object, validate and translate
+    // validate and translate request payload
     const approvalRequest = await schema.ApprovalRequest.instanceFromRequest(regime.id, payload)
 
     const summary = await BulkApproval.call(approvalRequest)
@@ -101,7 +101,6 @@ async function bulkApprove (req, h) {
     // return HTTP 200
     return h.response(summary).code(200)
   } catch (err) {
-    console.log('error!')
     if (Boom.isBoom(err)) {
       // status 500 squashes error message for some reason
       if (err.output.statusCode === 500) {
@@ -118,7 +117,6 @@ async function bulkUnapprove (req, h) {
   try {
     const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
-    // process and add transaction(s) in payload
     const payload = req.payload
     if (!payload) {
       // return HTTP 400
@@ -128,7 +126,7 @@ async function bulkUnapprove (req, h) {
     // load the correct schema for the regime
     const schema = Schema[regime.slug]
 
-    // create a BillRun object, validate and translate
+    // validate and translate request payload
     const approvalRequest = await schema.ApprovalRequest.instanceFromRequest(regime.id, payload)
 
     const summary = await BulkUnapproval.call(approvalRequest)
@@ -136,7 +134,39 @@ async function bulkUnapprove (req, h) {
     // return HTTP 200
     return h.response(summary).code(200)
   } catch (err) {
-    console.log('error!')
+    if (Boom.isBoom(err)) {
+      // status 500 squashes error message for some reason
+      if (err.output.statusCode === 500) {
+        err.output.payload.message = err.message
+      }
+      return err
+    } else {
+      return Boom.boomify(err)
+    }
+  }
+}
+
+async function bulkRemove (req, h) {
+  try {
+    const regime = await SecurityCheckRegime.call(req.params.regime_id)
+
+    const payload = req.payload
+    if (!payload) {
+      // return HTTP 400
+      return Boom.badRequest('No payload')
+    }
+
+    // load the correct schema for the regime
+    const schema = Schema[regime.slug]
+
+    // validate and translate request payload
+    const removalRequest = await schema.RemovalRequest.instanceFromRequest(regime.id, payload)
+
+    const summary = await BulkRemoval.call(removalRequest)
+
+    // return HTTP 200
+    return h.response(summary).code(200)
+  } catch (err) {
     if (Boom.isBoom(err)) {
       // status 500 squashes error message for some reason
       if (err.output.statusCode === 500) {
@@ -186,6 +216,11 @@ const routes = [
     method: 'PATCH',
     path: `${basePath}/unapprove`,
     handler: bulkUnapprove
+  },
+  {
+    method: 'POST',
+    path: `${basePath}/remove`,
+    handler: bulkRemove
   },
   {
     method: 'DELETE',

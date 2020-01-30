@@ -4,7 +4,7 @@ const { describe, it, before } = exports.lab = Lab.script()
 const { expect } = Code
 const createServer = require('../../app')
 const Regime = require('../../app/models/regime')
-const { addTransaction, cleanTransactions } = require('../helpers/transaction_helper')
+const { addTransaction, cleanTransactions, updateTransaction } = require('../helpers/transaction_helper')
 const BillRun = require('../../app/models/bill_run')
 const Transaction = require('../../app/models/transaction')
 
@@ -55,7 +55,8 @@ describe('Billruns controller: POST /v1/wrls/billruns', () => {
   })
 
   it('returns billrun summary for non-draft', async () => {
-    await addTransaction(regime)
+    const tId = await addTransaction(regime)
+    await updateTransaction(tId, { approved_for_billing: true })
 
     const options = {
       method: 'POST',
@@ -71,7 +72,8 @@ describe('Billruns controller: POST /v1/wrls/billruns', () => {
   })
 
   it('includes an id and filename in payload when non-draft', async () => {
-    await addTransaction(regime)
+    const tId = await addTransaction(regime)
+    await updateTransaction(tId, { approved_for_billing: true })
 
     const options = {
       method: 'POST',
@@ -88,7 +90,9 @@ describe('Billruns controller: POST /v1/wrls/billruns', () => {
   })
 
   it('creates a bill run record when not draft', async () => {
-    await addTransaction(regime)
+    const tId = await addTransaction(regime)
+    await updateTransaction(tId, { approved_for_billing: true })
+
     const options = {
       method: 'POST',
       url: '/v1/wrls/billruns',
@@ -105,7 +109,9 @@ describe('Billruns controller: POST /v1/wrls/billruns', () => {
   })
 
   it('creates an association between the transaction and bill run records when not draft', async () => {
-    const id = await addTransaction(regime)
+    const tId = await addTransaction(regime)
+    await updateTransaction(tId, { approved_for_billing: true })
+
     const options = {
       method: 'POST',
       url: '/v1/wrls/billruns',
@@ -116,7 +122,7 @@ describe('Billruns controller: POST /v1/wrls/billruns', () => {
     }
     const response = await server.inject(options)
     const payload = JSON.parse(response.payload)
-    const transaction = await Transaction.find(regime.id, id)
+    const transaction = await Transaction.find(regime.id, tId)
     expect(transaction.bill_run_id).to.equal(payload.id)
   })
 
