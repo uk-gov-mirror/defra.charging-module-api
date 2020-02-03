@@ -34,6 +34,22 @@ class WRLSTransactionFilePresenter {
     return this.billRun.credit_value
   }
 
+  blankWhenCompensationCharge (t, value) {
+    // regime_value_17 is compensationCharge (boolean in string form)
+    if (t.regime_value_17 === 'true') {
+      return ''
+    }
+    return value
+  }
+
+  blankUnlessCompensationCharge (t, value) {
+    // regime_value_17 is compensationCharge (boolean in string form)
+    if (t.regime_value_17 === 'true') {
+      return value
+    }
+    return ''
+  }
+
   nextSequenceNumber () {
     const num = this.sequenceNumber++
     return `${('0000000' + num).slice(-7)}`
@@ -67,19 +83,19 @@ class WRLSTransactionFilePresenter {
       'A',
       '',
       t.line_attr_1,
-      t.line_attr_2,
-      t.line_attr_3,
-      t.line_attr_4,
-      t.line_attr_5,
-      t.line_attr_6,
-      t.line_attr_7,
-      t.line_attr_8,
-      t.line_attr_9,
-      t.line_attr_10,
+      this.blankWhenCompensationCharge(t, t.line_attr_2),
+      this.blankWhenCompensationCharge(t, t.line_attr_3),
+      this.blankWhenCompensationCharge(t, t.line_attr_4),
+      this.blankWhenCompensationCharge(t, t.line_attr_5),
+      this.blankWhenCompensationCharge(t, t.line_attr_6),
+      this.blankWhenCompensationCharge(t, t.line_attr_7),
+      this.blankWhenCompensationCharge(t, t.line_attr_8),
+      this.blankWhenCompensationCharge(t, t.line_attr_9),
+      this.blankWhenCompensationCharge(t, t.line_attr_10),
       '',
       '',
-      t.line_attr_13,
-      t.line_attr_14,
+      this.blankUnlessCompensationCharge(t, t.line_attr_13),
+      this.blankUnlessCompensationCharge(t, t.line_attr_14),
       '',
       '1',
       'Each',
