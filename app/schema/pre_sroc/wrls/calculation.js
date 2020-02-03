@@ -1,4 +1,5 @@
 const Joi = require('@hapi/joi')
+const { convertToPence } = require('../../../lib/utils')
 
 class Calculation {
   constructor (data, isCredit) {
@@ -35,7 +36,7 @@ class Calculation {
 
   static translate (data) {
     return {
-      line_attr_4: data.sucFactor,
+      line_attr_4: convertToPence(data.sucFactor),
       line_attr_6: data.sourceFactor,
       line_attr_7: data.seasonFactor,
       line_attr_8: data.lossFactor,
@@ -59,9 +60,13 @@ class Calculation {
         chargeElementAgreement: this.chargeElementAgreement,
         eiucSourceFactor: calc.eiucSourceFactor,
         eiuc: calc.eiucFactor,
-        suc: calc.sucFactor
+        suc: this.sucFactor
       }
     }
+  }
+
+  get sucFactor () {
+    return convertToPence(this.calculation.sucFactor)
   }
 
   get chargeElementAgreement () {
@@ -95,7 +100,7 @@ class Calculation {
       : data.s127Agreement)
     output.eiucSourceFactor = data.eiucSourceFactor
     output.eiuc = data.eiucFactor
-    output.suc = data.sucFactor
+    output.suc = convertToPence(data.sucFactor)
 
     return output
   }
