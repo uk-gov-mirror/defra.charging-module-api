@@ -14,7 +14,11 @@ function financialYearFromDate (date) {
 
 function formatDate (date) {
   const dt = new Date(date)
-  return `${('00' + dt.getDate()).slice(-2)}-${MONTHS[dt.getMonth()]}-${dt.getFullYear()}`
+  return `${zeroPad(dt.getDate(), 2)}-${MONTHS[dt.getMonth()]}-${dt.getFullYear()}`
+}
+
+function zeroPad (val, length) {
+  return ('0000000000' + val).slice(-length)
 }
 
 function translateData (data, map) {
@@ -114,6 +118,7 @@ module.exports = {
   isValidUUID,
   financialYearFromDate,
   formatDate,
+  zeroPad,
   translateData,
   validateFinancialYear,
   validatePagination,

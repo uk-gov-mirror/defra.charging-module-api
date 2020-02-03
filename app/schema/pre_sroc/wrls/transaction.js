@@ -1,7 +1,7 @@
 const Boom = require('@hapi/boom')
 const Joi = require('@hapi/joi')
 const AttributeMap = require('./attribute_map')
-const utils = require('../../../lib/utils')
+const { financialYearFromDate, validateFinancialYear, translateData, zeroPad } = require('../../../lib/utils')
 const Charge = require('./charge')
 const Transaction = require('../../../models/transaction')
 
@@ -38,7 +38,7 @@ class WrlsTransaction extends Transaction {
 
     const t = this.build(this.translate(value))
 
-    t.charge_financial_year = utils.financialYearFromDate(t.charge_period_start)
+    t.charge_financial_year = financialYearFromDate(t.charge_period_start)
     t.pre_sroc = true
     t.setProrataDays()
     return t
@@ -70,7 +70,7 @@ class WrlsTransaction extends Transaction {
     // line_attr_3 -> prorataDays
     // regime_value_4 -> billableDays,
     // regime_value_5 -> authorisedDays
-    this.line_attr_3 = `${this.regime_value_4}/${this.regime_value_5}`
+    this.line_attr_3 = `${zeroPad(this.regime_value_4, 3)}/${zeroPad(this.regime_value_5, 3)}`
   }
 
   static validate (data) {
@@ -80,12 +80,12 @@ class WrlsTransaction extends Transaction {
       return result
     }
 
-    return utils.validateFinancialYear(result.value)
+    return validateFinancialYear(result.value)
   }
 
   static translate (data) {
     // translate filter values using main attribute map for pre-sroc WRLS naming
-    return utils.translateData(data, AttributeMap)
+    return translateData(data, AttributeMap)
   }
 
   static orderSearchQuery (sort, sortDir) {
