@@ -40,6 +40,14 @@ describe('PreSRoC Transaction (WRLS)', () => {
     expect(result.error).to.not.exist()
   })
 
+  it('zero pads the prorataDays elements to 3 digits', async () => {
+    const regime = await Regime.find('wrls')
+    const id = await addTransaction(regime, { billableDays: 10, authorisedDays: 99 })
+    const transaction = await Transaction.find(regime.id, id)
+    // line_attr_3 is prorataDays
+    expect(transaction.line_attr_3).to.equal('010/099')
+  })
+
   it('returns the correct attributes when queried', async () => {
     const regime = await Regime.find('wrls')
     const id = await addTransaction(regime)
