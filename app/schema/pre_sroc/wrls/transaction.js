@@ -57,7 +57,7 @@ class WrlsTransaction extends Transaction {
     this.line_attr_10 = calc.chargeElementAgreement
     this.line_attr_13 = calc.calculation.eiucSourceFactor
     this.line_attr_14 = calc.calculation.eiucFactor
-    this.line_attr_4 = calc.calculation.sucFactor
+    this.line_attr_4 = calc.sucFactor
 
     const chargeValue = calc.chargeValue
     this.charge_value = chargeValue
@@ -179,7 +179,7 @@ class WrlsTransaction extends Transaction {
       'regime_value_14::bool AS "waterUndertaker",' +
       'regime_value_15 AS "regionalChargingArea",' +
       'line_attr_14::float AS "eiuc",' +
-      'line_attr_4::float AS "suc",' +
+      'line_attr_4::int AS "suc",' +
       'charge_value AS "chargeValue",' +
       'charge_credit AS "credit",' +
       'to_char(transaction_date, \'DD-MON-YYYY\') AS "transactionDate",' +

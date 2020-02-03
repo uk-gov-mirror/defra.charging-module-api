@@ -114,6 +114,15 @@ function buildWhereClause (filter) {
   }
 }
 
+function convertToPence (value) {
+  const v = parseFloat(value)
+  if (isNaN(v)) {
+    return null
+  } else {
+    return Math.round(v * 100.0)
+  }
+}
+
 module.exports = {
   isValidUUID,
   financialYearFromDate,
@@ -122,5 +131,6 @@ module.exports = {
   translateData,
   validateFinancialYear,
   validatePagination,
-  buildWhereClause
+  buildWhereClause,
+  convertToPence
 }
