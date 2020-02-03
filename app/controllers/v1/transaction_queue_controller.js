@@ -61,7 +61,6 @@ async function create (req, h) {
         id: tId
       }
     }
-
     // return HTTP 201 Created
     const response = h.response(result)
     response.code(201)
