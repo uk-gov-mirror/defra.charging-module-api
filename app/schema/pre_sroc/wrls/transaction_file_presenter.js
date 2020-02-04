@@ -34,6 +34,15 @@ class WRLSTransactionFilePresenter {
     return this.billRun.credit_value
   }
 
+  volumeInMegaLitres (t) {
+    const val = this.blankWhenCompensationCharge(t, t.line_attr_5)
+    if (val !== '') {
+      return `${val} Ml`
+    } else {
+      return val
+    }
+  }
+
   blankWhenCompensationCharge (t, value) {
     // regime_value_17 is compensationCharge (boolean in string form)
     if (t.regime_value_17 === 'true') {
@@ -86,7 +95,7 @@ class WRLSTransactionFilePresenter {
       this.blankWhenCompensationCharge(t, t.line_attr_2),
       this.blankWhenCompensationCharge(t, t.line_attr_3),
       this.blankWhenCompensationCharge(t, t.line_attr_4),
-      this.blankWhenCompensationCharge(t, t.line_attr_5),
+      this.volumeInMegaLitres(t),
       this.blankWhenCompensationCharge(t, t.line_attr_6),
       this.blankWhenCompensationCharge(t, t.line_attr_7),
       this.blankWhenCompensationCharge(t, t.line_attr_8),
