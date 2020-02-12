@@ -91,7 +91,7 @@ class WRLSTransactionFilePresenter {
       t.line_description,
       'A',
       '',
-      t.line_attr_1,
+      this.blankWhenCompensationCharge(t, t.line_attr_1),
       this.blankWhenCompensationCharge(t, t.line_attr_2),
       this.blankWhenCompensationCharge(t, t.line_attr_3),
       this.blankWhenCompensationCharge(t, t.line_attr_4),
