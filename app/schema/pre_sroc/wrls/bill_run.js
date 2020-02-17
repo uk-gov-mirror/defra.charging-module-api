@@ -61,6 +61,10 @@ class WrlsBillRun extends BillRun {
     return `nal${this.region.toLowerCase()}i${this.fileId}.dat`
   }
 
+  get customerFilename () {
+    return this.customer_filename
+  }
+
   get bucketFileKey () {
     return `wrls/${this.filename}`
   }
@@ -161,6 +165,9 @@ class WrlsBillRun extends BillRun {
 
     if (!this.draft) {
       data.filename = this.filename
+      if (this.customerFilename) {
+        data.customerFilename = this.customerFilename
+      }
       data.id = this.id
     }
 

@@ -6,7 +6,6 @@ const DBTransaction = require('../lib/db_transaction')
 const Schema = require('../schema')
 const BillRun = require('../models/bill_run')
 const Regime = require('../models/regime')
-const GenerateRegionCustomerFile = require('../services/generate_region_customer_file')
 const ExportRegionCustomerFile = require('../services/export_region_customer_file')
 const CreateFile = require('../services/create_file')
 const MoveFileToS3 = require('../services/move_file_to_s3')
@@ -56,8 +55,6 @@ async function run () {
         Object.assign(br, billRun)
         logger.info(`Generating transaction file '${br.filename}' for ${regime.slug.toUpperCase()}`)
 
-        // check if any customer changes are waiting to be exported for this region
-        await GenerateRegionCustomerFile.call(regime, br.region)
         // check for any awaiting customer files for the region and export
         await ExportRegionCustomerFile.call(regime, br.region)
 
