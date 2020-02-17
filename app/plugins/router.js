@@ -6,6 +6,8 @@ const srocTransactionQueue = require('../controllers/v1/sroc_transaction_queue_c
 const calculateCharge = require('../controllers/v1/calculate_charge_controller').routes
 const srocCalculateCharge = require('../controllers/v1/sroc_calculate_charge_controller').routes
 const billRuns = require('../controllers/v1/billruns_controller').routes
+const customerChanges = require('../controllers/v1/customer_changes_controller').routes
+const customerFiles = require('../controllers/v1/customer_files_controller').routes
 
 const status = (request, h) => request.headers
 
@@ -17,6 +19,8 @@ const routes = [
   ...calculateCharge,
   ...srocCalculateCharge,
   ...billRuns,
+  ...customerChanges,
+  ...customerFiles,
   {
     method: 'GET',
     path: '/status',

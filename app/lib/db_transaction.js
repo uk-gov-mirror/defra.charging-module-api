@@ -19,12 +19,24 @@ class DBTransaction {
     return this._perform('BEGIN')
   }
 
+  async savepoint (name) {
+    return this._perform(`SAVEPOINT ${name}`)
+  }
+
   async commit () {
     return this._perform('COMMIT')
   }
 
   async rollback () {
     return this._perform('ROLLBACK')
+  }
+
+  async rollbackToSavepoint (name) {
+    return this._perform(`ROLLBACK TO SAVEPOINT ${name}`)
+  }
+
+  async releaseSavepoint (name) {
+    return this._perform(`RELEASE SAVEPOINT ${name}`)
   }
 
   async release () {

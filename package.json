@@ -13,8 +13,10 @@
   "scripts": {
     "start": "npm run migrate && node index.js",
     "file-export-job": "node ./app/jobs/file_export_job.js",
-    "migrate": "node node_modules/db-migrate/bin/db-migrate up -m db/migrations",
-    "migrate-test": "node node_modules/db-migrate/bin/db-migrate up -m db/migrations -e test",
+    "migrate": "./node_modules/db-migrate/bin/db-migrate up -m db/migrations",
+    "rollback": "./node_modules/db-migrate/bin/db-migrate down -m db/migrations",
+    "migrate-test": "./node_modules/db-migrate/bin/db-migrate up -m db/migrations -e test",
+    "rollback-test": "./node_modules/db-migrate/bin/db-migrate down -m db/migrations -e test",
     "seed": "node ./db/seeds/seeds.js",
     "lint": "eslint .",
     "unit-test": "PGDATABASE=chargedb_test TMPDIR='./tmpfiles' REMOVE_TMP_FILES=false lab -c -r console -o stdout -r html -o coverage.html -r lcov -o lcov.info -v",
