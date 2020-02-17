@@ -11,7 +11,8 @@ const config = {
     serviceUrl: process.env.SERVICE_URL
   },
 
-  fileExportSchedule: '*/1 * * * *', // every minute for testing
+  fileExportSchedule: process.env.FILE_EXPORT_SCHEDULE, // '*/1 * * * *', // every minute for testing
+  customerFileExportSchedule: process.env.CUSTOMER_FILE_EXPORT_SCHEDULE, // '*/1 * * * *', // every minute for testing
   temporaryFilePath: process.env.TMPDIR,
   removeTemporaryFiles: process.env.REMOVE_TMP_FILES,
 
@@ -116,7 +117,8 @@ const schema = {
     production: joi.boolean().default(false),
     serviceUrl: joi.string().required()
   }),
-  fileExportSchedule: joi.string().required(),
+  fileExportSchedule: joi.string().default('0,30 * * * *'), // default every 30 mins (on the hour and half past)
+  customerFileExportSchedule: joi.string().default('0 1 * * 6'), // default 01:00 on Saturday
   temporaryFilePath: joi.string().default('/tmp/'),
   removeTemporaryFiles: joi.boolean().default(true),
   server: joi.object({

@@ -46,6 +46,10 @@ class SequenceCounter {
   async nextDraftBillRunNumber () {
     return fetchNext(this.regimeId, this.region, 'draft_bill_run_number')
   }
+
+  async nextCustomerFileNumber () {
+    return fetchNext(this.regimeId, this.region, 'customer_file_number')
+  }
 }
 
 module.exports = SequenceCounter
