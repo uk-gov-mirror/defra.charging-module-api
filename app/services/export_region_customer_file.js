@@ -50,6 +50,18 @@ async function call (regime, region) {
         // if success update bill run status
         await regimeFile.setExported(db)
         // clean customer data
+        await db.query(
+          `UPDATE customer_changes
+           SET customer_name='',
+           address_line_1='',
+           address_line_2=NULL,
+           address_line_3=NULL,
+           address_line_4=NULL,
+           address_line_5=NULL,
+           address_line_6=NULL,
+           postcode=NULL
+           WHERE customer_file_id=$1
+           `, [id])
         //
         await db.releaseSavepoint(savepoint)
       } catch (err) {
