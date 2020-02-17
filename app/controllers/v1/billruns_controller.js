@@ -4,6 +4,7 @@ const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
 const SecurityCheckRegime = require('../../services/security_check_regime')
 const GenerateBillRun = require('../../services/generate_bill_run')
+const GenerateRegionCustomerFile = require('../../services/generate_region_customer_file')
 const Schema = require('../../schema/pre_sroc')
 
 const basePath = '/v1/{regime_id}/billruns'
@@ -76,6 +77,16 @@ async function create (req, h) {
     const billRun = await schema.BillRun.instanceFromRequest(regime.id, payload)
 
     const summary = await GenerateBillRun.call(billRun)
+
+    if (!billRun.draft) {
+      // check if any customer changes are waiting to be exported for this region
+      const customerFile = await GenerateRegionCustomerFile.call(regime, billRun.region)
+      if (customerFile.changesCount > 0) {
+        // we have a file
+        summary.addCustomerFile(customerFile)
+        // summary.customerFilename = customerFile.filename
+      }
+    }
 
     // return HTTP 201 Created unless a draft
     const response = h.response(summary)

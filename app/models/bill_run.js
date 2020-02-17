@@ -36,6 +36,21 @@ class BillRun {
     return 1
   }
 
+  async addCustomerFile (customerFile) {
+    this.customer_file_id = customerFile.id
+    this.customer_filename = customerFile.filename
+    const result = await pool.query(
+      `UPDATE bill_runs SET
+       customer_file_id=$1,
+       customer_filename=$2
+       WHERE id=$3`,
+      [this.customer_file_id, this.customer_filename, this.id])
+    if (result.rowCount !== 1) {
+      throw new Error('Could not associate CustomerFile with BillRun')
+    }
+    return 1
+  }
+
   async save (db) {
     const stmt = `
       INSERT INTO bill_runs (
