@@ -9,6 +9,11 @@ async function call (regime, transaction, schema) {
   // calculate the charge
   const calc = await CalculateCharge.call(regime, charge, schema)
 
+  if (calc.chargeValue === 0) {
+    // indicate zero value charge calculated and abandon transaction
+    return 0
+  }
+
   // set charge calculation data
   transaction.setCalculation(calc)
 

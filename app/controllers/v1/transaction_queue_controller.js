@@ -56,16 +56,21 @@ async function create (req, h) {
 
     // add transaction to the queue (create db record)
     const tId = await AddTransaction.call(regime, transaction, schema)
-    const result = {
-      transaction: {
-        id: tId
-      }
+
+    if (tId === 0) {
+      // zero charge - special case return HTTP 200
+      return h.response({ status: 'Zero value charge calculated' }).code(200)
+    } else {
+      // return HTTP 201 Created
+      const response = h.response({
+        transaction: {
+          id: tId
+        }
+      })
+      response.code(201)
+      response.header('Location', regimeTransactionPath(regime, tId))
+      return response
     }
-    // return HTTP 201 Created
-    const response = h.response(result)
-    response.code(201)
-    response.header('Location', regimeTransactionPath(regime, tId))
-    return response
   } catch (err) {
     if (Boom.isBoom(err)) {
       // status 500 squashes error message for some reason
