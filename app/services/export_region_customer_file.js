@@ -44,8 +44,8 @@ async function call (regime, region) {
         logger.info(`Generating customer file '${regimeFile.filename}' for ${regime.slug.toUpperCase()}`)
         const presenter = new (scheme[regime.slug].CustomerFilePresenter)(regimeFile)
         await CreateFile.call(db, presenter)
-        // copy transaction file to S3
-        await MoveFileToS3.call(regimeFile)
+        // copy transaction file to S3 - but without creating an archive copy
+        await MoveFileToS3.call(regimeFile, false)
 
         // if success update bill run status
         await regimeFile.setExported(db)

@@ -9,6 +9,31 @@ const Schema = require('../../schema/pre_sroc')
 
 const basePath = '/v1/{regime_id}/customer_files'
 
+async function index (req, h) {
+  try {
+    // check regime valid and caller has access to regime
+    // regime_id is part of routing so must be defined to get here
+    const regime = await SecurityCheckRegime.call(req.params.regime_id)
+
+    // load the correct schema for the regime
+    const CustomerFile = Schema[regime.slug].CustomerFile
+
+    const { page, perPage, sort, sortDir, ...q } = req.query
+
+    // translate params into DB naming
+    // const params = Transaction.translate(q)
+    const params = q
+    // force these criteria
+    params.regime_id = regime.id
+
+    // select all customer changes matching search criteria for the regime
+    return CustomerFile.search(params, page, perPage, sort, sortDir)
+  } catch (err) {
+    logger.error(err.stack)
+    return Boom.boomify(err)
+  }
+}
+
 async function create (req, h) {
   try {
     const regime = await SecurityCheckRegime.call(req.params.regime_id)
@@ -85,6 +110,11 @@ function regimeCustomerFilePath (regime, customerFileId) {
 }
 
 const routes = [
+  {
+    method: 'GET',
+    path: basePath,
+    handler: index
+  },
   {
     method: 'POST',
     path: basePath,
