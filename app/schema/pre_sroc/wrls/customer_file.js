@@ -47,6 +47,46 @@ class WrlsCustomerFile extends CustomerFile {
     return this.build(regimeId, value)
   }
 
+  static orderSearchQuery (sort, sortDir) {
+    // default sort order for WRLS is customer_reference and licence_number (line_attr_1) asc
+    const order = []
+    const defaultCols = ['region', 'file_reference']
+    let sortCols = []
+    let sortDirection = 'asc'
+
+    if (sortDir && sortDir.toUpperCase() === 'DESC') {
+      sortDirection = 'desc'
+    }
+
+    if (sort) {
+      let cols
+      if (sort instanceof Array) {
+        cols = sort
+      } else {
+        cols = sort.split(',')
+      }
+
+      for (let i = 0; i < cols.length; i++) {
+        const col = cols[i] // CustomerAttributeMap[cols[i]]
+        if (col) {
+          sortCols.push(col)
+        }
+      }
+    }
+
+    if (sortCols.length === 0) {
+      sortCols = defaultCols
+    }
+
+    for (let i = 0; i < sortCols.length; i++) {
+      order.push(`${sortCols[i]} ${sortDirection}`)
+    }
+
+    order.push(`created_at ${sortDirection}`)
+
+    return order
+  }
+
   static get schema () {
     return {
       region: Joi.string().uppercase().length(1).required()
@@ -65,6 +105,15 @@ class WrlsCustomerFile extends CustomerFile {
       result.customerChanges = this.changes
     }
     return result
+  }
+
+  static get rawQuery () {
+    return `SELECT id,
+      region,
+      file_reference,
+      status,
+      created_at
+      FROM customer_files`
   }
 }
 
