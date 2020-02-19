@@ -24,13 +24,17 @@ module.exports = {
         }
       }
 
-      schedule.scheduleJob(config.fileExportSchedule, async () => {
+      const job1 = schedule.scheduleJob(config.fileExportSchedule, async () => {
         await exportFile()
       })
+      logger.info(`Transaction Schedule: ${config.fileExportSchedule}`)
+      logger.info(`FileExportJob queued - next: ${job1.nextInvocation().toString()}`)
 
-      schedule.scheduleJob(config.customerFileSchedule, async () => {
+      const job2 = schedule.scheduleJob(config.customerFileExportSchedule, async () => {
         await exportCustomerFiles()
       })
+      logger.info(`Customer Schedule: ${config.customerFileExportSchedule}`)
+      logger.info(`CustomerFileExportJob queued - next: ${job2.nextInvocation().toString()}`)
     }
   }
 }
