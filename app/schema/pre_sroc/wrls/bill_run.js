@@ -66,7 +66,7 @@ class WrlsBillRun extends BillRun {
   }
 
   get bucketFileKey () {
-    return `wrls/${this.filename}`
+    return `wrls/transaction/${this.filename}`
   }
 
   async generateTransactionRef (isCredit) {
