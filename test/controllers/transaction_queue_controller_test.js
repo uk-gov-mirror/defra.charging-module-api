@@ -1,37 +1,46 @@
 const Lab = require('@hapi/lab')
 const Code = require('@hapi/code')
 const Sinon = require('sinon')
-const lab = exports.lab = Lab.script()
+const { describe, it, before } = exports.lab = Lab.script()
+const { expect } = Code
 const createServer = require('../../app')
 const Regime = require('../../app/models/regime')
 const RuleService = require('../../app/lib/connectors/rules')
-const { dummyCharge } = require('../helpers/charge_helper')
+const { dummyCharge, zeroCharge } = require('../helpers/charge_helper')
 const { addTransaction, cleanTransactions } = require('../helpers/transaction_helper')
 
-lab.experiment('Transaction Queue controller test', () => {
+describe('Transaction Queue controller: GET /v1/wrls/transaction_queue', () => {
   let server
-  let regime
 
   // Create server before the tests run
-  lab.before(async () => {
+  before(async () => {
     server = await createServer()
-    regime = await Regime.find('wrls')
     await cleanTransactions()
   })
 
-  lab.test('GET /v1/wrls/transaction_queue returns transactions', async () => {
+  it('returns list of transactions', async () => {
     const options = {
       method: 'GET',
       url: '/v1/wrls/transaction_queue'
     }
     const response = await server.inject(options)
-    Code.expect(response.statusCode).to.equal(200)
-    Code.expect(response.headers['content-type']).to.include('application/json')
+    expect(response.statusCode).to.equal(200)
+    expect(response.headers['content-type']).to.include('application/json')
     const payload = JSON.parse(response.payload)
-    Code.expect(Object.keys(payload)).to.equal(['pagination', 'data'])
+    expect(Object.keys(payload)).to.equal(['pagination', 'data'])
+  })
+})
+
+describe('Transaction Queue controller: POST /v1/wrls/transaction_queue', () => {
+  let server
+
+  // Create server before the tests run
+  before(async () => {
+    server = await createServer()
+    await cleanTransactions()
   })
 
-  lab.test('POST /v1/wrls/transaction_queue adds transaction', async () => {
+  it('adds a transaction to the queue', async () => {
     const options = {
       method: 'POST',
       url: '/v1/wrls/transaction_queue',
@@ -68,11 +77,11 @@ lab.experiment('Transaction Queue controller test', () => {
 
     const stubCalled = stub.called
     stub.restore()
-    Code.expect(stubCalled).to.be.true()
-    Code.expect(response.statusCode).to.equal(201)
+    expect(stubCalled).to.be.true()
+    expect(response.statusCode).to.equal(201)
   })
 
-  lab.test('POST /v1/wrls/transaction_queue with invalid data does not add transaction', async () => {
+  it('does not add a transaction with invalid data', async () => {
     const options = {
       method: 'POST',
       url: '/v1/wrls/transaction_queue',
@@ -91,19 +100,74 @@ lab.experiment('Transaction Queue controller test', () => {
       }
     }
     const response = await server.inject(options)
-    Code.expect(response.statusCode).to.equal(422)
+    expect(response.statusCode).to.equal(422)
   })
 
-  lab.test('DELETE /v1/wrls/transaction_queue/id removes transaction', async () => {
+  it('does not add a transaction that generates a zero charge', async () => {
+    const options = {
+      method: 'POST',
+      url: '/v1/wrls/transaction_queue',
+      payload: {
+        periodStart: '01-APR-2019',
+        periodEnd: '31-MAR-2020',
+        credit: false,
+        billableDays: 230,
+        authorisedDays: 240,
+        volume: '3.5865',
+        source: 'Supported',
+        season: 'Summer',
+        loss: 'Low',
+        twoPartTariff: false,
+        compensationCharge: true,
+        eiucSource: 'Tidal',
+        waterUndertaker: false,
+        regionalChargingArea: 'Midlands',
+        section127Agreement: false,
+        section130Agreement: false,
+        customerReference: 'TH12345678',
+        lineDescription: 'Drains within Littleport & Downham IDB',
+        licenceNumber: '123/456/26/*S/0453/R01',
+        chargePeriod: '01-APR-2018 - 31-MAR-2019',
+        chargeElementId: '',
+        batchNumber: 'TEST-Transaction-Queue',
+        region: 'B',
+        areaCode: 'ARCA'
+      }
+    }
+
+    const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(zeroCharge())
+    const response = await server.inject(options)
+
+    const stubCalled = stub.called
+    stub.restore()
+    expect(stubCalled).to.be.true()
+    expect(response.statusCode).to.equal(200)
+    const payload = JSON.parse(response.payload)
+    expect(payload.status).to.equal('Zero value charge calculated')
+  })
+})
+
+describe('Transaction Queue controller: DELETE /v1/wrls/transaction_queue', () => {
+  let server
+  let regime
+
+  // Create server before the tests run
+  before(async () => {
+    server = await createServer()
+    regime = await Regime.find('wrls')
+    await cleanTransactions()
+  })
+
+  it('removes specified transaction', async () => {
     const id = await addTransaction(regime)
 
-    Code.expect(id).to.not.be.null()
+    expect(id).to.not.be.null()
     const opts = {
       method: 'DELETE',
       url: '/v1/wrls/transaction_queue/' + id
     }
 
     const response = await server.inject(opts)
-    Code.expect(response.statusCode).to.equal(204)
+    expect(response.statusCode).to.equal(204)
   })
 })
