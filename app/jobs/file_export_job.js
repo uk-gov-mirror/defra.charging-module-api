@@ -60,8 +60,8 @@ async function run () {
 
         const presenter = new (scheme[regime.slug].TransactionFilePresenter)(br)
         await CreateFile.call(db, presenter)
-        // copy transaction file to S3
-        await MoveFileToS3.call(br)
+        // copy transaction file to S3 and create archive copy
+        await MoveFileToS3.call(br, true)
 
         // if success update bill run status
         await br.billed(db)
