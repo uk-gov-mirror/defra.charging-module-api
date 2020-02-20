@@ -164,11 +164,14 @@ class WrlsBillRun extends BillRun {
     }
 
     if (!this.draft) {
-      data.filename = this.filename
       if (this.customerFilename) {
-        data.customerFilename = this.customerFilename
+        data.customerFile = {
+          id: this.customer_file_id,
+          filename: this.customerFilename
+        }
       }
       data.id = this.id
+      data.filename = this.filename
     }
 
     return data
