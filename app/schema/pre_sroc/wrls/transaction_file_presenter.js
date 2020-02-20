@@ -128,7 +128,14 @@ class WRLSTransactionFilePresenter {
   }
 
   async body (db, stream) {
-    const stmt = 'SELECT * FROM transactions WHERE bill_run_id=$1::uuid ORDER BY transaction_reference ASC, line_attr_1 ASC'
+    const stmt = `
+      SELECT * FROM transactions
+      WHERE bill_run_id=$1::uuid
+      ORDER BY
+      transaction_reference ASC,
+      line_attr_1 ASC,
+      regime_value_17 ASC`
+
     const result = await db.query(stmt, [this.billRun.id])
     for (let n = 0; n < result.rowCount; n++) {
       const row = result.rows[n]
