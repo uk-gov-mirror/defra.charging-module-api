@@ -1,5 +1,6 @@
 const Boom = require('@hapi/boom')
 const Joi = require('@hapi/joi')
+const { stringValidator, regionValidator, customerReferenceValidator } = require('./validations')
 const CustomerAttributeMap = require('./customer_attribute_map')
 const { translateData } = require('../../../lib/utils')
 const CustomerChange = require('../../../models/customer_change')
@@ -45,16 +46,16 @@ class WrlsCustomerChange extends CustomerChange {
 
   static get schema () {
     return {
-      region: Joi.string().uppercase().length(1).required(),
-      customerReference: Joi.string().uppercase().required(),
-      customerName: Joi.string().required(),
-      addressLine1: Joi.string().required(),
-      addressLine2: Joi.string().allow('', null),
-      addressLine3: Joi.string().allow('', null),
-      addressLine4: Joi.string().allow('', null),
-      addressLine5: Joi.string().allow('', null),
-      addressLine6: Joi.string().allow('', null),
-      postcode: Joi.string().allow('', null)
+      region: regionValidator, // Joi.string().uppercase().length(1).valid('A', 'B', 'E', 'N', 'S', 'T', 'W', 'Y').required(),
+      customerReference: customerReferenceValidator, // Joi.string().trim().uppercase().max(12).regex(/^[^?^£\u2014\u2264\u2265]*$/).required(),
+      customerName: stringValidator.max(360).required(),
+      addressLine1: stringValidator.max(240).required(),
+      addressLine2: stringValidator.max(240).allow('', null),
+      addressLine3: stringValidator.max(240).allow('', null),
+      addressLine4: stringValidator.max(240).allow('', null),
+      addressLine5: stringValidator.max(60).allow('', null),
+      addressLine6: stringValidator.max(60).allow('', null),
+      postcode: stringValidator.max(60).allow('', null)
     }
   }
 

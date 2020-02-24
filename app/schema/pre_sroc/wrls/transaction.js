@@ -2,6 +2,7 @@ const Boom = require('@hapi/boom')
 const Joi = require('@hapi/joi')
 const AttributeMap = require('./attribute_map')
 const { financialYearFromDate, validateFinancialYear, translateData, zeroPad } = require('../../../lib/utils')
+const { stringValidator, regionValidator, customerReferenceValidator, areaCodeValidator } = require('./validations')
 const Charge = require('./charge')
 const Transaction = require('../../../models/transaction')
 
@@ -134,14 +135,14 @@ class WrlsTransaction extends Transaction {
 
   static get schema () {
     return {
-      region: Joi.string().uppercase().length(1).required(),
-      customerReference: Joi.string().uppercase().required(),
-      batchNumber: Joi.string().allow('', null),
-      licenceNumber: Joi.string().required(),
-      chargePeriod: Joi.string().required(),
-      chargeElementId: Joi.string().allow('', null),
-      areaCode: Joi.string().required(),
-      lineDescription: Joi.string().required(),
+      region: regionValidator,
+      customerReference: customerReferenceValidator,
+      batchNumber: stringValidator.allow('', null),
+      licenceNumber: stringValidator.max(150).required(),
+      chargePeriod: stringValidator.required(),
+      chargeElementId: stringValidator.allow('', null),
+      areaCode: areaCodeValidator,
+      lineDescription: stringValidator.max(240).required(),
       ...Charge.schema
     }
   }
