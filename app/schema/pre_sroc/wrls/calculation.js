@@ -27,9 +27,8 @@ class Calculation {
     const messages = data.WRLSChargingResponse.messages
 
     if (Array.isArray(messages) && messages.length) {
-      result.error = {
-        details: messages.map(m => { return { message: m } })
-      }
+      result.error = new Error(`Rules Service error${messages.length > 1 ? 's' : ''}: ${messages.join(', ')}`)
+      result.error.statusCode = 422
     }
     return result
   }

@@ -1,6 +1,7 @@
 const Boom = require('@hapi/boom')
 const Joi = require('@hapi/joi')
 const AttributeMap = require('./attribute_map')
+const { stringValidator } = require('./validations')
 const utils = require('../../../lib/utils')
 
 const DB_TO_PARAMS_MAP = {
@@ -76,23 +77,23 @@ class Charge {
 
   static get schema () {
     return {
-      periodStart: Joi.date().less(Joi.ref('periodEnd')).required(),
-      periodEnd: Joi.date().greater(Joi.ref('periodStart')).max('31-MAR-2020').required(),
+      periodStart: Joi.date().less(Joi.ref('periodEnd')).min('01-APR-2014').required(),
+      periodEnd: Joi.date().greater(Joi.ref('periodStart')).max('31-MAR-2021').required(),
       credit: Joi.boolean().required(),
       billableDays: Joi.number().integer().min(0).max(366).required(),
       authorisedDays: Joi.number().integer().min(0).max(366).required(),
-      volume: Joi.number().positive().required(),
-      source: Joi.string().required(),
-      season: Joi.string().required(),
-      loss: Joi.string().required(),
-      section130Agreement: Joi.boolean(),
+      volume: Joi.number().greater(0).required(),
+      source: stringValidator.required(), // validated in rules service
+      season: stringValidator.required(), // validated in rules service
+      loss: stringValidator.required(), // validated in rules service
+      section130Agreement: Joi.boolean().required(),
       section126Factor: Joi.number().allow(null).empty(null).default(1.0),
-      section127Agreement: Joi.boolean(),
+      section127Agreement: Joi.boolean().required(),
       twoPartTariff: Joi.boolean().required(),
       compensationCharge: Joi.boolean().required(),
-      eiucSource: Joi.string().when('compensationCharge', { is: Joi.valid(true), then: Joi.required() }),
+      eiucSource: stringValidator.when('compensationCharge', { is: Joi.valid(true), then: Joi.required() }), // validated in the rules service
       waterUndertaker: Joi.boolean().required(),
-      regionalChargingArea: Joi.string().required()
+      regionalChargingArea: stringValidator.required() // validated in the rules service
     }
   }
 }

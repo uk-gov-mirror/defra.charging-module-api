@@ -3,6 +3,7 @@ const AttributeMap = require('./attribute_map')
 const utils = require('../../../lib/utils')
 const BillRun = require('../../../models/bill_run')
 const SequenceCounter = require('../../../models/sequence_counter')
+const { regionValidator } = require('./validations')
 
 class WrlsBillRun extends BillRun {
   constructor (regimeId, params) {
@@ -114,8 +115,8 @@ class WrlsBillRun extends BillRun {
 
   static get schema () {
     return {
-      region: Joi.string().uppercase().length(1).required(),
-      draft: Joi.boolean(),
+      region: regionValidator,
+      draft: Joi.boolean().required(),
       filter: Joi.object({
         batchNumber: Joi.string().allow(null),
         customerReference: Joi.string().uppercase().allow(null),

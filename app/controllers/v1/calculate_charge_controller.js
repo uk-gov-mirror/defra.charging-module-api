@@ -36,7 +36,7 @@ async function calculate (req, h) {
       }
       return err
     } else {
-      return Boom.boomify(err)
+      return Boom.boomify(err, { statusCode: err.statusCode || 500 })
     }
   }
 }
