@@ -135,13 +135,13 @@ class WrlsTransaction extends Transaction {
 
   static get schema () {
     return {
-      region: regionValidator,
-      customerReference: customerReferenceValidator,
+      region: regionValidator.required(),
+      customerReference: customerReferenceValidator.required(),
       batchNumber: stringValidator.allow('', null),
       licenceNumber: stringValidator.max(150).required(),
       chargePeriod: stringValidator.required(),
       chargeElementId: stringValidator.allow('', null),
-      areaCode: areaCodeValidator,
+      areaCode: areaCodeValidator.required(),
       lineDescription: stringValidator.max(240).required(),
       ...Charge.schema
     }

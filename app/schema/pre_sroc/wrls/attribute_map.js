@@ -49,6 +49,7 @@ module.exports = {
   financialYear: 'charge_financial_year',
   transactionType: 'transaction_type',
   transactionReference: 'transaction_reference',
-  billRunId: 'bill_run',
+  transactionFileReference: 'transaction_filename',
+  billRunId: 'bill_run_number',
   calculation: 'charge_calculation'
 }

@@ -8,5 +8,6 @@ module.exports = {
   TransactionFilePresenter: require('./transaction_file_presenter'),
   CustomerChange: require('./customer_change'),
   CustomerFile: require('./customer_file'),
-  CustomerFilePresenter: require('./customer_file_presenter')
+  CustomerFilePresenter: require('./customer_file_presenter'),
+  BilledTransactionsRequest: require('./billed_transactions_request')
 }

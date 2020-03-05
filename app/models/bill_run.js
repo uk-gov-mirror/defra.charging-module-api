@@ -55,7 +55,7 @@ class BillRun {
     const stmt = `
       INSERT INTO bill_runs (
         regime_id, bill_run_reference, file_reference,
-        region, pre_sroc,
+        region, pre_sroc, transaction_filename,
         credit_count, credit_value,
         invoice_count, invoice_value,
         credit_line_count, credit_line_value,
@@ -64,7 +64,7 @@ class BillRun {
         filter
       ) VALUES (
         '${this.regimeId}', ${this.billRunId}, ${this.fileId},
-        '${this.region}', ${this.preSroc},
+        '${this.region}', ${this.preSroc}, '${this.filename}',
         ${this.credit_count}, ${this.credit_value},
         ${this.invoice_count}, ${this.invoice_value},
         ${this.credit_line_count}, ${this.credit_line_value},

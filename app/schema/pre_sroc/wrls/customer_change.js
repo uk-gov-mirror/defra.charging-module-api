@@ -46,8 +46,8 @@ class WrlsCustomerChange extends CustomerChange {
 
   static get schema () {
     return {
-      region: regionValidator, // Joi.string().uppercase().length(1).valid('A', 'B', 'E', 'N', 'S', 'T', 'W', 'Y').required(),
-      customerReference: customerReferenceValidator, // Joi.string().trim().uppercase().max(12).regex(/^[^?^£\u2014\u2264\u2265]*$/).required(),
+      region: regionValidator.required(), // Joi.string().uppercase().length(1).valid('A', 'B', 'E', 'N', 'S', 'T', 'W', 'Y').required(),
+      customerReference: customerReferenceValidator.required(), // Joi.string().trim().uppercase().max(12).regex(/^[^?^£\u2014\u2264\u2265]*$/).required(),
       customerName: stringValidator.max(360).required(),
       addressLine1: stringValidator.max(240).required(),
       addressLine2: stringValidator.max(240).allow('', null),
