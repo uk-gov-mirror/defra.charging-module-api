@@ -9,12 +9,16 @@ class WrlsBillRun extends BillRun {
   constructor (regimeId, params) {
     super(regimeId, params)
     this.preSroc = true
-    this.summaries = []
     this.sequenceCounter = new SequenceCounter(regimeId, this.region)
   }
 
   addSummary (summary) {
-    this.summaries.push(summary)
+    if (!this.summary_data) {
+      this.summary_data = {
+        customers: []
+      }
+    }
+    this.summary_data.customers.push(summary)
     summary.summary.forEach(s => {
       this.credit_line_count += s.credit_line_count
       this.credit_line_value += s.credit_line_value
@@ -32,13 +36,102 @@ class WrlsBillRun extends BillRun {
     })
   }
 
-  async generateBillRunId () {
-    if (this.draft) {
-      this.bill_run_reference = await this.sequenceCounter.nextDraftBillRunNumber()
-    } else {
-      this.bill_run_reference = await this.sequenceCounter.nextBillRunNumber()
+  summary (searchParams = {}) {
+    const data = {
+      id: this.id,
+      billRunId: this.bill_run_number,
+      region: this.region,
+      status: this.status,
+      approvedForBilling: this.approved_for_billing,
+      summary: {
+        creditNoteCount: this.credit_count,
+        creditNoteValue: this.credit_value,
+        invoiceCount: this.invoice_count,
+        invoiceValue: this.invoice_value,
+        creditLineCount: this.credit_line_count,
+        creditLineValue: this.credit_line_value,
+        debitLineCount: this.debit_line_count,
+        debitLineValue: this.debit_line_value,
+        netTotal: this.net_total
+      },
+      customers: []
     }
-    return this.bill_run_reference
+
+    if (this.summary_data) {
+      let customersSummary = this.summary_data.customers
+
+      if (searchParams.licenceNumber) {
+        // get customer data with this licence and recalc customer totals
+        customersSummary = this.summary_data.customers.filter(c => {
+          const result1 = c.summary.filter(s => {
+            s.transactions = s.transactions.filter(t => t.line_attr_1 === searchParams.licenceNumber)
+            if (s.transactions.length) {
+              s.credit_line_count = 0
+              s.credit_line_value = 0
+              s.debit_line_count = 0
+              s.debit_line_value = 0
+              s.net_total = 0
+              s.transactions.forEach(t => {
+                if (t.charge_value < 0) {
+                  s.credit_line_count++
+                  s.credit_line_value += t.charge_value
+                } else {
+                  s.debit_line_count++
+                  s.debit_line_value += t.charge_value
+                }
+                s.net_total += t.charge_value
+              })
+              return true
+            }
+            return false
+          })
+          return result1 && result1.length
+        })
+      } else if (searchParams.customerReference) {
+        // get customer data block for this customer reference
+        customersSummary = this.summary_data.customers.filter(c => c.customer_reference === searchParams.customerReference)
+      }
+
+      data.customers = customersSummary.map(s => {
+        return {
+          customerReference: s.customer_reference,
+          summaryByFinancialYear: s.summary.map(ss => {
+            return {
+              financialYear: ss.financial_year,
+              creditLineCount: ss.credit_line_count,
+              creditLineValue: ss.credit_line_value,
+              debitLineCount: ss.debit_line_count,
+              debitLineValue: ss.debit_line_value,
+              netTotal: ss.net_total,
+              transactions: ss.transactions.map(t => {
+                return {
+                  id: t.id,
+                  chargeValue: t.charge_value,
+                  licenceNumber: t.line_attr_1
+                }
+              })
+            }
+          })
+        }
+      })
+    }
+
+    if (this.isSent) { // pending or billed
+      if (this.customerFilename) {
+        data.customerFile = {
+          id: this.customer_file_id,
+          filename: this.customerFilename
+        }
+      }
+      data.filename = this.filename
+    }
+
+    return data
+  }
+
+  async generateBillRunId () {
+    this.bill_run_number = await this.sequenceCounter.nextBillRunNumber()
+    return this.bill_run_number
   }
 
   async generateFileId () {
@@ -50,8 +143,14 @@ class WrlsBillRun extends BillRun {
     return this.file_reference
   }
 
+  // attributes returned for each trnasaction in the customer summary sections
+  get summaryAdditionalAttributes () {
+    // line_attr_1 == licenceNumber
+    return ['line_attr_1']
+  }
+
   get billRunId () {
-    return this.bill_run_reference
+    return this.bill_run_number
   }
 
   get fileId () {
@@ -107,7 +206,7 @@ class WrlsBillRun extends BillRun {
       throw error
     }
 
-    value.filter = this.translate(value.filter)
+    // value.filter = this.translate(value.filter)
     const instance = this.build(regimeId, value)
     await instance.generateBillRunId()
     return instance
@@ -115,67 +214,73 @@ class WrlsBillRun extends BillRun {
 
   static get schema () {
     return {
-      region: regionValidator,
-      draft: Joi.boolean().required(),
-      filter: Joi.object({
-        batchNumber: Joi.string().allow(null),
-        customerReference: Joi.string().uppercase().allow(null),
-        financialYear: Joi.number().integer().min(2000).max(2020).allow(null)
-      }).optional().default([])
+      region: regionValidator.required()
+      // draft: Joi.boolean().required(),
+      // filter: Joi.object({
+      //   batchNumber: Joi.string().allow(null),
+      //   customerReference: Joi.string().uppercase().allow(null),
+      //   financialYear: Joi.number().integer().min(2000).max(2020).allow(null)
+      // }).optional().default([])
     }
   }
 
   toJSON () {
-    const data = {
-      billRunId: this.bill_run_reference,
-      region: this.region,
-      draft: this.draft,
-      summary: {
-        creditNoteCount: this.credit_count,
-        creditNoteValue: this.credit_value,
-        invoiceCount: this.invoice_count,
-        invoiceValue: this.invoice_value,
-        creditLineCount: this.credit_line_count,
-        creditLineValue: this.credit_line_value,
-        debitLineCount: this.debit_line_count,
-        debitLineValue: this.debit_line_value,
-        netTotal: this.net_total
-      },
-      customers: this.summaries.map(s => {
-        return {
-          customerReference: s.customer_reference,
-          summaryByFinancialYear: s.summary.map(ss => {
-            return {
-              financialYear: ss.financial_year,
-              creditLineCount: ss.credit_line_count,
-              creditLineValue: ss.credit_line_value,
-              debitLineCount: ss.debit_line_count,
-              debitLineValue: ss.debit_line_value,
-              netTotal: ss.net_total,
-              transactions: ss.transactions.map(t => {
-                return {
-                  id: t.id,
-                  chargeValue: t.charge_value
-                }
-              })
-            }
-          })
-        }
-      })
-    }
+    return this.summary()
+    // const data = {
+    //   id: this.id,
+    //   billRunId: this.bill_run_number,
+    //   region: this.region,
+    //   status: this.status,
+    //   summary: {
+    //     creditNoteCount: this.credit_count,
+    //     creditNoteValue: this.credit_value,
+    //     invoiceCount: this.invoice_count,
+    //     invoiceValue: this.invoice_value,
+    //     creditLineCount: this.credit_line_count,
+    //     creditLineValue: this.credit_line_value,
+    //     debitLineCount: this.debit_line_count,
+    //     debitLineValue: this.debit_line_value,
+    //     netTotal: this.net_total
+    //   },
+    //   customers: []
+    // }
 
-    if (!this.draft) {
-      if (this.customerFilename) {
-        data.customerFile = {
-          id: this.customer_file_id,
-          filename: this.customerFilename
-        }
-      }
-      data.id = this.id
-      data.filename = this.filename
-    }
+    // if (this.summary_data) {
+    //   data.customers = this.summary_data.customers.map(s => {
+    //     return {
+    //       customerReference: s.customer_reference,
+    //       summaryByFinancialYear: s.summary.map(ss => {
+    //         return {
+    //           financialYear: ss.financial_year,
+    //           creditLineCount: ss.credit_line_count,
+    //           creditLineValue: ss.credit_line_value,
+    //           debitLineCount: ss.debit_line_count,
+    //           debitLineValue: ss.debit_line_value,
+    //           netTotal: ss.net_total,
+    //           transactions: ss.transactions.map(t => {
+    //             return {
+    //               id: t.id,
+    //               chargeValue: t.charge_value,
+    //               licenceNumber: t.line_attr_1
+    //             }
+    //           })
+    //         }
+    //       })
+    //     }
+    //   })
+    // }
 
-    return data
+    // if (this.isBilled) {
+    //   if (this.customerFilename) {
+    //     data.customerFile = {
+    //       id: this.customer_file_id,
+    //       filename: this.customerFilename
+    //     }
+    //   }
+    //   data.filename = this.filename
+    // }
+
+    // return data
   }
 }
 

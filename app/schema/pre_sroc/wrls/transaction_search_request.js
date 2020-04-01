@@ -4,7 +4,7 @@ const AttributeMap = require('./attribute_map')
 const utils = require('../../../lib/utils')
 const Validations = require('./validations')
 
-class WrlsBilledTransactionsRequest {
+class WrlsTransactionsSearchRequest {
   constructor (regimeId, params) {
     this.regimeId = regimeId
 
@@ -32,7 +32,6 @@ class WrlsBilledTransactionsRequest {
     })
     params.regime_id = this.regimeId
     params.pre_sroc = true
-    params.status = 'billed'
     return params
   }
 
@@ -72,7 +71,7 @@ class WrlsBilledTransactionsRequest {
 
   async totalCount (db) {
     const { where, values } = this.whereClause
-    const q = `SELECT COUNT(*) FROM transactions t JOIN bill_runs b ON t.bill_run_id = b.id WHERE ${where.join(' AND ')}`
+    const q = `SELECT COUNT(*) FROM transactions t LEFT OUTER JOIN bill_runs b ON t.bill_run_id = b.id WHERE ${where.join(' AND ')}`
 
     const result = await db.query(q, values)
     return parseInt(result.rows[0].count)
@@ -123,17 +122,17 @@ class WrlsBilledTransactionsRequest {
       line_description AS "lineDescription",
       transaction_type AS "transactionType",
       transaction_reference AS "transactionReference",
-      bill_run_number AS "billRunId",
+      t.bill_run_number AS "billRunId",
       t.status AS "transactionStatus",
-      approved_for_billing AS "approvedForBilling",
+      t.approved_for_billing AS "approvedForBilling",
       CASE
-      WHEN t.bill_run_id IS NULL THEN
+      WHEN t.status <> 'billed' THEN
         NULL
       ELSE
         b.transaction_filename
       END AS "transactionFileReference"
       FROM transactions t
-      JOIN bill_runs b ON t.bill_run_id = b.id
+      LEFT OUTER JOIN bill_runs b ON t.bill_run_id = b.id
       WHERE ${whr}
       ORDER BY ${this.orderQuery().join(',')}
       OFFSET ${this.offset} LIMIT ${this.limit}
@@ -215,7 +214,8 @@ class WrlsBilledTransactionsRequest {
       'licenceNumber',
       'chargeElementId',
       'financialYear',
-      'billRunId',
+      'billRunNumber',
+      'transactionStatus',
       'transactionFileReference',
       'transactionReference'
     ]
@@ -229,7 +229,8 @@ class WrlsBilledTransactionsRequest {
       licenceNumber: Validations.stringValidator,
       chargeElementId: Validations.stringValidator,
       financialYear: Validations.financialYearValidator,
-      billRunId: Joi.number().integer().min(10000).max(99999),
+      billRunNumber: Joi.number().integer().min(10000).max(99999),
+      transactionStatus: Validations.stringValidator,
       transactionFileReference: Validations.fileReferenceValidator,
       transactionReference: Validations.transactionReferenceValidator,
       page: Validations.pageValidator,
@@ -240,4 +241,4 @@ class WrlsBilledTransactionsRequest {
   }
 }
 
-module.exports = WrlsBilledTransactionsRequest
+module.exports = WrlsTransactionsSearchRequest

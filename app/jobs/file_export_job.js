@@ -23,7 +23,7 @@ async function run () {
       `UPDATE bill_runs SET status='exporting'
        WHERE id IN (
        SELECT id FROM bill_runs
-       WHERE status='unbilled'
+       WHERE status='pending'
        ORDER BY updated_at ASC
        )
        RETURNING id,regime_id`
@@ -44,7 +44,7 @@ async function run () {
           throw new Error(`Cannot find regime with id: ${regimeId}`)
         }
 
-        const billRun = await BillRun.find(db, regimeId, id)
+        const billRun = await BillRun.find(regimeId, id, db)
         if (!billRun) {
           throw new Error(`Cannot find BillRun with id: ${id}`)
         }

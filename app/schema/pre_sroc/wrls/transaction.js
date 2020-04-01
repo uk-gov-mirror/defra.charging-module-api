@@ -90,9 +90,9 @@ class WrlsTransaction extends Transaction {
   }
 
   static orderSearchQuery (sort, sortDir) {
-    // default sort order for WRLS is customer_reference and licence_number (line_attr_1) asc
+    // default sort order for WRLS is customer_reference and licence_number (line_attr_1) transaction_reference asc
     const order = []
-    const defaultCols = ['customer_reference', 'line_attr_1']
+    const defaultCols = ['customer_reference', 'line_attr_1', 'transaction_reference']
     let sortCols = []
     let sortDirection = 'asc'
 

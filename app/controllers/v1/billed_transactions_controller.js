@@ -4,7 +4,7 @@ const { logger } = require('../../lib/logger')
 const SecurityCheckRegime = require('../../services/security_check_regime')
 const FindTransaction = require('../../services/find_transaction')
 const Schema = require('../../schema/pre_sroc')
-const SearchBilledTransactions = require('../../services/search_billed_transactions')
+const SearchCollection = require('../../services/search_collection')
 
 const basePath = '/v1/{regime_id}/billed_transactions'
 
@@ -25,7 +25,7 @@ async function index (req, h) {
     // params.status = 'billed'
     // params.regime_id = regime.id
     // params.pre_sroc = 'true'
-    return SearchBilledTransactions.call(searchRequest)
+    return SearchCollection.call(searchRequest)
     // select all transactions matching search criteria for the regime (pre-sroc only)
     // return Transaction.search(params, page, perPage, sort, sortDir)
   } catch (err) {
