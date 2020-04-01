@@ -4,9 +4,10 @@ const AttributeMap = require('./attribute_map')
 const utils = require('../../../lib/utils')
 const Validations = require('./validations')
 
-class WrlsBilledTransactionsRequest {
-  constructor (regimeId, params) {
-    this.regimeId = regimeId
+class WrlsBillRunTransactionsRemoveRequest {
+  constructor (regime, billRun, params) {
+    this.regime = regime
+    this.billRun = billRun
 
     if (params) {
       const { error, value } = this.constructor.validate(params)
@@ -30,9 +31,9 @@ class WrlsBilledTransactionsRequest {
         params[mappedName] = this[k]
       }
     })
-    params.regime_id = this.regimeId
+    params.regime_id = this.regime.id
+    params.bill_run_id = this.billRun.id
     params.pre_sroc = true
-    params.status = 'billed'
     return params
   }
 
@@ -45,12 +46,11 @@ class WrlsBilledTransactionsRequest {
     Object.keys(params).forEach(col => {
       if (col) {
         const val = params[col]
-        const table = (col === 'transaction_filename' ? 'b' : 't')
 
         if (val && val.indexOf && val.indexOf('%') !== -1) {
-          where.push(`${table}.${col} like $${attrCount++}`)
+          where.push(`${col} like $${attrCount++}`)
         } else {
-          where.push(`${table}.${col}=$${attrCount++}`)
+          where.push(`${col}=$${attrCount++}`)
         }
         values.push(val)
       }
@@ -60,22 +60,6 @@ class WrlsBilledTransactionsRequest {
       where,
       values
     }
-  }
-
-  get offset () {
-    return (this.page - 1) * this.perPage
-  }
-
-  get limit () {
-    return this.perPage
-  }
-
-  async totalCount (db) {
-    const { where, values } = this.whereClause
-    const q = `SELECT COUNT(*) FROM transactions t JOIN bill_runs b ON t.bill_run_id = b.id WHERE ${where.join(' AND ')}`
-
-    const result = await db.query(q, values)
-    return parseInt(result.rows[0].count)
   }
 
   async query (db) {
@@ -123,11 +107,11 @@ class WrlsBilledTransactionsRequest {
       line_description AS "lineDescription",
       transaction_type AS "transactionType",
       transaction_reference AS "transactionReference",
-      bill_run_number AS "billRunId",
+      t.bill_run_number AS "billRunId",
       t.status AS "transactionStatus",
-      approved_for_billing AS "approvedForBilling",
+      t.approved_for_billing AS "approvedForBilling",
       CASE
-      WHEN t.bill_run_id IS NULL THEN
+      WHEN t.status <> 'billed' THEN
         NULL
       ELSE
         b.transaction_filename
@@ -141,54 +125,6 @@ class WrlsBilledTransactionsRequest {
     return db.query(q, values)
   }
 
-  orderQuery () {
-    // default sort order for WRLS is customer_reference, licence_number (line_attr_1), transaction_reference asc
-    // const order = []
-    const defaultCols = ['customer_reference', 'line_attr_1', 'transaction_reference']
-    let sortCols = []
-    // const sortDirection = this.sortDir
-
-    if (this.sort) {
-      let cols
-      if (this.sort instanceof Array) {
-        cols = this.sort
-      } else {
-        cols = this.sort.split(',')
-      }
-
-      for (let i = 0; i < cols.length; i++) {
-        const col = AttributeMap[cols[i]]
-        if (col) {
-          sortCols.push(col)
-        }
-      }
-    }
-
-    if (sortCols.length === 0) {
-      sortCols = defaultCols
-    }
-
-    const order = sortCols.map(c => {
-      if (c === 'transaction_filename') {
-        return `b.${c} ${this.sortDir}`
-      } else {
-        return `t.${c} ${this.sortDir}`
-      }
-    })
-
-    // for (let i = 0; i < sortCols.length; i++) {
-    //   order.push(`${sortCols[i]} ${sortDirection}`)
-    // }
-
-    // add additional sub-sort on customer reference
-    if (!sortCols.includes('customer_reference')) {
-      order.push(`t.customer_reference ${this.sortDir}`)
-    }
-    order.push(`t.created_at ${this.sortDir}`)
-
-    return order
-  }
-
   static validate (data) {
     return Joi.validate(data, this.schema, { abortEarly: false })
   }
@@ -198,46 +134,30 @@ class WrlsBilledTransactionsRequest {
     return utils.translateData(data, AttributeMap)
   }
 
-  static async instanceFromRequest (regimeId, params) {
-    const { error, value } = this.validate(params)
-    if (error) {
-      throw Boom.badData(error)
-    }
+  // static async instanceFromRequest (regimeId, params) {
+  //   const { error, value } = this.validate(params)
+  //   if (error) {
+  //     throw Boom.badData(error)
+  //   }
 
-    return new this(regimeId, value)
-  }
+  //   return new this(regimeId, value)
+  // }
 
   static get inputCols () {
     return [
-      'region',
-      'batchNumber',
       'customerReference',
       'licenceNumber',
-      'chargeElementId',
-      'financialYear',
-      'billRunId',
-      'transactionFileReference',
-      'transactionReference'
+      'financialYear'
     ]
   }
 
   static get schema () {
     return {
-      region: Validations.regionValidator,
-      batchNumber: Validations.stringValidator,
       customerReference: Validations.customerReferenceValidator,
       licenceNumber: Validations.stringValidator,
-      chargeElementId: Validations.stringValidator,
-      financialYear: Validations.financialYearValidator,
-      billRunId: Joi.number().integer().min(10000).max(99999),
-      transactionFileReference: Validations.fileReferenceValidator,
-      transactionReference: Validations.transactionReferenceValidator,
-      page: Validations.pageValidator,
-      perPage: Validations.perPageValidator,
-      sort: Joi.string(),
-      sortDir: Joi.string().lowercase().valid('asc', 'desc').default('asc')
+      financialYear: Validations.financialYearValidator
     }
   }
 }
 
-module.exports = WrlsBilledTransactionsRequest
+module.exports = WrlsBillRunTransactionsRemoveRequest

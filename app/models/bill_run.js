@@ -14,6 +14,7 @@ class BillRun {
     this.debit_line_value = 0
     this.net_total = 0
     this.filter = {}
+    this.summary_data = null
 
     if (params) {
       Object.assign(this, params)
@@ -21,11 +22,19 @@ class BillRun {
   }
 
   get isUnbilled () {
-    return this.status === 'unbilled'
+    return this.status !== 'billed'
   }
 
   get isBilled () {
     return this.status === 'billed'
+  }
+
+  get isApproved () {
+    return this.approved_for_billing
+  }
+
+  get isSent () {
+    return this.status === 'pending' || this.status === 'billed'
   }
 
   async billed (db) {
@@ -33,7 +42,31 @@ class BillRun {
     if (result.rowCount !== 1) {
       throw new Error('Could not update BillRun status to billed')
     }
+    const tResult = await db.query(`UPDATE transactions SET status='billed' WHERE bill_run_id=$1::uuid`, [this.id])
+    if (tResult.rowCount < 1) {
+      throw new Error('Could not update transaction status to billed')
+    }
     return 1
+  }
+
+  async invalidateCache () {
+    // something has been updated and we need to remove the cached summary
+    const stmt = `
+      UPDATE bill_runs SET
+      credit_count = 0,
+      credit_value = 0,
+      invoice_count = 0,
+      invoice_value = 0,
+      credit_line_count = 0,
+      credit_line_value = 0,
+      debit_line_count = 0,
+      debit_line_value = 0,
+      net_total = 0,
+      summary_data = NULL
+      WHERE id=$1::uuid
+    `
+    const result = await pool.query(stmt, [this.id])
+    return result.rowCount
   }
 
   async addCustomerFile (customerFile) {
@@ -51,41 +84,72 @@ class BillRun {
     return 1
   }
 
+  async checkTransactionsApproved () {
+    const stmt = `SELECT count(*) FROM transactions WHERE bill_run_id=$1::uuid AND approved_for_billing=false`
+    const result = await pool.query(stmt, [this.id])
+    return result.rows[0].count === 0
+  }
+
   async save (db) {
     const stmt = `
-      INSERT INTO bill_runs (
-        regime_id, bill_run_reference, file_reference,
-        region, pre_sroc, transaction_filename,
-        credit_count, credit_value,
-        invoice_count, invoice_value,
-        credit_line_count, credit_line_value,
-        debit_line_count, debit_line_value,
-        net_total,
-        filter
-      ) VALUES (
-        '${this.regimeId}', ${this.billRunId}, ${this.fileId},
-        '${this.region}', ${this.preSroc}, '${this.filename}',
-        ${this.credit_count}, ${this.credit_value},
-        ${this.invoice_count}, ${this.invoice_value},
-        ${this.credit_line_count}, ${this.credit_line_value},
-        ${this.debit_line_count}, ${this.debit_line_value},
-        ${this.net_total},
-        $1
-      ) RETURNING id`
+      UPDATE bill_runs SET
+        file_reference=${this.fileId},
+        transaction_filename='${this.filename}',
+        credit_count=${this.credit_count},
+        credit_value=${this.credit_value},
+        invoice_count=${this.invoice_count},
+        invoice_value=${this.invoice_value},
+        credit_line_count=${this.credit_line_count},
+        credit_line_value=${this.credit_line_value},
+        debit_line_count=${this.debit_line_count},
+        debit_line_value=${this.debit_line_value},
+        net_total=${this.net_total},
+        summary_data=$1
+      WHERE id='${this.id}' AND regime_id='${this.regime_id}'
+    `
+
+    // const stmt = `
+    //   INSERT INTO bill_runs (
+    //     regime_id, bill_run_number, file_reference,
+    //     region, pre_sroc, transaction_filename,
+    //     credit_count, credit_value,
+    //     invoice_count, invoice_value,
+    //     credit_line_count, credit_line_value,
+    //     debit_line_count, debit_line_value,
+    //     net_total,
+    //     filter,
+    //     summary_data
+    //   ) VALUES (
+    //     '${this.regimeId}', ${this.billRunId}, ${this.fileId},
+    //     '${this.region}', ${this.preSroc}, '${this.filename}',
+    //     ${this.credit_count}, ${this.credit_value},
+    //     ${this.invoice_count}, ${this.invoice_value},
+    //     ${this.credit_line_count}, ${this.credit_line_value},
+    //     ${this.debit_line_count}, ${this.debit_line_value},
+    //     ${this.net_total},
+    //     $1,$2
+    //   ) RETURNING id`
     // if db supplied, the inside a transaction so use the db client
     // not the pool
-    let result
+    const cnx = db || pool
+    const result = await cnx.query(stmt, [this.summary_data])
 
-    if (db) {
-      result = await db.query(stmt, [this.filter])
-    } else {
-      result = await pool.query(stmt, [this.filter])
-    }
     if (result.rowCount !== 1) {
       throw new Error('Unable to save bill run')
     }
-    this.id = result.rows[0].id
-    return this.id
+    // this.id = result.rows[0].id
+    // return this.id
+    return true
+  }
+
+  async remove () {
+    // removes all associated transactions (cascade delete)
+    if (this.id) {
+      const stmt = `DELETE FROM bill_runs WHERE id=$1::uuid`
+      const result = await pool.query(stmt, [this.id])
+      return result.rowCount
+    }
+    return 0
   }
 
   static build (regimeId, params) {
@@ -96,7 +160,7 @@ class BillRun {
     throw new Error('You need to override "translate" in a subclass')
   }
 
-  static async find (db, regimeId, billRunId) {
+  static async find (regimeId, billRunId, db) {
     const cnx = db || pool
     const stmt = 'select * from bill_runs where id=$1::uuid and regime_id=$2::uuid'
     const result = await cnx.query(stmt, [billRunId, regimeId])

@@ -1,132 +1,260 @@
-// Pre-SRoC Transaction Queue =====================
+// Pre-SRoC Bill Runs =====================
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
 const SecurityCheckRegime = require('../../services/security_check_regime')
-const GenerateBillRun = require('../../services/generate_bill_run')
+const CreateBillRun = require('../../services/create_bill_run')
+const ViewBillRun = require('../../services/view_bill_run')
+const ApproveBillRun = require('../../services/approve_bill_run')
+const UnapproveBillRun = require('../../services/unapprove_bill_run')
+const RemoveBillRun = require('../../services/remove_bill_run')
+const SendBillRun = require('../../services/send_bill_run')
+const SearchCollection = require('../../services/search_collection')
 const GenerateRegionCustomerFile = require('../../services/generate_region_customer_file')
+const { isValidUUID } = require('../../lib/utils')
 const Schema = require('../../schema/pre_sroc')
 
 const basePath = '/v1/{regime_id}/billruns'
 
-// POST create a billing run
-// request payload = {
-//  draft: true,
-//  region: 'A',
-//  filter: {
-//    batchNumber: 'XXX111',
-//    customerReference: 'ABC123'
-//  }
-// }
-//
-// response.payload = {
-// "billRunId": 10059,
-// "region": "A",
-// "draft": true,
-// "summary": {
-//     "creditNoteCount": 3,
-//     "creditNoteValue": -1402,
-//     "invoiceCount": 24,
-//     "invoiceValue": 501016,
-//     "creditLineCount": 3,
-//     "creditLineValue": -1402,
-//     "debitLineCount": 28,
-//     "debitLineValue": 501016,
-//     "netTotal": 499614
-// },
-// "customers": [
-//     {
-//         "customerReference": "A10656902A",
-//         "summaryByFinancialYear": [
-//             {
-//                 "financialYear": 2019,
-//                 "creditLineCount": 0,
-//                 "creditLineValue": 0,
-//                 "debitLineCount": 1,
-//                 "debitLineValue": 1346,
-//                 "netTotal": 1346,
-//                 "transactions": [
-//                     {
-//                         "id": "5bb14d9a-0a69-48ae-99b9-15a19d866bd3",
-//                         "chargeValue": 1346
-//                     }
-//                 ]
-//             }
-//         ]
-//     },
-//  ...
-//   ],
-//  "filename": "nalai50004.dat",
-//  "id": "f5a9164c-aecf-45df-9c0c-8fff70b83048"
-// }
-async function create (req, h) {
-  try {
-    const regime = await SecurityCheckRegime.call(req.params.regime_id)
+class BillRunsController {
+  // GET /v1/{regime_id}/bill_runs?param1=xyz
+  static async index (req, h) {
+    try {
+      // check regime valid and caller has access to regime
+      // regime_id is part of routing so must be defined to get here
+      const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
-    // process and add transaction(s) in payload
-    const payload = req.payload
-    if (!payload) {
-      // return HTTP 400
-      return Boom.badRequest('No payload')
+      // load the correct schema for the regime
+      const searchRequest = new (Schema[regime.slug].BillRunSearchRequest)(regime.id, req.query)
+
+      // select all transactions matching search criteria for the regime (pre-sroc only)
+      return SearchCollection.call(searchRequest)
+    } catch (err) {
+      logger.error(err.stack)
+      return Boom.boomify(err)
     }
+  }
 
-    // load the correct schema for the regime
-    const schema = Schema[regime.slug]
+  // GET /v1/{regime_id}/bill_runs/{id}?param1=xyz
+  static async show (req, h) {
+    try {
+      // check regime valid and caller has access to regime
+      // regime_id is part of routing so must be defined to get here
+      const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
-    // create a BillRun object, validate and translate
-    const billRun = await schema.BillRun.instanceFromRequest(regime.id, payload)
+      const billRunId = req.params.id
+      if (!isValidUUID(billRunId)) {
+        return Boom.badRequest('Bill Run id is not a valid UUID')
+      }
 
-    const summary = await GenerateBillRun.call(billRun)
+      // encapsulate and validate request
+      const request = new (Schema[regime.slug].BillRunViewRequest)(regime.id, billRunId, req.query)
 
-    if (!billRun.draft) {
+      return {
+        billRun: await ViewBillRun.call(request)
+      }
+    } catch (err) {
+      logger.error(err.stack)
+      return Boom.boomify(err)
+    }
+  }
+
+  // POST /v1/{regime_id}/bill_runs/{id}
+  static async send (req, h) {
+    try {
+      const regime = await SecurityCheckRegime.call(req.params.regime_id)
+
+      const billRunId = req.params.id
+      if (!isValidUUID(billRunId)) {
+        return Boom.badRequest('Bill Run id is not a valid UUID')
+      }
+      // fetch BillRun
+      const billRun = await (Schema[regime.slug].BillRun).find(regime.id, billRunId)
+      if (!billRun) {
+        return Boom.notFound(`No Bill Run with id '${billRunId} found`)
+      }
+
+      const sentBillRun = await SendBillRun.call(billRun)
+
       // check if any customer changes are waiting to be exported for this region
       const customerFile = await GenerateRegionCustomerFile.call(regime, billRun.region)
       if (customerFile.changesCount > 0) {
         // we have a file
-        summary.addCustomerFile(customerFile)
-        // summary.customerFilename = customerFile.filename
+        sentBillRun.addCustomerFile(customerFile)
+      }
+
+      // return HTTP 200
+      return {
+        billRun: sentBillRun
+      }
+    } catch (err) {
+      logger.error(err.stack)
+      if (Boom.isBoom(err)) {
+        // status 500 squashes error message for some reason
+        if (err.output.statusCode === 500) {
+          err.output.payload.message = err.message
+        }
+        return err
+      } else if (err.isJoi) {
+        return Boom.badData(err.details.map(e => e.message).join(', '))
+      } else {
+        return Boom.boomify(err)
       }
     }
+  }
 
-    // return HTTP 201 Created unless a draft
-    const response = h.response(summary)
+  // This now only creates a billrun record and does not generate the summary
+  // The operations will now be to create a billrun - add records to it
+  // POST /v1/{regime_id}/bill_runs
+  static async create (req, h) {
+    try {
+      const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
-    if (billRun.draft) {
-      response.code(200)
-    } else {
+      const payload = req.payload
+      if (!payload) {
+        // return HTTP 400
+        return Boom.badRequest('No payload')
+      }
+
+      const request = new (Schema[regime.slug].BillRunCreateRequest)(regime.id, req.payload)
+
+      const result = await CreateBillRun.call(request)
+
+      // return HTTP 201 Created
+      const response = h.response({
+        billRun: result
+      })
       response.code(201)
-      response.header('Location', regimeBillRunPath(regime, summary.id))
-    }
-
-    return response
-  } catch (err) {
-    logger.error(err.stack)
-    if (Boom.isBoom(err)) {
-      // status 500 squashes error message for some reason
-      if (err.output.statusCode === 500) {
-        err.output.payload.message = err.message
+      response.header('Location', this.regimeBillRunPath(regime, result.id))
+      return response
+    } catch (err) {
+      logger.error(err.stack)
+      if (Boom.isBoom(err)) {
+        // status 500 squashes error message for some reason
+        if (err.output.statusCode === 500) {
+          err.output.payload.message = err.message
+        }
+        return err
+      } else if (err.isJoi) {
+        return Boom.badData(err.details.map(e => e.message).join(', '))
+      } else {
+        return Boom.boomify(err)
       }
-      return err
-    } else if (err.isJoi) {
-      return Boom.badData(err.details.map(e => e.message).join(', '))
-    } else {
+    }
+  }
+
+  // PATCH /v1/{regime_id}/bill_runs/{id}/approve
+  static async approve (req, h) {
+    try {
+      // check regime valid and caller has access to regime
+      // regime_id is part of routing so must be defined to get here
+      const regime = await SecurityCheckRegime.call(req.params.regime_id)
+
+      const billRunId = req.params.id
+      if (!isValidUUID(billRunId)) {
+        return Boom.badRequest('Bill Run id is not a valid UUID')
+      }
+
+      // mustn't be billed - updates billrun and all assoc. transactions
+      await ApproveBillRun.call(regime, billRunId)
+
+      // HTTP 204 No Content
+      return h.response().code(204)
+    } catch (err) {
+      logger.error(err.stack)
       return Boom.boomify(err)
     }
   }
-}
 
-function regimeBillRunPath (regime, billRunId) {
-  return `${config.environment.serviceUrl}/v1/${regime.slug}/billruns/${billRunId}`
-}
+  // PATCH /v1/{regime_id}/bill_runs/{id}/unapprove
+  static async unapprove (req, h) {
+    try {
+      // check regime valid and caller has access to regime
+      // regime_id is part of routing so must be defined to get here
+      const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
-const routes = [
-  {
-    method: 'POST',
-    path: basePath,
-    handler: create
+      const billRunId = req.params.id
+      if (!isValidUUID(billRunId)) {
+        return Boom.badRequest('Bill Run id is not a valid UUID')
+      }
+
+      // mustn't be billed - updates billrun and all assoc. transactions
+      await UnapproveBillRun.call(regime, billRunId)
+
+      // HTTP 204 No Content
+      return h.response().code(204)
+    } catch (err) {
+      logger.error(err.stack)
+      return Boom.boomify(err)
+    }
   }
-]
 
-module.exports = {
-  routes
+  // DELETE /v1/{regime_id}/bill_runs/{id}
+  static async remove (req, h) {
+    try {
+      // check regime valid and caller has access to regime
+      // regime_id is part of routing so must be defined to get here
+      const regime = await SecurityCheckRegime.call(req.params.regime_id)
+
+      const billRunId = req.params.id
+      if (!isValidUUID(billRunId)) {
+        return Boom.badRequest('Bill Run id is not a valid UUID')
+      }
+
+      // mustn't be billed - deletes billrun and all assoc. transactions
+      await RemoveBillRun.call(regime, billRunId)
+
+      // HTTP 204 No Content
+      return h.response().code(204)
+    } catch (err) {
+      logger.error(err.stack)
+      return Boom.boomify(err)
+    }
+  }
+
+  static regimeBillRunPath (regime, billRunId) {
+    return `${config.environment.serviceUrl}/v1/${regime.slug}/billruns/${billRunId}`
+  }
+
+  static routes () {
+    return [
+      {
+        method: 'GET',
+        path: basePath,
+        handler: this.index.bind(this)
+      },
+      {
+        method: 'GET',
+        path: `${basePath}/{id}`,
+        handler: this.show.bind(this)
+      },
+      {
+        method: 'POST',
+        path: basePath,
+        handler: this.create.bind(this)
+      },
+      {
+        method: 'PATCH',
+        path: `${basePath}/{id}/approve`,
+        handler: this.approve.bind(this)
+      },
+      {
+        method: 'PATCH',
+        path: `${basePath}/{id}/unapprove`,
+        handler: this.unapprove.bind(this)
+      },
+      {
+        method: 'POST',
+        path: `${basePath}/{id}/send`,
+        handler: this.send.bind(this)
+      },
+      {
+        method: 'DELETE',
+        path: `${basePath}/{id}`,
+        handler: this.remove.bind(this)
+      }
+    ]
+  }
 }
+
+module.exports = BillRunsController

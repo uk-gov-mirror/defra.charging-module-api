@@ -32,7 +32,7 @@ describe('Generate Bill Run: draft', () => {
 
     const summary = await GenerateBillRun.call(billRun)
 
-    expect(summary.bill_run_reference).to.exist()
+    expect(summary.bill_run_number).to.exist()
     expect(summary.draft).to.be.true()
     expect(summary.region).to.equal('A')
     expect(summary.summaries).to.exist()

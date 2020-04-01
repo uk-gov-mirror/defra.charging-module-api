@@ -4,9 +4,10 @@ const AttributeMap = require('./attribute_map')
 const utils = require('../../../lib/utils')
 const Validations = require('./validations')
 
-class WrlsBilledTransactionsRequest {
-  constructor (regimeId, params) {
+class WrlsBillRunTransactionsSearchRequest {
+  constructor (regimeId, billRunId, params) {
     this.regimeId = regimeId
+    this.billRunId = billRunId
 
     if (params) {
       const { error, value } = this.constructor.validate(params)
@@ -31,8 +32,8 @@ class WrlsBilledTransactionsRequest {
       }
     })
     params.regime_id = this.regimeId
+    params.bill_run_id = this.billRunId
     params.pre_sroc = true
-    params.status = 'billed'
     return params
   }
 
@@ -123,11 +124,11 @@ class WrlsBilledTransactionsRequest {
       line_description AS "lineDescription",
       transaction_type AS "transactionType",
       transaction_reference AS "transactionReference",
-      bill_run_number AS "billRunId",
+      t.bill_run_number AS "billRunId",
       t.status AS "transactionStatus",
-      approved_for_billing AS "approvedForBilling",
+      t.approved_for_billing AS "approvedForBilling",
       CASE
-      WHEN t.bill_run_id IS NULL THEN
+      WHEN t.status <> 'billed' THEN
         NULL
       ELSE
         b.transaction_filename
@@ -215,7 +216,7 @@ class WrlsBilledTransactionsRequest {
       'licenceNumber',
       'chargeElementId',
       'financialYear',
-      'billRunId',
+      'billRunNumber',
       'transactionFileReference',
       'transactionReference'
     ]
@@ -229,7 +230,7 @@ class WrlsBilledTransactionsRequest {
       licenceNumber: Validations.stringValidator,
       chargeElementId: Validations.stringValidator,
       financialYear: Validations.financialYearValidator,
-      billRunId: Joi.number().integer().min(10000).max(99999),
+      billRunNumber: Joi.number().integer().min(10000).max(99999),
       transactionFileReference: Validations.fileReferenceValidator,
       transactionReference: Validations.transactionReferenceValidator,
       page: Validations.pageValidator,
@@ -240,4 +241,4 @@ class WrlsBilledTransactionsRequest {
   }
 }
 
-module.exports = WrlsBilledTransactionsRequest
+module.exports = WrlsBillRunTransactionsSearchRequest

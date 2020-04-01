@@ -21,17 +21,20 @@ const YEAR_SUFFIX = {
   2016: '_2016_17',
   2017: '_2017_18',
   2018: '_2018_19',
-  2019: '_2019_20'
+  2019: '_2019_20',
+  2020: '_2020_21'
 }
 
 async function calculateCharge (regime, financialYear, chargeParams) {
   // Rules service details
   const service = config.decisionService
 
+  const uri = makeRulesPath(regime, financialYear)
+  console.log(uri)
   // The rules service end-points are per regime
   const options = {
     method: 'POST',
-    uri: makeRulesPath(regime, financialYear),
+    uri: uri,
     body: chargeParams,
     timeout: 1500,
     json: true,

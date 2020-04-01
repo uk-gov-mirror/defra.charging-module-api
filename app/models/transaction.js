@@ -110,6 +110,15 @@ class Transaction {
     return result.rows[0]
   }
 
+  static async findBillRunRaw (regimeId, billRunId, transactionId) {
+    const stmt = this.rawQuery + ` WHERE id=$1::uuid AND regime_id=$2::uuid AND bill_run_id=$3::uuid`
+    const result = await pool.query(stmt, [transactionId, regimeId, billRunId])
+    if (result.rowCount !== 1) {
+      return null
+    }
+    return result.rows[0]
+  }
+
   static async search (params, page, perPage, sort, sortDir) {
     // paginated search returning collection of DB records (not class instances)
     // const pagination = {
