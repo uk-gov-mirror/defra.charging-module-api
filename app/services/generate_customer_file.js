@@ -26,8 +26,7 @@ async function call (customerFile) {
       customerFile.changesCount = result.rowCount
       // associate customer changes with file and update their status
       const upd = `UPDATE customer_changes SET customer_file_id=$4::uuid, status='exported' WHERE ${where}`
-      const updResult = await db.query(upd, [...values, customerFile.id])
-      console.log(`UPDATEd ${updResult.rowCount} customer_changes (expected ${result.rowCount} rows)`)
+      await db.query(upd, [...values, customerFile.id])
       // load the list of changes associated with this file
       await customerFile.loadChanges(db)
     } else {

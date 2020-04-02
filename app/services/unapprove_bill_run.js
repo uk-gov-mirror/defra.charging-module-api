@@ -19,8 +19,8 @@ async function call (regime, id) {
     throw Boom.notFound(`No BillRun found with id '${id}'`)
   }
 
-  // only update the bill_run if it hasn't been billed
-  if (billRun.isBilled) {
+  // only update the bill_run if it hasn't been sent/billed
+  if (billRun.isSent) {
     throw Boom.badRequest(`Cannot unapprove BillRun because it has been billed`)
   }
 

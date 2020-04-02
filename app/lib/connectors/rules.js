@@ -30,7 +30,6 @@ async function calculateCharge (regime, financialYear, chargeParams) {
   const service = config.decisionService
 
   const uri = makeRulesPath(regime, financialYear)
-  console.log(uri)
   // The rules service end-points are per regime
   const options = {
     method: 'POST',

@@ -79,7 +79,6 @@ class WrlsBillRunSearchRequest {
   async query (db) {
     const { where, values } = this.whereClause
     const whr = where.join(' AND ')
-    console.log(whr, values)
     const q = `
       SELECT id,
       region,
