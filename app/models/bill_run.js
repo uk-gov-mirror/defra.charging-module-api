@@ -85,7 +85,7 @@ class BillRun {
   }
 
   async checkTransactionsApproved () {
-    const stmt = `SELECT count(*) FROM transactions WHERE bill_run_id=$1::uuid AND approved_for_billing=false`
+    const stmt = `SELECT count(*)::int FROM transactions WHERE bill_run_id=$1::uuid AND approved_for_billing=false`
     const result = await pool.query(stmt, [this.id])
     return result.rows[0].count === 0
   }

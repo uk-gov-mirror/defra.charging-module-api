@@ -95,8 +95,6 @@ class TransactionsController {
 
       // add transaction to the queue (create db record)
       const tId = await AddTransaction.call(regime, transaction, schema)
-      console.log(tId)
-      console.log(this)
       if (tId === 0) {
         // zero charge - special case return HTTP 200
         return h.response({ status: 'Zero value charge calculated' }).code(200)
