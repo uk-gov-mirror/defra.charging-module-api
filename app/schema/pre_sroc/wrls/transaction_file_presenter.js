@@ -45,7 +45,7 @@ class WRLSTransactionFilePresenter {
 
   blankWhenCompensationCharge (t, value) {
     // regime_value_17 is compensationCharge (boolean in string form)
-    if (t.regime_value_17 === 'true') {
+    if (t.regime_value_17 === 'true' || t.minimum_charge_adjustment) {
       return ''
     }
     return value
@@ -128,13 +128,40 @@ class WRLSTransactionFilePresenter {
   }
 
   async body (db, stream) {
+    // const stmt = `
+    //   SELECT * FROM transactions
+    //   WHERE bill_run_id=$1::uuid
+    //   ORDER BY
+    //   transaction_reference ASC,
+    //   line_attr_1 ASC,
+    //   regime_value_17 ASC,
+    //   minimum_charge_adjustment ASC`
+
     const stmt = `
-      SELECT * FROM transactions
-      WHERE bill_run_id=$1::uuid
+      SELECT *,
+        CASE WHEN charge_value < 0 THEN
+          CASE WHEN minimum_charge_adjustment=true THEN
+            1
+          ELSE
+            0
+          END
+        ELSE
+          CASE WHEN minimum_charge_adjustment=true THEN
+            3
+          ELSE
+            2
+          END
+        END AS cvf
+      FROM
+        transactions
+      WHERE
+        bill_run_id=$1::uuid
       ORDER BY
-      transaction_reference ASC,
-      line_attr_1 ASC,
-      regime_value_17 ASC`
+        transaction_reference ASC,
+        line_attr_1 ASC,
+        regime_value_17 ASC,
+        cvf ASC
+    `
 
     const result = await db.query(stmt, [this.billRun.id])
     for (let n = 0; n < result.rowCount; n++) {

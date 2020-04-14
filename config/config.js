@@ -16,6 +16,8 @@ const config = {
   temporaryFilePath: process.env.TMPDIR,
   removeTemporaryFiles: process.env.REMOVE_TMP_FILES,
 
+  minimumChargeAmount: 2500,
+
   server: {
     port: process.env.PORT,
     router: {
@@ -121,6 +123,7 @@ const schema = {
   customerFileExportSchedule: joi.string().default('0 1 * * 6'), // default 01:00 on Saturday
   temporaryFilePath: joi.string().default('/tmp/'),
   removeTemporaryFiles: joi.boolean().default(true),
+  minimumChargeAmount: joi.number().required(),
   server: joi.object({
     port: joi.number().default(3000).required(),
     router: joi.object({

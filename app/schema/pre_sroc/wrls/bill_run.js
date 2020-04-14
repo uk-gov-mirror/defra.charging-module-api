@@ -107,7 +107,8 @@ class WrlsBillRun extends BillRun {
                 return {
                   id: t.id,
                   chargeValue: t.charge_value,
-                  licenceNumber: t.line_attr_1
+                  licenceNumber: t.line_attr_1,
+                  minimumChargeAdjustment: t.minimum_charge_adjustment
                 }
               })
             }
@@ -146,7 +147,7 @@ class WrlsBillRun extends BillRun {
   // attributes returned for each trnasaction in the customer summary sections
   get summaryAdditionalAttributes () {
     // line_attr_1 == licenceNumber
-    return ['line_attr_1']
+    return ['line_attr_1', 'minimum_charge_adjustment']
   }
 
   get billRunId () {

@@ -18,8 +18,12 @@ async function call (regime, billRun, transaction, schema) {
 
   if (result !== 0) {
     // not a zero charge
-    // invalidate any cached summary for the bill run
-    await billRun.invalidateCache()
+    // invalidate any cached summary for the bill run and
+    // any minimum charge adjustments
+    await Promise.all([
+      billRun.invalidateCache(),
+      billRun.removeAdjustmentsForLicence(transaction.licenceNumber)
+    ])
   }
 
   return result

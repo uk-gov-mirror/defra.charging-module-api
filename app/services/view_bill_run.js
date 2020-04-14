@@ -13,7 +13,7 @@ async function call (request) {
   }
 
   if (!billRun.summary_data) {
-    await GenerateBillRunSummary.call(billRun, false)
+    await GenerateBillRunSummary.call(request.regime, billRun)
   }
 
   // pull out either customer summary or licence

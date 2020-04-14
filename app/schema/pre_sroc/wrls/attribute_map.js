@@ -51,5 +51,6 @@ module.exports = {
   transactionReference: 'transaction_reference',
   transactionFileReference: 'transaction_filename',
   billRunId: 'bill_run_number',
-  calculation: 'charge_calculation'
+  calculation: 'charge_calculation',
+  newLicence: 'new_licence'
 }

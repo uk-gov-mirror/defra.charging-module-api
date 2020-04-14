@@ -126,6 +126,7 @@ class WrlsBillRunTransactionsSearchRequest {
       transaction_reference AS "transactionReference",
       t.bill_run_number AS "billRunId",
       t.status AS "transactionStatus",
+      t.new_licence AS "newLicence",
       t.approved_for_billing AS "approvedForBilling",
       CASE
       WHEN t.status <> 'billed' THEN

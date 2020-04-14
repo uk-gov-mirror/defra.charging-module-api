@@ -66,6 +66,18 @@ class BillRun {
       WHERE id=$1::uuid
     `
     const result = await pool.query(stmt, [this.id])
+
+    return result.rowCount
+  }
+
+  async removeAdjustmentsForLicence (licenceNumber) {
+    // called when transaction added or removed
+    const delStmt = `DELETE FROM transactions
+     WHERE bill_run_id=$1::uuid
+     AND minimum_charge_adjustment=true
+     AND line_attr_1=$2`
+
+    const result = await pool.query(delStmt, [this.id, licenceNumber])
     return result.rowCount
   }
 

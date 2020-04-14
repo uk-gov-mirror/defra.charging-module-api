@@ -5,8 +5,8 @@ const utils = require('../../../lib/utils')
 const Validations = require('./validations')
 
 class WrlsBillRunSearchRequest {
-  constructor (regimeId, params) {
-    this.regimeId = regimeId
+  constructor (regime, params) {
+    this.regime = regime
 
     if (params) {
       const { error, value } = this.constructor.validate(params)
@@ -16,6 +16,10 @@ class WrlsBillRunSearchRequest {
 
       Object.assign(this, value)
     }
+  }
+
+  get regimeId () {
+    return this.regime.id
   }
 
   get collectionName () {
@@ -30,7 +34,7 @@ class WrlsBillRunSearchRequest {
         params[mappedName] = this[k]
       }
     })
-    params.regime_id = this.regimeId
+    params.regime_id = this.regime.id
     params.pre_sroc = true
     return params
   }
@@ -158,13 +162,13 @@ class WrlsBillRunSearchRequest {
     return utils.translateData(data, AttributeMap)
   }
 
-  static async instanceFromRequest (regimeId, params) {
+  static async instanceFromRequest (regime, params) {
     const { error, value } = this.validate(params)
     if (error) {
       throw Boom.badData(error)
     }
 
-    return new this(regimeId, value)
+    return new this(regime, value)
   }
 
   static get inputCols () {
