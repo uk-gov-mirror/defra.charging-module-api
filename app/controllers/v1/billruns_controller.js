@@ -12,7 +12,7 @@ const SendBillRun = require('../../services/send_bill_run')
 const SearchCollection = require('../../services/search_collection')
 const GenerateRegionCustomerFile = require('../../services/generate_region_customer_file')
 const { isValidUUID } = require('../../lib/utils')
-const Schema = require('../../schema/pre_sroc')
+// const Schema = require('../../schema/pre_sroc')
 
 const basePath = '/v1/{regime_id}/billruns'
 
@@ -25,7 +25,7 @@ class BillRunsController {
       const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
       // load the correct schema for the regime
-      const searchRequest = new (Schema[regime.slug].BillRunSearchRequest)(regime.id, req.query)
+      const searchRequest = new (regime.schema.BillRunSearchRequest)(regime, req.query)
 
       // select all transactions matching search criteria for the regime (pre-sroc only)
       return SearchCollection.call(searchRequest)
@@ -48,7 +48,7 @@ class BillRunsController {
       }
 
       // encapsulate and validate request
-      const request = new (Schema[regime.slug].BillRunViewRequest)(regime.id, billRunId, req.query)
+      const request = new (regime.schema.BillRunViewRequest)(regime, billRunId, req.query)
 
       return {
         billRun: await ViewBillRun.call(request)
@@ -69,12 +69,12 @@ class BillRunsController {
         return Boom.badRequest('Bill Run id is not a valid UUID')
       }
       // fetch BillRun
-      const billRun = await (Schema[regime.slug].BillRun).find(regime.id, billRunId)
+      const billRun = await (regime.schema.BillRun).find(regime.id, billRunId)
       if (!billRun) {
         return Boom.notFound(`No Bill Run with id '${billRunId} found`)
       }
 
-      const sentBillRun = await SendBillRun.call(billRun)
+      const sentBillRun = await SendBillRun.call(regime, billRun)
 
       // check if any customer changes are waiting to be exported for this region
       const customerFile = await GenerateRegionCustomerFile.call(regime, billRun.region)
@@ -116,7 +116,7 @@ class BillRunsController {
         return Boom.badRequest('No payload')
       }
 
-      const request = new (Schema[regime.slug].BillRunCreateRequest)(regime.id, req.payload)
+      const request = new (regime.schema.BillRunCreateRequest)(regime.id, req.payload)
 
       const result = await CreateBillRun.call(request)
 

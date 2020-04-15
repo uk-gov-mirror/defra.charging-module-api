@@ -1,4 +1,5 @@
 const { pool } = require('../lib/connectors/db')
+const Schema = require('../schema')
 
 class Regime {
   constructor (params) {
@@ -18,6 +19,14 @@ class Regime {
       id: this.slug,
       name: this.name
     }
+  }
+
+  get schema () {
+    return Schema.preSroc[this.slug]
+  }
+
+  get srocSchema () {
+    return Schema.sroc[this.slug]
   }
 
   static build (params) {

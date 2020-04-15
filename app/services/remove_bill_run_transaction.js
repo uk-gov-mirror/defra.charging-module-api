@@ -10,11 +10,20 @@ async function call (regime, billRun, transaction) {
     throw Boom.notFound('BillRun does not contain this Transaction')
   }
 
+  if (transaction.minimum_charge_adjustment) {
+    throw Boom.badRequest('Cannot remove a minimum charge adjustment')
+  }
+
   const result = await transaction.remove()
 
   if (result) {
     // invalidate any cached summary for the bill run
-    await billRun.invalidateCache()
+    // await billRun.invalidateCache()
+    // await billRun.removeAdjustmentsForLicence(transaction.licenceNumber)
+    await Promise.all([
+      billRun.invalidateCache(),
+      billRun.removeAdjustmentsForLicence(transaction.licenceNumber)
+    ])
   }
 
   return result

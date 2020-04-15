@@ -5,7 +5,7 @@ const utils = require('../lib/utils')
 const DBTransaction = require('../lib/db_transaction')
 
 // Send a pre-sroc billRun
-async function call (billRun) {
+async function call (regime, billRun) {
   // recreate summary if necessary
   // assign transactions references and C/I flags
   // update status on billRun and transactions
@@ -28,7 +28,7 @@ async function call (billRun) {
   }
 
   if (!billRun.summary_data) {
-    billRun = await GenerateBillRunSummary.call(billRun)
+    billRun = await GenerateBillRunSummary.call(regime, billRun)
   }
 
   const db = new DBTransaction()

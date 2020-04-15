@@ -6,8 +6,8 @@ const Validations = require('./validations')
 const BillRun = require('./bill_run')
 
 class WrlsBillRunViewRequest {
-  constructor (regimeId, billRunId, params) {
-    this.regimeId = regimeId
+  constructor (regime, billRunId, params) {
+    this.regime = regime
     this.billRunId = billRunId
     this.searchParams = {}
 
@@ -19,6 +19,10 @@ class WrlsBillRunViewRequest {
 
       this.searchParams = value
     }
+  }
+
+  get regimeId () {
+    return this.regime.id
   }
 
   get model () {
