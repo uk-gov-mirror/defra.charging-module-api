@@ -124,6 +124,8 @@ class WrlsTransactionsSearchRequest {
       transaction_reference AS "transactionReference",
       t.bill_run_number AS "billRunId",
       t.status AS "transactionStatus",
+      t.new_licence AS "newLicence",
+      t.minimum_charge_adjustment AS "minimumChargeAdjustment",
       t.approved_for_billing AS "approvedForBilling",
       CASE
       WHEN t.status <> 'billed' THEN
