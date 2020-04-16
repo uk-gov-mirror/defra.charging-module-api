@@ -38,7 +38,7 @@ class BillRun {
   }
 
   async billed (db) {
-    const result = await db.query(`UPDATE bill_runs SET status='billed' WHERE id=$1::uuid`, [this.id])
+    const result = await db.query(`UPDATE bill_runs SET status='billed',file_created_at=NOW() WHERE id=$1::uuid`, [this.id])
     if (result.rowCount !== 1) {
       throw new Error('Could not update BillRun status to billed')
     }

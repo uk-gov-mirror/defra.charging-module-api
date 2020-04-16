@@ -1,6 +1,6 @@
 const Joi = require('@hapi/joi')
 const AttributeMap = require('./attribute_map')
-const utils = require('../../../lib/utils')
+const { formatDate, translateData } = require('../../../lib/utils')
 const BillRun = require('../../../models/bill_run')
 const SequenceCounter = require('../../../models/sequence_counter')
 const { regionValidator } = require('./validations')
@@ -125,6 +125,9 @@ class WrlsBillRun extends BillRun {
         }
       }
       data.filename = this.filename
+      if (this.fileDate) {
+        data.fileDate = this.fileDate
+      }
     }
 
     return data
@@ -160,6 +163,13 @@ class WrlsBillRun extends BillRun {
 
   get filename () {
     return `nal${this.region.toLowerCase()}i${this.fileId}.dat`
+  }
+
+  get fileDate () {
+    if (this.file_created_at) {
+      return formatDate(this.file_created_at)
+    }
+    return null
   }
 
   get customerFilename () {
@@ -198,7 +208,7 @@ class WrlsBillRun extends BillRun {
 
   static translate (data) {
     // translate filter values using main attribute map for pre-sroc WRLS naming
-    return utils.translateData(data, AttributeMap)
+    return translateData(data, AttributeMap)
   }
 
   static async instanceFromRequest (regimeId, params) {
@@ -216,72 +226,11 @@ class WrlsBillRun extends BillRun {
   static get schema () {
     return {
       region: regionValidator.required()
-      // draft: Joi.boolean().required(),
-      // filter: Joi.object({
-      //   batchNumber: Joi.string().allow(null),
-      //   customerReference: Joi.string().uppercase().allow(null),
-      //   financialYear: Joi.number().integer().min(2000).max(2020).allow(null)
-      // }).optional().default([])
     }
   }
 
   toJSON () {
     return this.summary()
-    // const data = {
-    //   id: this.id,
-    //   billRunId: this.bill_run_number,
-    //   region: this.region,
-    //   status: this.status,
-    //   summary: {
-    //     creditNoteCount: this.credit_count,
-    //     creditNoteValue: this.credit_value,
-    //     invoiceCount: this.invoice_count,
-    //     invoiceValue: this.invoice_value,
-    //     creditLineCount: this.credit_line_count,
-    //     creditLineValue: this.credit_line_value,
-    //     debitLineCount: this.debit_line_count,
-    //     debitLineValue: this.debit_line_value,
-    //     netTotal: this.net_total
-    //   },
-    //   customers: []
-    // }
-
-    // if (this.summary_data) {
-    //   data.customers = this.summary_data.customers.map(s => {
-    //     return {
-    //       customerReference: s.customer_reference,
-    //       summaryByFinancialYear: s.summary.map(ss => {
-    //         return {
-    //           financialYear: ss.financial_year,
-    //           creditLineCount: ss.credit_line_count,
-    //           creditLineValue: ss.credit_line_value,
-    //           debitLineCount: ss.debit_line_count,
-    //           debitLineValue: ss.debit_line_value,
-    //           netTotal: ss.net_total,
-    //           transactions: ss.transactions.map(t => {
-    //             return {
-    //               id: t.id,
-    //               chargeValue: t.charge_value,
-    //               licenceNumber: t.line_attr_1
-    //             }
-    //           })
-    //         }
-    //       })
-    //     }
-    //   })
-    // }
-
-    // if (this.isBilled) {
-    //   if (this.customerFilename) {
-    //     data.customerFile = {
-    //       id: this.customer_file_id,
-    //       filename: this.customerFilename
-    //     }
-    //   }
-    //   data.filename = this.filename
-    // }
-
-    // return data
   }
 }
 
