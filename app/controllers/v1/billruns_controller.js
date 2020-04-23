@@ -2,7 +2,8 @@
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
-const SecurityCheckRegime = require('../../services/security_check_regime')
+const { checkAuthorisedForRegime } = require('../../lib/authorisation')
+// const SecurityCheckRegime = require('../../services/security_check_regime')
 const CreateBillRun = require('../../services/create_bill_run')
 const ViewBillRun = require('../../services/view_bill_run')
 const ApproveBillRun = require('../../services/approve_bill_run')
@@ -22,8 +23,8 @@ class BillRunsController {
     try {
       // check regime valid and caller has access to regime
       // regime_id is part of routing so must be defined to get here
-      const regime = await SecurityCheckRegime.call(req.params.regime_id)
-
+      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
+      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
       // load the correct schema for the regime
       const searchRequest = new (regime.schema.BillRunSearchRequest)(regime, req.query)
 
@@ -40,7 +41,8 @@ class BillRunsController {
     try {
       // check regime valid and caller has access to regime
       // regime_id is part of routing so must be defined to get here
-      const regime = await SecurityCheckRegime.call(req.params.regime_id)
+      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
+      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
       const billRunId = req.params.id
       if (!isValidUUID(billRunId)) {
@@ -62,7 +64,8 @@ class BillRunsController {
   // POST /v1/{regime_id}/bill_runs/{id}
   static async send (req, h) {
     try {
-      const regime = await SecurityCheckRegime.call(req.params.regime_id)
+      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
       const billRunId = req.params.id
       if (!isValidUUID(billRunId)) {
@@ -108,7 +111,8 @@ class BillRunsController {
   // POST /v1/{regime_id}/bill_runs
   static async create (req, h) {
     try {
-      const regime = await SecurityCheckRegime.call(req.params.regime_id)
+      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
       const payload = req.payload
       if (!payload) {
@@ -148,7 +152,8 @@ class BillRunsController {
     try {
       // check regime valid and caller has access to regime
       // regime_id is part of routing so must be defined to get here
-      const regime = await SecurityCheckRegime.call(req.params.regime_id)
+      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
       const billRunId = req.params.id
       if (!isValidUUID(billRunId)) {
@@ -171,7 +176,8 @@ class BillRunsController {
     try {
       // check regime valid and caller has access to regime
       // regime_id is part of routing so must be defined to get here
-      const regime = await SecurityCheckRegime.call(req.params.regime_id)
+      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
       const billRunId = req.params.id
       if (!isValidUUID(billRunId)) {
@@ -194,7 +200,8 @@ class BillRunsController {
     try {
       // check regime valid and caller has access to regime
       // regime_id is part of routing so must be defined to get here
-      const regime = await SecurityCheckRegime.call(req.params.regime_id)
+      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
       const billRunId = req.params.id
       if (!isValidUUID(billRunId)) {

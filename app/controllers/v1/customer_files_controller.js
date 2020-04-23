@@ -2,7 +2,8 @@
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
-const SecurityCheckRegime = require('../../services/security_check_regime')
+// const SecurityCheckRegime = require('../../services/security_check_regime')
+const { checkAuthorisedForRegime } = require('../../lib/authorisation')
 const GenerateCustomerFile = require('../../services/generate_customer_file')
 const ExportRegionCustomerFile = require('../../services/export_region_customer_file')
 const Schema = require('../../schema/pre_sroc')
@@ -13,7 +14,8 @@ async function index (req, h) {
   try {
     // check regime valid and caller has access to regime
     // regime_id is part of routing so must be defined to get here
-    const regime = await SecurityCheckRegime.call(req.params.regime_id)
+    // const regime = await SecurityCheckRegime.call(req.params.regime_id)
+    const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     // load the correct schema for the regime
     const CustomerFile = Schema[regime.slug].CustomerFile
@@ -36,7 +38,7 @@ async function index (req, h) {
 
 async function create (req, h) {
   try {
-    const regime = await SecurityCheckRegime.call(req.params.regime_id)
+    const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     // process and add transaction(s) in payload
     const payload = req.payload
@@ -82,7 +84,7 @@ async function create (req, h) {
 
 async function show (req, h) {
   try {
-    const regime = await SecurityCheckRegime.call(req.params.regime_id)
+    const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     const id = req.params.id
 
