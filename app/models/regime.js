@@ -16,8 +16,9 @@ class Regime {
 
   toJSON () {
     return {
-      id: this.slug,
-      name: this.name
+      id: this.id,
+      name: this.name,
+      slug: this.slug
     }
   }
 
@@ -38,16 +39,15 @@ class Regime {
   }
 
   static async find (slug) {
-    const stmt = 'select * from regimes where slug=$1'
-    const result = await pool.query(stmt, [slug])
-    if (result.rowCount !== 1) {
-      return null
+    const result = await this.findRaw(slug)
+    if (result) {
+      return this.build(result)
     }
-    return this.build(result.rows[0])
+    return null
   }
 
   static async findById (id) {
-    const stmt = 'SELECT * FROM regimes WHERE id=$1::uuid'
+    const stmt = this.rawQuery + ' WHERE id=$1::uuid'
     const result = await pool.query(stmt, [id])
     if (result.rowCount !== 1) {
       return null
@@ -72,7 +72,7 @@ class Regime {
   }
 
   static get rawQuery () {
-    return 'select slug as id, name from regimes'
+    return 'SELECT * FROM regimes'
   }
 }
 

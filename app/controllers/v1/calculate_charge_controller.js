@@ -1,7 +1,8 @@
 // const path = require('path')
 const Boom = require('@hapi/boom')
 const { logger } = require('../../lib/logger')
-const SecurityCheckRegime = require('../../services/security_check_regime')
+// const SecurityCheckRegime = require('../../services/security_check_regime')
+const { checkAuthorisedForRegime } = require('../../lib/authorisation')
 const CalculateCharge = require('../../services/calculate_charge')
 const Schema = require('../../schema/pre_sroc')
 
@@ -10,7 +11,8 @@ const basePath = '/v1/{regime_id}/calculate_charge'
 async function calculate (req, h) {
   try {
     // check regime valid
-    const regime = await SecurityCheckRegime.call(req.params.regime_id)
+    // const regime = await SecurityCheckRegime.call(req.params.regime_id)
+    const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     // process the charge params in the payload
     const payload = req.payload
