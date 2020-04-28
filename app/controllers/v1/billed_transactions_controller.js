@@ -2,7 +2,7 @@ const Boom = require('@hapi/boom')
 // const Transaction = require('../../models/transaction')
 const { logger } = require('../../lib/logger')
 // const SecurityCheckRegime = require('../../services/security_check_regime')
-const { checkAuthorisedForRegime } = require('../../lib/authorisation')
+const Authorisation = require('../../lib/authorisation')
 const FindTransaction = require('../../services/find_transaction')
 const Schema = require('../../schema/pre_sroc')
 const SearchCollection = require('../../services/search_collection')
@@ -14,7 +14,7 @@ async function index (req, h) {
     // check regime valid and caller has access to regime
     // regime_id is part of routing so must be defined to get here
     // const regime = await SecurityCheckRegime.call(req.params.regime_id)
-    const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     // load the correct schema for the regime
     const searchRequest = new (Schema[regime.slug].BilledTransactionsRequest)(regime.id, req.query)
@@ -41,7 +41,7 @@ async function index (req, h) {
 //
 async function show (req, h) {
   try {
-    const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     const id = req.params.id
 

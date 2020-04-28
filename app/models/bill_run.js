@@ -106,7 +106,7 @@ class BillRun {
     const stmt = `
       UPDATE bill_runs SET
         file_reference=${this.fileId},
-        transaction_filename='${this.filename}',
+        transaction_filename=$1,,
         credit_count=${this.credit_count},
         credit_value=${this.credit_value},
         invoice_count=${this.invoice_count},
@@ -116,7 +116,7 @@ class BillRun {
         debit_line_count=${this.debit_line_count},
         debit_line_value=${this.debit_line_value},
         net_total=${this.net_total},
-        summary_data=$1
+        summary_data=$2
       WHERE id='${this.id}' AND regime_id='${this.regime_id}'
     `
 
@@ -144,7 +144,7 @@ class BillRun {
     // if db supplied, the inside a transaction so use the db client
     // not the pool
     const cnx = db || pool
-    const result = await cnx.query(stmt, [this.summary_data])
+    const result = await cnx.query(stmt, [this.filename, this.summary_data])
 
     if (result.rowCount !== 1) {
       throw new Error('Unable to save bill run')

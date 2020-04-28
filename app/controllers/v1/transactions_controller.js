@@ -2,8 +2,7 @@ const Boom = require('@hapi/boom')
 // const Transaction = require('../../models/transaction')
 const { logger } = require('../../lib/logger')
 const config = require('../../../config/config')
-const { checkAuthorisedForRegime } = require('../../lib/authorisation')
-// const SecurityCheckRegime = require('../../services/security_check_regime')
+const Authorisation = require('../../lib/authorisation')
 const ApproveTransaction = require('../../services/approve_transaction')
 const UnapproveTransaction = require('../../services/unapprove_transaction')
 const AddTransaction = require('../../services/add_transaction')
@@ -21,8 +20,7 @@ class TransactionsController {
     try {
       // check regime valid and caller has access to regime
       // regime_id is part of routing so must be defined to get here
-      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
-      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
       // load the correct schema for the regime
       const searchRequest = new (Schema[regime.slug].TransactionSearchRequest)(regime.id, req.query)
@@ -52,7 +50,7 @@ class TransactionsController {
   // GET /v1/{regime_id}/transactions/{id}
   static async show (req, h) {
     try {
-      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
       const id = req.params.id
 
@@ -75,7 +73,7 @@ class TransactionsController {
   // POST /v1/{regime_id}/billruns/{billrun_id}/transactions
   static async create (req, h) {
     try {
-      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
       // check and verify if nested under billrun
       const billRunId = req.params.bill_run_id
@@ -131,7 +129,7 @@ class TransactionsController {
   static async remove (req, h) {
     // remove (delete) transaction
     try {
-      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
       await RemoveTransaction.call(regime, req.params.id)
 
@@ -149,7 +147,7 @@ class TransactionsController {
   static async approve (req, h) {
     // approve transaction for billing
     try {
-      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
       await ApproveTransaction.call(regime, req.params.id)
 
@@ -167,7 +165,7 @@ class TransactionsController {
   static async unapprove (req, h) {
     // unapprove/withhold transaction for billing
     try {
-      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
       await UnapproveTransaction.call(regime, req.params.id)
 

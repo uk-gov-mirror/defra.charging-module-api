@@ -2,8 +2,7 @@
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
-const { checkAuthorisedForRegime } = require('../../lib/authorisation')
-// const SecurityCheckRegime = require('../../services/security_check_regime')
+const Authorisation = require('../../lib/authorisation')
 const AddTransaction = require('../../services/add_transaction')
 const RemoveTransaction = require('../../services/remove_transaction')
 const Schema = require('../../schema/pre_sroc')
@@ -17,8 +16,7 @@ async function index (req, h) {
   try {
     // check regime valid and caller has access to regime
     // regime_id is part of routing so must be defined to get here
-    // const regime = await SecurityCheckRegime.call(req.params.regime_id)
-    const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     // load the correct schema for the regime
     const Transaction = Schema[regime.slug].Transaction
@@ -42,7 +40,7 @@ async function index (req, h) {
 
 async function create (req, h) {
   try {
-    const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     // process and add transaction(s) in payload
     const payload = req.payload
@@ -89,7 +87,7 @@ async function create (req, h) {
 
 async function bulkApprove (req, h) {
   try {
-    const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     const payload = req.payload
     if (!payload) {
@@ -122,7 +120,7 @@ async function bulkApprove (req, h) {
 
 async function bulkUnapprove (req, h) {
   try {
-    const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     const payload = req.payload
     if (!payload) {
@@ -155,7 +153,7 @@ async function bulkUnapprove (req, h) {
 
 async function bulkRemove (req, h) {
   try {
-    const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     const payload = req.payload
     if (!payload) {
@@ -189,7 +187,7 @@ async function bulkRemove (req, h) {
 async function remove (req, h) {
   // remove (delete) transaction
   try {
-    const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
     await RemoveTransaction.call(regime, req.params.id)
 
     // HTTP 204 No Content

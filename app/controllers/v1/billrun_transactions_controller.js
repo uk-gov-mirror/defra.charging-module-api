@@ -2,8 +2,7 @@
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
-const { checkAuthorisedForRegime } = require('../../lib/authorisation')
-// const SecurityCheckRegime = require('../../services/security_check_regime')
+const Authorisation = require('../../lib/authorisation')
 const SearchCollection = require('../../services/search_collection')
 const { isValidUUID } = require('../../lib/utils')
 const Schema = require('../../schema/pre_sroc')
@@ -19,8 +18,8 @@ class BillRunTransactionsController {
     try {
       // check regime valid and caller has access to regime
       // regime_id is part of routing so must be defined to get here
-      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
-      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+
       // check and verify if nested under billrun
       const billRun = await this.fetchBillRun(regime, req.params.billrun_id)
 
@@ -40,7 +39,7 @@ class BillRunTransactionsController {
     try {
       // check regime valid and caller has access to regime
       // regime_id is part of routing so must be defined to get here
-      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
       // check and verify if nested under billrun
       const billRun = await this.fetchBillRun(regime, req.params.billrun_id)
@@ -79,7 +78,7 @@ class BillRunTransactionsController {
   // POST /v1/{regime_id}/billruns/{billrun_id}/transactions
   static async create (req, h) {
     try {
-      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
       // check and verify if nested under billrun
       const billRunId = req.params.billrun_id
@@ -135,7 +134,7 @@ class BillRunTransactionsController {
     try {
       // check regime valid and caller has access to regime
       // regime_id is part of routing so must be defined to get here
-      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
       // check and verify if nested under billrun
       const billRun = await this.fetchBillRun(regime, req.params.billrun_id)
@@ -165,7 +164,7 @@ class BillRunTransactionsController {
     try {
       // check regime valid and caller has access to regime
       // regime_id is part of routing so must be defined to get here
-      const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
       // check and verify if nested under billrun
       const billRun = await this.fetchBillRun(regime, req.params.billrun_id)

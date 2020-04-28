@@ -162,7 +162,10 @@ class WrlsBillRun extends BillRun {
   }
 
   get filename () {
-    return `nal${this.region.toLowerCase()}i${this.fileId}.dat`
+    if (this.fileId) {
+      return `nal${this.region.toLowerCase()}i${this.fileId}.dat`
+    }
+    return null
   }
 
   get fileDate () {
