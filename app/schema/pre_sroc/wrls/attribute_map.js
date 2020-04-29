@@ -50,7 +50,8 @@ module.exports = {
   transactionType: 'transaction_type',
   transactionReference: 'transaction_reference',
   transactionFileReference: 'transaction_filename',
-  billRunId: 'bill_run_number',
+  billRunNumber: 'bill_run_number',
   calculation: 'charge_calculation',
-  newLicence: 'new_licence'
+  newLicence: 'new_licence',
+  status: 'status'
 }

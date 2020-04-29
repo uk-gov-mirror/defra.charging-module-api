@@ -174,28 +174,18 @@ class WrlsBillRunSearchRequest {
   static get inputCols () {
     return [
       'region',
-      'batchNumber',
-      'customerReference',
-      'licenceNumber',
-      'chargeElementId',
-      'financialYear',
-      'billRunId',
-      'transactionFileReference',
-      'transactionReference'
+      'status',
+      'billRunNumber',
+      'transactionFileReference'
     ]
   }
 
   static get schema () {
     return {
       region: Validations.regionValidator,
-      batchNumber: Validations.stringValidator,
-      customerReference: Validations.customerReferenceValidator,
-      licenceNumber: Validations.stringValidator,
-      chargeElementId: Validations.stringValidator,
-      financialYear: Validations.financialYearValidator,
-      billRunId: Joi.number().integer().min(10000).max(99999),
+      status: Validations.stringValidator,
+      billRunNumber: Joi.number().integer().min(10000).max(99999),
       transactionFileReference: Validations.fileReferenceValidator,
-      transactionReference: Validations.transactionReferenceValidator,
       page: Validations.pageValidator,
       perPage: Validations.perPageValidator,
       sort: Joi.string(),
