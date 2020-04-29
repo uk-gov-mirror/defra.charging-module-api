@@ -20,7 +20,8 @@
     "seed": "node ./db/seeds/seeds.js",
     "lint": "eslint .",
     "unit-test": "PGDATABASE=chargedb_test TMPDIR='./tmpfiles' REMOVE_TMP_FILES=false lab -c -r console -o stdout -r html -o coverage.html -r lcov -o lcov.info -v",
-    "test": "npm run lint && npm run unit-test"
+    "test": "npm run lint && npm run unit-test",
+    "qtest": "PGDATABASE=chargedb_test lab"
   },
   "author": "Department for Environment, Food & Rural Affairs",
   "license": "SEE LICENSE IN LICENSE.md",

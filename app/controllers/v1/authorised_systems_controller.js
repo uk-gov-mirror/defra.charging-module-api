@@ -2,7 +2,7 @@
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
-const { checkAdminOnlyAccess } = require('../../lib/authorisation')
+const Authorisation = require('../../lib/authorisation')
 const { dbError } = require('../../lib/db_error')
 const AuthorisedSystem = require('../../models/authorised_system')
 
@@ -13,7 +13,7 @@ class AuthorisedSystemsController {
   static async index (req, h) {
     try {
       // check caller is authenticated as admin
-      checkAdminOnlyAccess(req.headers.authorization)
+      Authorisation.assertAdminOnlyAccess(req.headers.authorization)
 
       // admin only, no need for searches as such a small number
       const result = await AuthorisedSystem.all()
@@ -30,7 +30,7 @@ class AuthorisedSystemsController {
   static async show (req, h) {
     try {
       // check caller is authenticated as admin
-      checkAdminOnlyAccess(req.headers.authorization)
+      Authorisation.assertAdminOnlyAccess(req.headers.authorization)
 
       const authSys = await AuthorisedSystem.find(req.params.id)
 
@@ -48,7 +48,7 @@ class AuthorisedSystemsController {
   static async create (req, h) {
     try {
       // check caller is authenticated as admin
-      checkAdminOnlyAccess(req.headers.authorization)
+      Authorisation.assertAdminOnlyAccess(req.headers.authorization)
 
       const payload = req.payload
       if (!payload) {
@@ -91,8 +91,7 @@ class AuthorisedSystemsController {
     try {
       // check regime valid and caller has access to regime
       // regime_id is part of routing so must be defined to get here
-      checkAdminOnlyAccess(req.headers.authorization)
-      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
+      Authorisation.assertAdminOnlyAccess(req.headers.authorization)
 
       // expect a payload with updated name/status/authorisations - to remove all an empty array should be specified
       // changing authorisations does not only add, so will remove any already set but not in payload
@@ -115,10 +114,7 @@ class AuthorisedSystemsController {
   // DELETE /v1/authorised_systems/{id}
   static async remove (req, h) {
     try {
-      // check regime valid and caller has access to regime
-      // regime_id is part of routing so must be defined to get here
-      checkAdminOnlyAccess(req.headers.authorization)
-      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
+      Authorisation.assertAdminOnlyAccess(req.headers.authorization)
 
       await AuthorisedSystem.remove(req.params.id)
 

@@ -1,8 +1,7 @@
 // SRoC Calculate Charge ===============
 const Boom = require('@hapi/boom')
 const { logger } = require('../../lib/logger')
-const { checkAuthorisedForRegime } = require('../../lib/authorisation')
-// const SecurityCheckRegime = require('../../services/security_check_regime')
+const Authorisation = require('../../lib/authorisation')
 const SrocCalculateCharge = require('../../services/sroc_calculate_charge')
 const Schema = require('../../schema/sroc')
 
@@ -12,7 +11,7 @@ async function calculate (req, h) {
   // check regime valid
   // select all transactions matching search criteria for the regime
   try {
-    const regime = await checkAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     // process the charge params in the payload
     const payload = req.payload
