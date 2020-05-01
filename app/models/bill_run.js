@@ -106,7 +106,7 @@ class BillRun {
     const stmt = `
       UPDATE bill_runs SET
         file_reference=${this.fileId},
-        transaction_filename=$1,,
+        transaction_filename=$1,
         credit_count=${this.credit_count},
         credit_value=${this.credit_value},
         invoice_count=${this.invoice_count},
