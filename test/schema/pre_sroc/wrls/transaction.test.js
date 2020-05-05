@@ -99,9 +99,12 @@ describe('PreSRoC Transaction (WRLS)', () => {
       lineDescription: Joi.string().required(),
       transactionType: Joi.string().regex(/^[CI]$/).allow('', null),
       transactionReference: Joi.string().allow('', null),
-      billRunId: Joi.number().integer().positive().allow(null),
+      billRunNumber: Joi.number().integer().positive().allow(null),
       transactionStatus: Joi.string().required(),
       approvedForBilling: Joi.boolean().required(),
+      newLicence: Joi.boolean().required(),
+      minimumChargeAdjustment: Joi.boolean().required(),
+      transactionFileReference: Joi.string().allow(null),
       calculation: Joi.object()
     }
     const result = Joi.validate(transaction, outputSchema)

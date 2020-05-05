@@ -1,6 +1,5 @@
 const { pool } = require('../../app/lib/connectors/db')
 const Sinon = require('sinon')
-const Schema = require('../../app/schema/pre_sroc')
 const RuleService = require('../../app/lib/connectors/rules')
 const AddBillRunTransaction = require('../../app/services/add_bill_run_transaction')
 const { buildTransaction } = require('./transaction_helper')
@@ -15,7 +14,7 @@ async function addBillRunTransaction (regime, billRun, data = {}) {
   const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(dummyCharge())
   const transaction = buildTransaction(regime, data)
 
-  const result = await AddBillRunTransaction.call(regime, billRun, transaction, Schema[regime.slug])
+  const result = await AddBillRunTransaction.call(regime, billRun, transaction, regime.schema)
   stub.restore()
 
   return result

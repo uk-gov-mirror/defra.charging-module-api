@@ -39,7 +39,7 @@ class WrlsBillRun extends BillRun {
   summary (searchParams = {}) {
     const data = {
       id: this.id,
-      billRunId: this.bill_run_number,
+      billRunNumber: this.bill_run_number,
       region: this.region,
       status: this.status,
       approvedForBilling: this.approved_for_billing,
@@ -124,9 +124,9 @@ class WrlsBillRun extends BillRun {
           filename: this.customerFilename
         }
       }
-      data.filename = this.filename
+      data.transactionFileReference = this.filename
       if (this.fileDate) {
-        data.fileDate = this.fileDate
+        data.transactionFileDate = this.fileDate
       }
     }
 
@@ -162,6 +162,10 @@ class WrlsBillRun extends BillRun {
   }
 
   get filename () {
+    if (this.transaction_filename) {
+      return this.transaction_filename
+    }
+
     if (this.fileId) {
       return `nal${this.region.toLowerCase()}i${this.fileId}.dat`
     }
@@ -230,6 +234,68 @@ class WrlsBillRun extends BillRun {
     return {
       region: regionValidator.required()
     }
+  }
+
+  static get rawQuery () {
+    return `
+      SELECT id,
+      region,
+      bill_run_number AS "billRunNumber",
+      file_reference AS "fileId",
+      transaction_filename AS "transactionFileReference",
+      to_char(file_created_at, 'DD-MON-YYYY') AS "transactionFileDate",
+      status,
+      approved_for_billing AS "approvedForBilling",
+      credit_count AS "creditCount",
+      credit_value AS "creditValue",
+      invoice_count AS "invoiceCount",
+      invoice_value AS "invoiceValue",
+      credit_line_count AS "creditLineCount",
+      credit_line_value AS "creditLineValue",
+      debit_line_count AS "debitLineCount",
+      debit_line_value AS "debitLineValue",
+      net_total AS "netTotal"
+      FROM bill_runs
+    `
+  }
+
+  static orderSearchQuery (sort, sortDir) {
+    const defaultCols = ['region', 'bill_run_number']
+    let sortCols = []
+
+    let sortDirection = 'asc'
+
+    if (sortDir && sortDir.toUpperCase() === 'DESC') {
+      sortDirection = 'desc'
+    }
+
+    if (sort) {
+      let cols
+      if (sort instanceof Array) {
+        cols = sort
+      } else {
+        cols = sort.split(',')
+      }
+
+      for (let i = 0; i < cols.length; i++) {
+        const col = AttributeMap[cols[i]]
+        if (col) {
+          sortCols.push(col)
+        }
+      }
+    }
+
+    if (sortCols.length === 0) {
+      sortCols = defaultCols
+    }
+
+    const order = sortCols.map(c => {
+      return `${c} ${sortDirection}`
+    })
+
+    order.push(`created_at ${sortDirection}`)
+
+    return order
   }
 
   toJSON () {

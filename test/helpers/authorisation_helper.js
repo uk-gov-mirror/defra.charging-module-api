@@ -23,9 +23,19 @@ async function cleanAuthorisedSystems () {
   return pool.query(`DELETE FROM authorised_systems`)
 }
 
+function makeAuthHeader (clientId) {
+  return `Bearer ${createToken(clientId)}`
+}
+
+function makeAdminAuthHeader () {
+  return `Bearer ${createAdminToken()}`
+}
+
 module.exports = {
   createToken,
   createAdminToken,
   addAuthorisedSystem,
-  cleanAuthorisedSystems
+  cleanAuthorisedSystems,
+  makeAuthHeader,
+  makeAdminAuthHeader
 }

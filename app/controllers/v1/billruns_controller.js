@@ -9,7 +9,7 @@ const ApproveBillRun = require('../../services/approve_bill_run')
 const UnapproveBillRun = require('../../services/unapprove_bill_run')
 const RemoveBillRun = require('../../services/remove_bill_run')
 const SendBillRun = require('../../services/send_bill_run')
-const SearchCollection = require('../../services/search_collection')
+// const SearchCollection = require('../../services/search_collection')
 const GenerateRegionCustomerFile = require('../../services/generate_region_customer_file')
 const { isValidUUID } = require('../../lib/utils')
 // const Schema = require('../../schema/pre_sroc')
@@ -28,7 +28,9 @@ class BillRunsController {
       const searchRequest = new (regime.schema.BillRunSearchRequest)(regime, req.query)
 
       // select all transactions matching search criteria for the regime (pre-sroc only)
-      return SearchCollection.call(searchRequest)
+      return regime.schema.BillRun.search(searchRequest)
+
+      // return SearchCollection.call(searchRequest)
     } catch (err) {
       logger.error(err.stack)
       return Boom.boomify(err)
@@ -43,13 +45,13 @@ class BillRunsController {
       // const regime = await SecurityCheckRegime.call(req.params.regime_id)
       const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
-      const billRunId = req.params.id
-      if (!isValidUUID(billRunId)) {
+      const id = req.params.id
+      if (!isValidUUID(id)) {
         return Boom.badRequest('Bill Run id is not a valid UUID')
       }
 
       // encapsulate and validate request
-      const request = new (regime.schema.BillRunViewRequest)(regime, billRunId, req.query)
+      const request = new (regime.schema.BillRunViewRequest)(regime, id, req.query)
 
       return {
         billRun: await ViewBillRun.call(request)
@@ -66,14 +68,14 @@ class BillRunsController {
       const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
       // const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
-      const billRunId = req.params.id
-      if (!isValidUUID(billRunId)) {
+      const id = req.params.id
+      if (!isValidUUID(id)) {
         return Boom.badRequest('Bill Run id is not a valid UUID')
       }
       // fetch BillRun
-      const billRun = await (regime.schema.BillRun).find(regime.id, billRunId)
+      const billRun = await (regime.schema.BillRun).find(regime.id, id)
       if (!billRun) {
-        return Boom.notFound(`No Bill Run with id '${billRunId} found`)
+        return Boom.notFound(`No Bill Run with id '${id} found`)
       }
 
       const sentBillRun = await SendBillRun.call(regime, billRun)
@@ -152,13 +154,13 @@ class BillRunsController {
       // regime_id is part of routing so must be defined to get here
       const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
-      const billRunId = req.params.id
-      if (!isValidUUID(billRunId)) {
+      const id = req.params.id
+      if (!isValidUUID(id)) {
         return Boom.badRequest('Bill Run id is not a valid UUID')
       }
 
       // mustn't be billed - updates billrun and all assoc. transactions
-      await ApproveBillRun.call(regime, billRunId)
+      await ApproveBillRun.call(regime, id)
 
       // HTTP 204 No Content
       return h.response().code(204)
@@ -175,13 +177,13 @@ class BillRunsController {
       // regime_id is part of routing so must be defined to get here
       const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
-      const billRunId = req.params.id
-      if (!isValidUUID(billRunId)) {
+      const id = req.params.id
+      if (!isValidUUID(id)) {
         return Boom.badRequest('Bill Run id is not a valid UUID')
       }
 
       // mustn't be billed - updates billrun and all assoc. transactions
-      await UnapproveBillRun.call(regime, billRunId)
+      await UnapproveBillRun.call(regime, id)
 
       // HTTP 204 No Content
       return h.response().code(204)
@@ -198,13 +200,13 @@ class BillRunsController {
       // regime_id is part of routing so must be defined to get here
       const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
-      const billRunId = req.params.id
-      if (!isValidUUID(billRunId)) {
+      const id = req.params.id
+      if (!isValidUUID(id)) {
         return Boom.badRequest('Bill Run id is not a valid UUID')
       }
 
       // mustn't be billed - deletes billrun and all assoc. transactions
-      await RemoveBillRun.call(regime, billRunId)
+      await RemoveBillRun.call(regime, id)
 
       // HTTP 204 No Content
       return h.response().code(204)
@@ -214,8 +216,8 @@ class BillRunsController {
     }
   }
 
-  static regimeBillRunPath (regime, billRunId) {
-    return `${config.environment.serviceUrl}/v1/${regime.slug}/billruns/${billRunId}`
+  static regimeBillRunPath (regime, id) {
+    return `${config.environment.serviceUrl}/v1/${regime.slug}/billruns/${id}`
   }
 
   static routes () {

@@ -1,5 +1,4 @@
 const { pool } = require('../lib/connectors/db')
-const utils = require('../lib/utils')
 
 class BillRun {
   constructor (regimeId, params) {
@@ -120,27 +119,6 @@ class BillRun {
       WHERE id='${this.id}' AND regime_id='${this.regime_id}'
     `
 
-    // const stmt = `
-    //   INSERT INTO bill_runs (
-    //     regime_id, bill_run_number, file_reference,
-    //     region, pre_sroc, transaction_filename,
-    //     credit_count, credit_value,
-    //     invoice_count, invoice_value,
-    //     credit_line_count, credit_line_value,
-    //     debit_line_count, debit_line_value,
-    //     net_total,
-    //     filter,
-    //     summary_data
-    //   ) VALUES (
-    //     '${this.regimeId}', ${this.billRunId}, ${this.fileId},
-    //     '${this.region}', ${this.preSroc}, '${this.filename}',
-    //     ${this.credit_count}, ${this.credit_value},
-    //     ${this.invoice_count}, ${this.invoice_value},
-    //     ${this.credit_line_count}, ${this.credit_line_value},
-    //     ${this.debit_line_count}, ${this.debit_line_value},
-    //     ${this.net_total},
-    //     $1,$2
-    //   ) RETURNING id`
     // if db supplied, the inside a transaction so use the db client
     // not the pool
     const cnx = db || pool
@@ -149,8 +127,6 @@ class BillRun {
     if (result.rowCount !== 1) {
       throw new Error('Unable to save bill run')
     }
-    // this.id = result.rows[0].id
-    // return this.id
     return true
   }
 
@@ -191,25 +167,22 @@ class BillRun {
     return result.rows[0]
   }
 
-  static async search (params, page, perPage, sort, sortDir) {
-    // paginated search returning collection of DB records (not class instances)
-    const pagination = utils.validatePagination(page, perPage)
-
-    const offset = (pagination.page - 1) * pagination.perPage
-    const limit = pagination.perPage
-
+  static async search (searchRequest, db) {
     const select = this.rawQuery
+
+    const cnx = db || pool
 
     // where clause uses DB names not mapped names
     const where = []
     const values = []
     let attrCount = 1
 
+    const params = searchRequest.searchParams
+
     Object.keys(params).forEach(col => {
       if (col) {
-        let val = params[col]
-        if (val && val.indexOf('*') !== -1) {
-          val = val.replace(/\*/g, '%')
+        const val = params[col]
+        if (val && typeof val === 'string' && val.indexOf('%') !== -1) {
           where.push(`${col} like $${attrCount++}`)
         } else {
           where.push(`${col} = $${attrCount++}`)
@@ -219,25 +192,25 @@ class BillRun {
     })
 
     const whr = where.join(' AND ')
-    // order clause uses mapped names
-    const order = this.orderSearchQuery(sort, sortDir)
+    const order = this.orderSearchQuery(searchRequest.sort, searchRequest.sortDir)
+    const stmt = `${select} WHERE ${whr} ORDER BY ${order.join(',')} OFFSET $${attrCount++} LIMIT $${attrCount++}`
     const promises = [
-      pool.query('SELECT count(*) FROM bill_runs WHERE ' + whr, values),
-      pool.query(select + ' WHERE ' +
-        whr + ' ORDER BY ' + order.join(',') + ` OFFSET $${attrCount++} LIMIT $${attrCount++}`,
-      [...values, offset, limit])
+      cnx.query(`SELECT count(*) FROM bill_runs WHERE ${whr}`, values),
+      cnx.query(stmt, [...values, searchRequest.offset, searchRequest.limit])
     ]
 
     const results = await Promise.all(promises)
     const count = parseInt(results[0].rows[0].count)
-    const pageTotal = Math.ceil(count / limit)
+    const pageTotal = Math.ceil(count / searchRequest.limit)
     const rows = results[1].rows
 
-    pagination.pageCount = pageTotal
-    pagination.recordCount = count
-
     return {
-      pagination,
+      pagination: {
+        page: searchRequest.page,
+        perPage: searchRequest.perPage,
+        pageCount: pageTotal,
+        recordCount: count
+      },
       data: {
         billRuns: rows
       }

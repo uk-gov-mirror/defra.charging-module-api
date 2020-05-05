@@ -1,5 +1,4 @@
 const Boom = require('@hapi/boom')
-// const Transaction = require('../../models/transaction')
 const { logger } = require('../../lib/logger')
 const config = require('../../../config/config')
 const Authorisation = require('../../lib/authorisation')
@@ -7,10 +6,7 @@ const ApproveTransaction = require('../../services/approve_transaction')
 const UnapproveTransaction = require('../../services/unapprove_transaction')
 const AddTransaction = require('../../services/add_transaction')
 const RemoveTransaction = require('../../services/remove_transaction')
-const FindTransaction = require('../../services/find_transaction')
-const SearchCollection = require('../../services/search_collection')
 const { isValidUUID } = require('../../lib/utils')
-const Schema = require('../../schema/pre_sroc')
 
 const basePath = '/v1/{regime_id}/transactions'
 
@@ -23,24 +19,9 @@ class TransactionsController {
       const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
       // load the correct schema for the regime
-      const searchRequest = new (Schema[regime.slug].TransactionSearchRequest)(regime.id, req.query)
+      const searchRequest = new (regime.schema.TransactionSearchRequest)(regime.id, req.query)
 
-      // select all transactions matching search criteria for the regime (pre-sroc only)
-      return SearchCollection.call(searchRequest)
-
-      // // load the correct schema for the regime
-      // const Transaction = Schema[regime.slug].Transaction
-
-      // const { page, perPage, sort, sortDir, ...q } = req.query
-
-      // // translate params into DB naming
-      // const params = Transaction.translate(q)
-      // // force these criteria
-      // params.regime_id = regime.id
-      // params.pre_sroc = 'true'
-
-      // // select all transactions matching search criteria for the regime (pre-sroc only)
-      // return Transaction.search(params, page, perPage, sort, sortDir)
+      return regime.schema.Transaction.search(searchRequest)
     } catch (err) {
       logger.error(err.stack)
       return Boom.boomify(err)
@@ -54,7 +35,11 @@ class TransactionsController {
 
       const id = req.params.id
 
-      const transaction = await FindTransaction.call(regime, id)
+      if (!isValidUUID(id)) {
+        return Boom.badRequest('Transaction id is not a valid UUID')
+      }
+
+      const transaction = await regime.schema.Transaction.findRaw(regime.id, req.params.id)
 
       if (transaction === null) {
         return Boom.notFound(`No transaction found with id '${id}'`)
@@ -88,13 +73,13 @@ class TransactionsController {
         return Boom.badRequest('No payload')
       }
       // load the correct schema for the regime
-      const schema = Schema[regime.slug]
+      // const schema = Schema[regime.slug]
 
       // create Transaction object, validate and translate
-      const transaction = schema.Transaction.instanceFromRequest(payload)
+      const transaction = regime.schema.Transaction.instanceFromRequest(payload)
 
       // add transaction to the queue (create db record)
-      const tId = await AddTransaction.call(regime, transaction, schema)
+      const tId = await AddTransaction.call(regime, transaction, regime.schema)
       if (tId === 0) {
         // zero charge - special case return HTTP 200
         return h.response({ status: 'Zero value charge calculated' }).code(200)

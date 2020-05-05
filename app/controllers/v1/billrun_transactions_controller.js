@@ -3,9 +3,9 @@ const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
 const Authorisation = require('../../lib/authorisation')
-const SearchCollection = require('../../services/search_collection')
+// const SearchCollection = require('../../services/search_collection')
 const { isValidUUID } = require('../../lib/utils')
-const Schema = require('../../schema/pre_sroc')
+// const Schema = require('../../schema/pre_sroc')
 const AddBillRunTransaction = require('../../services/add_bill_run_transaction')
 const RemoveBillRunTransaction = require('../../services/remove_bill_run_transaction')
 const RemoveMatchingBillRunTransactions = require('../../services/remove_matching_bill_run_transactions')
@@ -24,10 +24,11 @@ class BillRunTransactionsController {
       const billRun = await this.fetchBillRun(regime, req.params.billrun_id)
 
       // load the correct schema for the regime
-      const searchRequest = new (Schema[regime.slug].BillRunTransactionsSearchRequest)(regime.id, billRun.id, req.query)
+      const searchRequest = new (regime.schema.BillRunTransactionsSearchRequest)(regime.id, billRun.id, req.query)
 
       // select all transactions matching search criteria for the regime (pre-sroc only)
-      return SearchCollection.call(searchRequest)
+      // return SearchCollection.call(searchRequest)
+      return regime.schema.Transaction.search(searchRequest)
     } catch (err) {
       logger.error(err.stack)
       return Boom.boomify(err)
@@ -45,7 +46,7 @@ class BillRunTransactionsController {
       const billRun = await this.fetchBillRun(regime, req.params.billrun_id)
 
       // encapsulate and validate request
-      const result = await (Schema[regime.slug].Transaction).findBillRunRaw(regime.id, billRun.id, req.params.id)
+      const result = await (regime.schema.Transaction).findBillRunRaw(regime.id, billRun.id, req.params.id)
 
       if (!result) {
         return Boom.notFound(`Transaction with id '${req.params.id} not found in bill run`)
@@ -66,7 +67,7 @@ class BillRunTransactionsController {
     }
 
     // fetch BillRun
-    const billRun = await (Schema[regime.slug].BillRun).find(regime.id, billRunId)
+    const billRun = await (regime.schema.BillRun).find(regime.id, billRunId)
     if (!billRun) {
       throw Boom.notFound(`No Bill Run with id '${billRunId} found`)
     }
@@ -91,14 +92,11 @@ class BillRunTransactionsController {
         return Boom.badRequest('No payload')
       }
 
-      // load the correct schema for the regime
-      const schema = Schema[regime.slug]
-
       // create Transaction object, validate and translate
-      const transaction = schema.Transaction.instanceFromRequest(payload)
+      const transaction = regime.schema.Transaction.instanceFromRequest(payload)
 
       // add transaction to the bill run (create db record)
-      const tId = await AddBillRunTransaction.call(regime, billRun, transaction, schema)
+      const tId = await AddBillRunTransaction.call(regime, billRun, transaction, regime.schema)
 
       if (tId === 0) {
         // zero charge - special case return HTTP 200
@@ -144,7 +142,7 @@ class BillRunTransactionsController {
         return Boom.badRequest('Transaction id is not a valid UUID')
       }
 
-      const transaction = await (Schema[regime.slug].Transaction).find(regime.id, tId)
+      const transaction = await (regime.schema.Transaction).find(regime.id, tId)
       if (!transaction) {
         return Boom.notFound(`Could not find a transaction with the id: '${tId}'`)
       }
@@ -169,7 +167,7 @@ class BillRunTransactionsController {
       // check and verify if nested under billrun
       const billRun = await this.fetchBillRun(regime, req.params.billrun_id)
 
-      const removeRequest = new (Schema[regime.slug].BillRunTransactionsRemoveRequest)(regime, billRun, req.query)
+      const removeRequest = new (regime.schema.BillRunTransactionsRemoveRequest)(regime, billRun, req.query)
       // mustn't be billed - deletes transaction matching criteria (or all if none)
       await RemoveMatchingBillRunTransactions.call(removeRequest)
 
