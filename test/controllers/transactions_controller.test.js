@@ -7,21 +7,25 @@ const createServer = require('../../app')
 const Regime = require('../../app/models/regime')
 const RuleService = require('../../app/lib/connectors/rules')
 const { dummyCharge, zeroCharge } = require('../helpers/charge_helper')
-const { addTransaction, cleanTransactions } = require('../helpers/transaction_helper')
+const { addTransaction, updateTransaction, cleanTransactions } = require('../helpers/transaction_helper')
+const { makeAdminAuthHeader } = require('../helpers/authorisation_helper')
 
-describe('Transaction Queue controller: GET /v1/wrls/transaction_queue', () => {
+describe('Transactions controller: GET /v1/wrls/transactions', () => {
   let server
+  let authToken
 
   // Create server before the tests run
   before(async () => {
     server = await createServer()
+    authToken = makeAdminAuthHeader()
     await cleanTransactions()
   })
 
   it('returns list of transactions', async () => {
     const options = {
       method: 'GET',
-      url: '/v1/wrls/transaction_queue'
+      url: '/v1/wrls/transactions',
+      headers: { authorization: authToken }
     }
     const response = await server.inject(options)
     expect(response.statusCode).to.equal(200)
@@ -31,19 +35,22 @@ describe('Transaction Queue controller: GET /v1/wrls/transaction_queue', () => {
   })
 })
 
-describe('Transaction Queue controller: POST /v1/wrls/transaction_queue', () => {
+describe('Transactions controller: POST /v1/wrls/transaction', () => {
   let server
+  let authToken
 
   // Create server before the tests run
   before(async () => {
     server = await createServer()
+    authToken = makeAdminAuthHeader()
     await cleanTransactions()
   })
 
-  it('adds a transaction to the queue', async () => {
+  it('adds a transaction', async () => {
     const options = {
       method: 'POST',
-      url: '/v1/wrls/transaction_queue',
+      url: '/v1/wrls/transactions',
+      headers: { authorization: authToken },
       payload: {
         periodStart: '01-APR-2019',
         periodEnd: '31-MAR-2020',
@@ -66,7 +73,7 @@ describe('Transaction Queue controller: POST /v1/wrls/transaction_queue', () => 
         licenceNumber: '123/456/26/*S/0453/R01',
         chargePeriod: '01-APR-2018 - 31-MAR-2019',
         chargeElementId: '',
-        batchNumber: 'TEST-Transaction-Queue',
+        batchNumber: 'TEST-Transaction',
         region: 'A',
         areaCode: 'ARCA'
       }
@@ -84,7 +91,8 @@ describe('Transaction Queue controller: POST /v1/wrls/transaction_queue', () => 
   it('does not add a transaction with invalid data', async () => {
     const options = {
       method: 'POST',
-      url: '/v1/wrls/transaction_queue',
+      url: '/v1/wrls/transactions',
+      headers: { authorization: authToken },
       payload: {
         transaction_date: '20-Jul-2018',
         invoice_date: '20-Jul-2018',
@@ -106,7 +114,8 @@ describe('Transaction Queue controller: POST /v1/wrls/transaction_queue', () => 
   it('does not add a transaction that generates a zero charge', async () => {
     const options = {
       method: 'POST',
-      url: '/v1/wrls/transaction_queue',
+      url: '/v1/wrls/transactions',
+      headers: { authorization: authToken },
       payload: {
         periodStart: '01-APR-2019',
         periodEnd: '31-MAR-2020',
@@ -147,14 +156,124 @@ describe('Transaction Queue controller: POST /v1/wrls/transaction_queue', () => 
   })
 })
 
-describe('Transaction Queue controller: DELETE /v1/wrls/transaction_queue', () => {
+describe('Transactions controller: GET /v1/wrls/transactions/id', () => {
   let server
   let regime
+  let authToken
 
   // Create server before the tests run
   before(async () => {
     server = await createServer()
     regime = await Regime.find('wrls')
+    authToken = makeAdminAuthHeader()
+    await cleanTransactions()
+  })
+
+  it('returns transaction', async () => {
+    const id = await addTransaction(regime)
+
+    const options = {
+      method: 'GET',
+      url: `/v1/wrls/transactions/${id}`,
+      headers: { authorization: authToken }
+    }
+
+    const response = await server.inject(options)
+    expect(response.statusCode).to.equal(200)
+    expect(response.headers['content-type']).to.include('application/json')
+    const payload = JSON.parse(response.payload)
+    expect(payload.transaction.id).to.equal(id)
+  })
+
+  it('returns 404 when id not found', async () => {
+    const options = {
+      method: 'GET',
+      url: '/v1/wrls/transactions/deadbeef-0914-44f7-80ad-666ef0df67e0',
+      headers: { authorization: authToken }
+    }
+    const response = await server.inject(options)
+    expect(response.statusCode).to.equal(404)
+    expect(response.headers['content-type']).to.include('application/json')
+    const payload = JSON.parse(response.payload)
+    expect(payload).to.include(['statusCode', 'error', 'message'])
+  })
+})
+
+describe('Transactions controller: PATCH /v1/wrls/transactions/id/approve', () => {
+  let server
+  let regime
+  let authToken
+
+  // Create server before the tests run
+  before(async () => {
+    server = await createServer()
+    regime = await Regime.find('wrls')
+    authToken = makeAdminAuthHeader()
+    await cleanTransactions()
+  })
+
+  it('sets the approved for billing flag', async () => {
+    const id = await addTransaction(regime)
+
+    const options = {
+      method: 'PATCH',
+      url: `/v1/${regime.slug}/transactions/${id}/approve`,
+      headers: { authorization: authToken }
+    }
+    const response = await server.inject(options)
+    expect(response.statusCode).to.equal(204)
+
+    const transaction = await regime.schema.Transaction.find(regime.id, id)
+    expect(transaction.approved_for_billing).to.be.true()
+  })
+})
+
+describe('Transactions controller: PATCH /v1/wrls/transactions/id/unapprove', () => {
+  let server
+  let regime
+  let authToken
+
+  // Create server before the tests run
+  before(async () => {
+    server = await createServer()
+    regime = await Regime.find('wrls')
+    authToken = makeAdminAuthHeader()
+    await cleanTransactions()
+  })
+
+  it('clears approved for billing flag', async () => {
+    const id = await addTransaction(regime)
+
+    // set the approved flag directly with the helper
+    await updateTransaction(id, { approved_for_billing: true })
+
+    const transaction = await regime.schema.Transaction.find(regime.id, id)
+    expect(transaction.approved_for_billing).to.be.true()
+
+    const options = {
+      method: 'PATCH',
+      url: `/v1/${regime.slug}/transactions/${id}/unapprove`,
+      headers: { authorization: authToken }
+    }
+
+    const response = await server.inject(options)
+    expect(response.statusCode).to.equal(204)
+
+    await transaction.reload() // = await Transaction.find(regime.id, id)
+    expect(transaction.approved_for_billing).to.be.false()
+  })
+})
+
+describe('Transactions controller: DELETE /v1/wrls/transactions', () => {
+  let server
+  let regime
+  let authToken
+
+  // Create server before the tests run
+  before(async () => {
+    server = await createServer()
+    regime = await Regime.find('wrls')
+    authToken = makeAdminAuthHeader()
     await cleanTransactions()
   })
 
@@ -164,7 +283,8 @@ describe('Transaction Queue controller: DELETE /v1/wrls/transaction_queue', () =
     expect(id).to.not.be.null()
     const opts = {
       method: 'DELETE',
-      url: '/v1/wrls/transaction_queue/' + id
+      url: `/v1/wrls/transactions/${id}`,
+      headers: { authorization: authToken }
     }
 
     const response = await server.inject(opts)

@@ -1,6 +1,5 @@
 const Boom = require('@hapi/boom')
 const { pool } = require('../lib/connectors/db')
-const utils = require('../lib/utils')
 
 class Transaction {
   constructor (params) {
@@ -102,7 +101,7 @@ class Transaction {
   }
 
   static async findRaw (regimeId, transactionId) {
-    const stmt = this.rawQuery + ` WHERE id=$1::uuid AND regime_id=$2::uuid`
+    const stmt = `${this.rawQuery} WHERE t.id=$1::uuid AND t.regime_id=$2::uuid`
     const result = await pool.query(stmt, [transactionId, regimeId])
     if (result.rowCount !== 1) {
       return null
@@ -111,7 +110,7 @@ class Transaction {
   }
 
   static async findBillRunRaw (regimeId, billRunId, transactionId) {
-    const stmt = this.rawQuery + ` WHERE id=$1::uuid AND regime_id=$2::uuid AND bill_run_id=$3::uuid`
+    const stmt = `${this.rawQuery} WHERE t.id=$1::uuid AND t.regime_id=$2::uuid AND t.bill_run_id=$3::uuid`
     const result = await pool.query(stmt, [transactionId, regimeId, billRunId])
     if (result.rowCount !== 1) {
       return null
@@ -119,67 +118,54 @@ class Transaction {
     return result.rows[0]
   }
 
-  static async search (params, page, perPage, sort, sortDir) {
-    // paginated search returning collection of DB records (not class instances)
-    // const pagination = {
-    //   page: page || config.pagination.page,
-    //   perPage: perPage || config.pagination.perPage
-    // }
-    const pagination = utils.validatePagination(page, perPage)
-
-    const offset = (pagination.page - 1) * pagination.perPage
-    const limit = pagination.perPage
-
-    // build where clause
-    // regime name, database name
-    // const transactions = require(`../schema/${regime.slug}_transaction`)
-    // const schema = Schema[regime.slug]
+  static async search (searchRequest, db) {
     const select = this.rawQuery
+
+    const cnx = db || pool
 
     // where clause uses DB names not mapped names
     const where = []
     const values = []
     let attrCount = 1
 
+    const params = searchRequest.searchParams
+
+    // we need to support a join with the bill runs table as searching by filename is allowed
+    // we could simplify by storing the filename in the transaction as well but ...
     Object.keys(params).forEach(col => {
       if (col) {
         const val = params[col]
+        const table = (col === 'transaction_filename' ? 'br' : 't')
 
-        if (val && val.indexOf('%') !== -1) {
-          where.push(`${col} like $${attrCount++}`)
+        if (val && typeof val === 'string' && val.indexOf('%') !== -1) {
+          where.push(`${table}.${col} like $${attrCount++}`)
         } else {
-          where.push(`${col}=$${attrCount++}`)
+          where.push(`${table}.${col}=$${attrCount++}`)
         }
-        // if (val && val.indexOf('*') !== -1) {
-        //   val = val.replace(/\*/g, '%')
-        //   where.push(`${col} like $${attrCount++}`)
-        // } else {
-        //   where.push(`${col} = $${attrCount++}`)
-        // }
         values.push(val)
       }
     })
 
     const whr = where.join(' AND ')
-    // order clause uses mapped names
-    const order = this.orderSearchQuery(sort, sortDir)
+    const order = this.orderSearchQuery(searchRequest.sort, searchRequest.sortDir)
+    const stmt = `${select} WHERE ${whr} ORDER BY ${order.join(',')} OFFSET $${attrCount++} LIMIT $${attrCount++}`
     const promises = [
-      pool.query('SELECT count(*) FROM transactions WHERE ' + whr, values),
-      pool.query(select + ' WHERE ' +
-        whr + ' ORDER BY ' + order.join(',') + ` OFFSET $${attrCount++} LIMIT $${attrCount++}`,
-      [...values, offset, limit])
+      cnx.query('SELECT count(*) FROM transactions t LEFT JOIN bill_runs br ON (t.bill_run_id = br.id) WHERE ' + whr, values),
+      cnx.query(stmt, [...values, searchRequest.offset, searchRequest.limit])
     ]
 
     const results = await Promise.all(promises)
     const count = parseInt(results[0].rows[0].count)
-    const pageTotal = Math.ceil(count / limit)
+    const pageTotal = Math.ceil(count / searchRequest.limit)
     const rows = results[1].rows
 
-    pagination.pageCount = pageTotal
-    pagination.recordCount = count
-
     return {
-      pagination,
+      pagination: {
+        page: searchRequest.page,
+        perPage: searchRequest.perPage,
+        pageCount: pageTotal,
+        recordCount: count
+      },
       data: {
         transactions: rows
       }
@@ -195,7 +181,7 @@ class Transaction {
   }
 
   static get rawQuery () {
-    return 'select * from transactions'
+    return 'SELECT t.*,br.transaction_filename FROM transactions t LEFT JOIN bill_runs br ON (t.bill_run_id = br.id)'
   }
 }
 

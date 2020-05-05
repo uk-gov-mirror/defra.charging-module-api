@@ -4,6 +4,7 @@ const { describe, it, before } = exports.lab = Lab.script()
 const { expect } = Code
 const createServer = require('../../app')
 const { cleanCustomerChanges } = require('../helpers/customer_helper')
+const { makeAdminAuthHeader } = require('../helpers/authorisation_helper')
 
 // describe('Customer changes controller: GET /v1/wrls/customer_changes', () => {
 //   let server
@@ -28,10 +29,12 @@ const { cleanCustomerChanges } = require('../helpers/customer_helper')
 
 describe('Customer changes controller: POST /v1/wrls/customer_changes', () => {
   let server
+  let authToken
 
   // Create server before the tests run
   before(async () => {
     server = await createServer()
+    authToken = makeAdminAuthHeader()
     await cleanCustomerChanges()
   })
 
@@ -39,6 +42,7 @@ describe('Customer changes controller: POST /v1/wrls/customer_changes', () => {
     const options = {
       method: 'POST',
       url: '/v1/wrls/customer_changes',
+      headers: { authorization: authToken },
       payload: {
         region: 'A',
         customerReference: 'AB123456A',
@@ -57,6 +61,7 @@ describe('Customer changes controller: POST /v1/wrls/customer_changes', () => {
   it('does not add a customer change with invalid data', async () => {
     const options = {
       method: 'POST',
+      headers: { authorization: authToken },
       url: '/v1/wrls/customer_changes',
       payload: {
         region: 'A',

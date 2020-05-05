@@ -1,32 +1,37 @@
 const Lab = require('@hapi/lab')
 const Code = require('@hapi/code')
 const Sinon = require('sinon')
-const lab = exports.lab = Lab.script()
+const { describe, it, before, after } = exports.lab = Lab.script()
+const { expect } = Code
 const createServer = require('../../app')
 const RuleService = require('../../app/lib/connectors/rules')
 const Regime = require('../../app/models/regime')
 const { dummyCharge } = require('../helpers/charge_helper')
+const { makeAdminAuthHeader } = require('../helpers/authorisation_helper')
 
-lab.experiment('Calculate Charge controller test', () => {
+describe('Calculate Charge controller: POST /v1/wrls/calculate_charge', () => {
   let server
   let regime
   let ruleStub
+  let authToken
 
   // Create server before the experiment
-  lab.before(async () => {
+  before(async () => {
     server = await createServer()
     regime = await Regime.find('wrls')
     ruleStub = Sinon.stub(RuleService, 'calculateCharge').resolves(dummyCharge())
+    authToken = makeAdminAuthHeader()
   })
 
-  lab.after(() => {
+  after(() => {
     ruleStub.restore()
   })
 
-  lab.test('POST /v1/wrls/calculate_charge returns charge', async () => {
+  it('returns a charge', async () => {
     const options = {
       method: 'POST',
       url: `/v1/${regime.slug}/calculate_charge`,
+      headers: { authorization: authToken },
       payload: {
         periodStart: '01-APR-2019',
         periodEnd: '31-MAR-2020',
@@ -47,24 +52,26 @@ lab.experiment('Calculate Charge controller test', () => {
       }
     }
     const response = await server.inject(options)
-    Code.expect(response.statusCode).to.equal(200)
-    Code.expect(ruleStub.called).to.be.true()
-    Code.expect(JSON.parse(response.payload).calculation.chargeValue).to.equal(-1234500)
+    expect(response.statusCode).to.equal(200)
+    expect(ruleStub.called).to.be.true()
+    expect(JSON.parse(response.payload).calculation.chargeValue).to.equal(-1234500)
   })
 
-  lab.test('POST /v1/wrls/calculate_charge without payload returns 400 error', async () => {
-    const options = {
-      method: 'POST',
-      url: `/v1/${regime.slug}/calculate_charge`
-    }
-    const response = await server.inject(options)
-    Code.expect(response.statusCode).to.equal(400)
-  })
-
-  lab.test('POST /v1/wrls/calculate_charge with invalid payload schema returns 422 error', async () => {
+  it('returns 400 error when no payload supplied', async () => {
     const options = {
       method: 'POST',
       url: `/v1/${regime.slug}/calculate_charge`,
+      headers: { authorization: authToken }
+    }
+    const response = await server.inject(options)
+    expect(response.statusCode).to.equal(400)
+  })
+
+  it('returns 422 error when payload schema is invalid', async () => {
+    const options = {
+      method: 'POST',
+      url: `/v1/${regime.slug}/calculate_charge`,
+      headers: { authorization: authToken },
       payload: {
         periodStart: '01-APR-2019',
         periodEnd: '31-MAR-2020',
@@ -73,6 +80,6 @@ lab.experiment('Calculate Charge controller test', () => {
       }
     }
     const response = await server.inject(options)
-    Code.expect(response.statusCode).to.equal(422)
+    expect(response.statusCode).to.equal(422)
   })
 })

@@ -11,7 +11,6 @@ async function call (regime, billRun) {
   //   status = unbilled
   //   region = billRun.region
   //   approved_for_billing = true ?
-  // optionally further restricted by billRun.filter
   //
   const defaultArgs = {
     regime_id: regime.id,
@@ -20,12 +19,6 @@ async function call (regime, billRun) {
     region: billRun.region
   }
 
-  // transactions must be approved to be included when not a draft bill run
-  // if (!billRun.draft) {
-  //   defaultArgs.approved_for_billing = true
-  // }
-
-  // const filter = { ...billRun.filter, ...defaultArgs }
   const filter = defaultArgs
 
   const { where, values } = utils.buildWhereClause(filter)
@@ -50,11 +43,6 @@ async function call (regime, billRun) {
       const summary = await buildCustomerSummary(db, regime, billRun, ref, filter)
       billRun.addSummary(summary)
     }
-
-    // if (finalise) {
-    //   await billRun.generateFileId()
-    //   await updateTransactions(db, billRun, filter)
-    // }
 
     await billRun.save(db)
     await db.commit()
@@ -121,7 +109,6 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
   summary.debit_line_count = debits.rowCount
   summary.debit_line_value = debits.rows.reduce((total, row) => {
     summary.transactions.push(row)
-    // summary.transactions.push({ id: row.id, charge_value: row.charge_value, line_attr_1: row.line_attr_1 })
     return total + row.charge_value
   }, 0)
 
@@ -134,7 +121,6 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
       const licence = row.line_attr_1
       const creditNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value < 0 AND line_attr_1='${licence}'`
       const newCredits = await db.query(creditNewStmt, values)
-      // console.log(`newCredits count: ${newCredits.rowCount}`)
       if (newCredits.rowCount > 0) {
         // we have some new licences / transfers so minimum charge rules apply
         const creditValue = newCredits.rows.reduce((total, row) => {
@@ -142,16 +128,12 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
           return total + row.charge_value
         }, 0)
 
-        // console.log(`Credit value: ${creditValue}`)
         const amount = -config.minimumChargeAmount - creditValue
-        // console.log(`Amount is: ${amount}`)
-        // if (creditValue > -config.minimumChargeAmount) {
         if (amount < 0) {
           const transaction = await addMinimumChargeAdjustment(db, regime, billRun, newCredits.rows[0].id, amount, attrs)
           summary.transactions.push(transaction)
           summary.credit_line_count++
           summary.credit_line_value += amount
-          // console.log(`add min charge credit row for: ${amount}`)
         }
         summary.credit_line_count += newCredits.rowCount
         summary.credit_line_value += creditValue
@@ -159,24 +141,20 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
 
       const invoiceNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value >= 0 AND line_attr_1='${licence}'`
       const newDebits = await db.query(invoiceNewStmt, values)
-      // console.log(`newDebits count: ${newDebits.rowCount}`)
+
       if (newDebits.rowCount > 0) {
         // we have some new licences / transfers so minimum charge rules apply
         const debitValue = newDebits.rows.reduce((total, row) => {
           summary.transactions.push(row)
           return total + row.charge_value
         }, 0)
-        // console.log(`Debit value: ${debitValue}`)
-        // console.log(`Config value: ${config.minimumChargeAmount}`)
+
         const amount = config.minimumChargeAmount - debitValue
-        // if (debitValue < config.minimumChargeAmount) {
         if (amount > 0) {
-          // console.log(`add min charge debit row for: ${amount}`)
           const transaction = await addMinimumChargeAdjustment(db, regime, billRun, newDebits.rows[0].id, amount, attrs)
           summary.transactions.push(transaction)
           summary.debit_line_count++
           summary.debit_line_value += amount
-          // console.log(`add min charge debit row for: ${amount}`)
         }
         summary.debit_line_count += newDebits.rowCount
         summary.debit_line_value += debitValue
@@ -184,34 +162,10 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
     }
   }
 
-  // const creditStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value < 0 AND new_licence = false`
-  // const creditNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value < 0 AND new_licence = true`
-  // const invoiceStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value >= 0 AND new_licence = false`
-  // const invoiceNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value >= 0 AND new_licence = true`
-  // const creditStmt = `SELECT id,charge_value,line_attr_1 FROM transactions WHERE ${where} AND charge_value < 0`
-  // const invoiceStmt = `SELECT id,charge_value,line_attr_1 FROM transactions WHERE ${where} AND charge_value >= 0`
-
   summary.net_total = summary.credit_line_value + summary.debit_line_value
-
-  // NOTE: this is outside of the database transaction so won't rollback if there's an issue
-  // if (finalise) {
-  //   const transactionType = (summary.net_total < 0 ? 'C' : 'I')
-  //   const transactionRef = await billRun.generateTransactionRef(transactionType === 'C')
-  //   const upd = `UPDATE transactions SET transaction_type='${transactionType}',transaction_reference='${transactionRef}' WHERE ${where}`
-  //   await db.query(upd, values)
-  // }
 
   return summary
 }
-
-// async function updateTransactions (db, billRun, filter) {
-//   // update all included transactions with an association to the billRun
-//   // and change their status so they aren't visible in the billing queue
-//   const dateNow = utils.formatDate(new Date())
-//   const { where, values } = utils.buildWhereClause(filter)
-//   const upd = `UPDATE transactions SET status='billed', transaction_date='${dateNow}', header_attr_1='${dateNow}' WHERE ${where}`
-//   return db.query(upd, values)
-// }
 
 async function addMinimumChargeAdjustment (db, regime, billRun, parentId, amount, returnAttrs) {
   // add adjustment transaction
@@ -230,11 +184,6 @@ async function addMinimumChargeAdjustment (db, regime, billRun, parentId, amount
     values.push(`$${attrCount++}`)
     data.push(kv[1])
   })
-  // Object.keys(params).forEach((k) => {
-  //   names.push(k)
-  //   values.push(`$${attrCount++}`)
-  //   data.push(params[k])
-  // })
 
   const stmt = `INSERT INTO transactions (${names.join(',')}) VALUES (${values.join(',')}) RETURNING ${returnAttrs}`
   const result = await db.query(stmt, data)
