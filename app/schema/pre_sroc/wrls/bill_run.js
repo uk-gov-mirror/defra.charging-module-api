@@ -19,20 +19,24 @@ class WrlsBillRun extends BillRun {
       }
     }
     this.summary_data.customers.push(summary)
-    summary.summary.forEach(s => {
-      this.credit_line_count += s.credit_line_count
-      this.credit_line_value += s.credit_line_value
-      this.debit_line_count += s.debit_line_count
-      this.debit_line_value += s.debit_line_value
+    summary.summary = summary.summary.map(line => {
+      // Only update totals if deminimis doesn't apply to this line
+      if (!line.deminimis) {
+        this.credit_line_count += line.credit_line_count
+        this.credit_line_value += line.credit_line_value
+        this.debit_line_count += line.debit_line_count
+        this.debit_line_value += line.debit_line_value
 
-      if (s.net_total >= 0) {
-        this.invoice_count++
-        this.invoice_value += s.net_total
-      } else {
-        this.credit_count++
-        this.credit_value += s.net_total
+        if (line.net_total >= 0) {
+          this.invoice_count++
+          this.invoice_value += line.net_total
+        } else {
+          this.credit_count++
+          this.credit_value += line.net_total
+        }
+        this.net_total += line.net_total
       }
-      this.net_total += s.net_total
+      return line
     })
   }
 
@@ -52,7 +56,8 @@ class WrlsBillRun extends BillRun {
         creditLineValue: this.credit_line_value,
         debitLineCount: this.debit_line_count,
         debitLineValue: this.debit_line_value,
-        netTotal: this.net_total
+        netTotal: this.net_total,
+        deminimis: this.deminimis
       },
       customers: []
     }
@@ -60,34 +65,16 @@ class WrlsBillRun extends BillRun {
     if (this.summary_data) {
       let customersSummary = this.summary_data.customers
 
+      if (searchParams.licenceNumber && searchParams.customerReference) {
+        throw new Error('Only one of licenceNumber or customerReference can be specified')
+      }
+
       if (searchParams.licenceNumber) {
         // get customer data with this licence and recalc customer totals
-        customersSummary = this.summary_data.customers.filter(c => {
-          const result1 = c.summary.filter(s => {
-            s.transactions = s.transactions.filter(t => t.line_attr_1 === searchParams.licenceNumber)
-            if (s.transactions.length) {
-              s.credit_line_count = 0
-              s.credit_line_value = 0
-              s.debit_line_count = 0
-              s.debit_line_value = 0
-              s.net_total = 0
-              s.transactions.forEach(t => {
-                if (t.charge_value < 0) {
-                  s.credit_line_count++
-                  s.credit_line_value += t.charge_value
-                } else {
-                  s.debit_line_count++
-                  s.debit_line_value += t.charge_value
-                }
-                s.net_total += t.charge_value
-              })
-              return true
-            }
-            return false
-          })
-          return result1 && result1.length
-        })
-      } else if (searchParams.customerReference) {
+        customersSummary = this.summary_data.customers.filter(c => recalculateCustomerTotals(c, searchParams.licenceNumber))
+      }
+
+      if (searchParams.customerReference) {
         // get customer data block for this customer reference
         customersSummary = this.summary_data.customers.filter(c => c.customer_reference === searchParams.customerReference)
       }
@@ -103,12 +90,14 @@ class WrlsBillRun extends BillRun {
               debitLineCount: ss.debit_line_count,
               debitLineValue: ss.debit_line_value,
               netTotal: ss.net_total,
+              deminimis: ss.deminimis,
               transactions: ss.transactions.map(t => {
                 return {
                   id: t.id,
                   chargeValue: t.charge_value,
                   licenceNumber: t.line_attr_1,
-                  minimumChargeAdjustment: t.minimum_charge_adjustment
+                  minimumChargeAdjustment: t.minimum_charge_adjustment,
+                  deminimis: t.deminimis
                 }
               })
             }
@@ -301,6 +290,41 @@ class WrlsBillRun extends BillRun {
   toJSON () {
     return this.summary()
   }
+}
+
+function recalculateCustomerTotals (c, licenceNumber) {
+  const result = c.summary.filter(s => {
+    s.transactions = s.transactions.filter(t => t.line_attr_1 === licenceNumber)
+
+    // Bail if there are no transactions
+    if (!s.transactions.length) {
+      return false
+    }
+
+    s = {
+      ...s,
+      credit_line_count: 0,
+      credit_line_value: 0,
+      debit_line_count: 0,
+      debit_line_value: 0,
+      net_total: 0
+    }
+
+    s.transactions.forEach(t => {
+      // Charges values < 0 are credits, >= 0 are debits
+      if (t.charge_value < 0) {
+        s.credit_line_count++
+        s.credit_line_value += t.charge_value
+      } else {
+        s.debit_line_count++
+        s.debit_line_value += t.charge_value
+      }
+      s.net_total += t.charge_value
+    })
+
+    return true
+  })
+  return result && result.length
 }
 
 module.exports = WrlsBillRun

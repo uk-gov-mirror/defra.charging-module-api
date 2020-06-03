@@ -164,7 +164,24 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
 
   summary.net_total = summary.credit_line_value + summary.debit_line_value
 
-  return summary
+  const deminimisSummary = calculateDeminimis(summary, db, where, values)
+
+  return deminimisSummary
+}
+
+async function calculateDeminimis (summary, db, where, values) {
+  // Determine whether deminimis applies
+  const deminimis = summary.net_total >= 0 && summary.net_total < 500
+
+  // Add deminimis flag to each transaction
+  const transactions = summary.transactions.map(transaction => ({ ...transaction, deminimis }))
+
+  // Update deminimis flags in database
+  const updateDeminimis = `UPDATE transactions SET deminimis = ${deminimis} WHERE ${where}`
+  await db.query(updateDeminimis, values)
+
+  // Return summary with updated transactions and deminimis flag
+  return { ...summary, transactions, deminimis }
 }
 
 async function addMinimumChargeAdjustment (db, regime, billRun, parentId, amount, returnAttrs) {

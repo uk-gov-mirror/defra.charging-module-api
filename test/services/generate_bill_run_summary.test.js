@@ -1,9 +1,9 @@
 const Lab = require('@hapi/lab')
 const Code = require('@hapi/code')
-const { describe, it, before } = exports.lab = Lab.script()
+const { describe, it, beforeEach } = exports.lab = Lab.script()
 const { expect } = Code
 const Regime = require('../../app/models/regime')
-const { addBillRunTransaction } = require('../helpers/bill_run_helper')
+const { addBillRunTransaction, addBillRunDeminimisTransaction } = require('../helpers/bill_run_helper')
 const CreateBillRun = require('../../app/services/create_bill_run')
 const GenerateBillRunSummary = require('../../app/services/generate_bill_run_summary')
 
@@ -11,7 +11,7 @@ describe('Generate Bill Run Summary', () => {
   let regime
   let billRun
 
-  before(async () => {
+  beforeEach(async () => {
     regime = await Regime.find('wrls')
     const payload = {
       region: 'A'
@@ -36,5 +36,27 @@ describe('Generate Bill Run Summary', () => {
     expect(summary.approvedForBilling).to.be.false()
     expect(summary.summary.netTotal).to.equal(transaction.charge_value)
     expect(summary.customers[0].customerReference).to.equal(transaction.customerReference)
+  })
+
+  it('sets deminimis to false if payment is over 500', async () => {
+    const tId = await addBillRunTransaction(regime, billRun, { region: 'A' })
+    const transaction = await regime.schema.Transaction.find(regime.id, tId)
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+    const summary = br.summary()
+
+    expect(summary.customers[0].customerReference).to.equal(transaction.customerReference)
+    expect(summary.customers[0].summaryByFinancialYear[0].deminimis).to.equal(false)
+    expect(summary.customers[0].summaryByFinancialYear[0].transactions[0].deminimis).to.equal(false)
+  })
+
+  it('sets deminimis to true if payment is under 500', async () => {
+    const tId = await addBillRunDeminimisTransaction(regime, billRun, { region: 'A' })
+    const transaction = await regime.schema.Transaction.find(regime.id, tId)
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+    const summary = br.summary()
+
+    expect(summary.customers[0].customerReference).to.equal(transaction.customerReference)
+    expect(summary.customers[0].summaryByFinancialYear[0].deminimis).to.equal(true)
+    expect(summary.customers[0].summaryByFinancialYear[0].transactions[0].deminimis).to.equal(true)
   })
 })
