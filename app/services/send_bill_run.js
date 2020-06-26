@@ -47,7 +47,7 @@ async function call (regime, billRun) {
     for (const c of billRun.summary_data.customers) {
       for (const s of c.summary) {
         const tType = s.net_total < 0 ? 'C' : 'I'
-        const tRef = await billRun.generateTransactionRef(tType === 'C')
+        const tRef = s.deminimis ? null : await billRun.generateTransactionRef(tType === 'C')
         const tIds = s.transactions.map(t => t.id).join("','")
         const stmt = `UPDATE transactions SET transaction_type=$1,transaction_reference=$2 WHERE id IN ('${tIds}') AND deminimis=FALSE`
         await db.query(stmt, [tType, tRef])
