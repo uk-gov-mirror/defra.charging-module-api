@@ -3,7 +3,7 @@ const Sinon = require('sinon')
 const RuleService = require('../../app/lib/connectors/rules')
 const AddBillRunTransaction = require('../../app/services/add_bill_run_transaction')
 const { buildTransaction } = require('./transaction_helper')
-const { dummyCharge, deminimisCharge } = require('./charge_helper')
+const { dummyCharge, deminimisCharge, minimumCharge } = require('./charge_helper')
 
 async function billRunCount () {
   const result = await pool.query('SELECT count(*)::int from bill_runs')
@@ -22,6 +22,16 @@ async function addBillRunTransaction (regime, billRun, data = {}) {
 
 async function addBillRunDeminimisTransaction (regime, billRun, data = {}) {
   const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(deminimisCharge())
+  const transaction = buildTransaction(regime, data)
+
+  const result = await AddBillRunTransaction.call(regime, billRun, transaction, regime.schema)
+  stub.restore()
+
+  return result
+}
+
+async function addBillRunMinimumChargeTransaction (regime, billRun, data = {}) {
+  const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(minimumCharge())
   const transaction = buildTransaction(regime, data)
 
   const result = await AddBillRunTransaction.call(regime, billRun, transaction, regime.schema)
@@ -53,5 +63,6 @@ module.exports = {
   forceStatus,
   forceApproval,
   addBillRunTransaction,
-  addBillRunDeminimisTransaction
+  addBillRunDeminimisTransaction,
+  addBillRunMinimumChargeTransaction
 }
