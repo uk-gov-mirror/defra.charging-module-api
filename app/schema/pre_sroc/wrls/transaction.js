@@ -225,15 +225,7 @@ class WrlsTransaction extends Transaction {
       t.new_licence AS "newLicence",
       t.minimum_charge_adjustment AS "minimumChargeAdjustment",
       t.approved_for_billing AS "approvedForBilling",
-      t.deminimis,
-      CASE
-        WHEN t.deminimis=TRUE
-        THEN
-          NULL
-        ELSE
-          br.transaction_filename
-        END
-      AS "transactionFileReference",
+      br.transaction_filename AS "transactionFileReference",
       t.charge_calculation AS "calculation"
       FROM transactions t LEFT OUTER JOIN bill_runs br ON (t.bill_run_id = br.id)`
   }
