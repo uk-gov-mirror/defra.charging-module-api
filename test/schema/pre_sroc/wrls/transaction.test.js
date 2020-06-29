@@ -38,6 +38,14 @@ describe('PreSRoC Transaction (WRLS)', () => {
 
     const result = Transaction.validate(params)
     expect(result.error).to.not.exist()
+
+    // again with zero volume, a valid use case
+    const zeroVolParams = {
+      ...params,
+      volume: '0'
+    }
+    const result2 = Transaction.validate(zeroVolParams)
+    expect(result2.error).to.not.exist()
   })
 
   it('zero pads the prorataDays elements to 3 digits', async () => {

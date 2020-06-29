@@ -82,7 +82,7 @@ class Charge {
       credit: Joi.boolean().required(),
       billableDays: Joi.number().integer().min(0).max(366).required(),
       authorisedDays: Joi.number().integer().min(0).max(366).required(),
-      volume: Joi.number().greater(0).required(),
+      volume: Joi.number().min(0).required(),
       source: stringValidator.required(), // validated in rules service
       season: stringValidator.required(), // validated in rules service
       loss: stringValidator.required(), // validated in rules service
