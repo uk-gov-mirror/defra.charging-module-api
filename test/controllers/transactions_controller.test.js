@@ -6,7 +6,7 @@ const { expect } = Code
 const createServer = require('../../app')
 const Regime = require('../../app/models/regime')
 const RuleService = require('../../app/lib/connectors/rules')
-const { dummyCharge, zeroCharge } = require('../helpers/charge_helper')
+const { dummyCharge } = require('../helpers/charge_helper')
 const { addTransaction, updateTransaction, cleanTransactions } = require('../helpers/transaction_helper')
 const { makeAdminAuthHeader } = require('../helpers/authorisation_helper')
 
@@ -144,7 +144,7 @@ describe('Transactions controller: POST /v1/wrls/transaction', () => {
       }
     }
 
-    const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(zeroCharge())
+    const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(dummyCharge({ chargeValue: 0 }))
     const response = await server.inject(options)
 
     const stubCalled = stub.called
