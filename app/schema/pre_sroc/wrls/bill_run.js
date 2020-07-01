@@ -20,8 +20,8 @@ class WrlsBillRun extends BillRun {
     }
     this.summary_data.customers.push(summary)
     summary.summary = summary.summary.map(line => {
-      // Only update totals if deminimis doesn't apply to this line
-      if (!line.deminimis) {
+      // Only update totals if this line isn't deminimis or zero value charge
+      if (!line.deminimis && line.net_total) {
         this.credit_line_count += line.credit_line_count
         this.credit_line_value += line.credit_line_value
         this.debit_line_count += line.debit_line_count
@@ -311,14 +311,19 @@ function recalculateCustomerTotals (c, licenceNumber) {
     }
 
     s.transactions.forEach(t => {
-      // Charges values < 0 are credits, >= 0 are debits
+      // Transactions with charge value <0 are credits
+      // Transactions with charge value >0 are debits
+      // Zero value charge transactions don't count towards stats so no action is taken
       if (t.charge_value < 0) {
         s.credit_line_count++
         s.credit_line_value += t.charge_value
-      } else {
+      }
+
+      if (t.charge_value > 0) {
         s.debit_line_count++
         s.debit_line_value += t.charge_value
       }
+
       s.net_total += t.charge_value
     })
 

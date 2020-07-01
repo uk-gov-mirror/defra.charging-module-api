@@ -103,7 +103,7 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
   }, 0)
 
   // summarize debits at customer level (excluding new licences)
-  const invoiceStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value >= 0 AND new_licence = false`
+  const invoiceStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value > 0 AND new_licence = false`
   const debits = await db.query(invoiceStmt, values)
 
   summary.debit_line_count = debits.rowCount
@@ -139,7 +139,7 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
         summary.credit_line_value += creditValue
       }
 
-      const invoiceNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value >= 0 AND line_attr_1='${licence}'`
+      const invoiceNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value > 0 AND line_attr_1='${licence}'`
       const newDebits = await db.query(invoiceNewStmt, values)
 
       if (newDebits.rowCount > 0) {

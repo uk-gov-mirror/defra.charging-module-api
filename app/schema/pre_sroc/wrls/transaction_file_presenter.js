@@ -158,6 +158,8 @@ class WRLSTransactionFilePresenter {
         bill_run_id=$1::uuid
       AND
         deminimis=FALSE
+      AND
+        charge_value!=0
       ORDER BY
         transaction_reference ASC,
         line_attr_1 ASC,
