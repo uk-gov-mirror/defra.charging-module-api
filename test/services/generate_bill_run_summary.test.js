@@ -121,4 +121,18 @@ describe('Generate Bill Run Summary', () => {
     const transactionsTotal = transaction.charge_value + minimumChargeAmount
     expect(summary.summary.netTotal).to.equal(transactionsTotal)
   })
+
+  it.only('excludes zero charge transactions from the summary count', async () => {
+    await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 50 })
+    await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: -40 })
+    await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 0 })
+
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+    const summary = br.summary()
+
+    console.log(summary)
+
+    expect(summary.summary.creditLineCount).to.equal(1)
+    expect(summary.summary.debitLineCount).to.equal(1)
+  })
 })
