@@ -122,7 +122,7 @@ describe('Generate Bill Run Summary', () => {
     expect(summary.summary.netTotal).to.equal(transactionsTotal)
   })
 
-  it.only('excludes zero charge transactions from the summary count', async () => {
+  it('excludes zero charge transactions from the summary count', async () => {
     await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 50 })
     await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: -40 })
     await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 0 })
