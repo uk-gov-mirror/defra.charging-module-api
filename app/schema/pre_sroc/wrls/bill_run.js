@@ -20,8 +20,8 @@ class WrlsBillRun extends BillRun {
     }
     this.summary_data.customers.push(summary)
     summary.summary = summary.summary.map(line => {
-      // Only update totals if this line isn't deminimis or zero value charge
-      if (!line.deminimis && line.net_total) {
+      // Only update totals if deminimis doesn't apply to this line
+      if (!line.deminimis) {
         this.credit_line_count += line.credit_line_count
         this.credit_line_value += line.credit_line_value
         this.debit_line_count += line.debit_line_count
