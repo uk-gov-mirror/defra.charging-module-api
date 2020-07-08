@@ -3,16 +3,16 @@ const Sinon = require('sinon')
 const RuleService = require('../../app/lib/connectors/rules')
 const AddBillRunTransaction = require('../../app/services/add_bill_run_transaction')
 const { buildTransaction } = require('./transaction_helper')
-const { dummyCharge, deminimisCharge } = require('./charge_helper')
+const { dummyCharge } = require('./charge_helper')
 
 async function billRunCount () {
   const result = await pool.query('SELECT count(*)::int from bill_runs')
   return result.rows[0].count
 }
 
-async function addBillRunTransaction (regime, billRun, data = {}) {
-  const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(dummyCharge())
-  const transaction = buildTransaction(regime, data)
+async function addBillRunTransaction (regime, billRun, transactionData = {}, chargeData = {}) {
+  const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(dummyCharge(chargeData))
+  const transaction = buildTransaction(regime, transactionData)
 
   const result = await AddBillRunTransaction.call(regime, billRun, transaction, regime.schema)
   stub.restore()
@@ -20,14 +20,12 @@ async function addBillRunTransaction (regime, billRun, data = {}) {
   return result
 }
 
-async function addBillRunDeminimisTransaction (regime, billRun, data = {}) {
-  const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(deminimisCharge())
-  const transaction = buildTransaction(regime, data)
+async function addBillRunDeminimisTransaction (regime, billRun, transactionData = {}, chargeData = {}) {
+  return addBillRunTransaction(regime, billRun, transactionData, { ...chargeData, chargeValue: 0.01 })
+}
 
-  const result = await AddBillRunTransaction.call(regime, billRun, transaction, regime.schema)
-  stub.restore()
-
-  return result
+async function addBillRunMinimumChargeTransaction (regime, billRun, transactionData = {}, chargeData = {}) {
+  return addBillRunTransaction(regime, billRun, transactionData, { ...chargeData, chargeValue: 20 })
 }
 
 async function forceStatus (billRunId, state) {
@@ -53,5 +51,6 @@ module.exports = {
   forceStatus,
   forceApproval,
   addBillRunTransaction,
-  addBillRunDeminimisTransaction
+  addBillRunDeminimisTransaction,
+  addBillRunMinimumChargeTransaction
 }

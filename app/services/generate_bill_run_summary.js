@@ -103,7 +103,7 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
   }, 0)
 
   // summarize debits at customer level (excluding new licences)
-  const invoiceStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value >= 0 AND new_licence = false`
+  const invoiceStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value > 0 AND new_licence = false`
   const debits = await db.query(invoiceStmt, values)
 
   summary.debit_line_count = debits.rowCount
@@ -113,13 +113,13 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
   }, 0)
 
   // new licences / minimum charge - handled at licence level
-  const newLicStmt = `SELECT DISTINCT line_attr_1 FROM transactions WHERE ${where} AND new_licence=true`
+  const newLicStmt = `SELECT DISTINCT line_attr_1 FROM transactions WHERE ${where} AND new_licence = true`
   const newLicences = await db.query(newLicStmt, values)
 
   if (newLicences.rowCount > 0) {
     for (const row of newLicences.rows) {
       const licence = row.line_attr_1
-      const creditNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value < 0 AND line_attr_1='${licence}'`
+      const creditNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value < 0 AND line_attr_1='${licence}' AND new_licence = true`
       const newCredits = await db.query(creditNewStmt, values)
       if (newCredits.rowCount > 0) {
         // we have some new licences / transfers so minimum charge rules apply
@@ -139,7 +139,7 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
         summary.credit_line_value += creditValue
       }
 
-      const invoiceNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value >= 0 AND line_attr_1='${licence}'`
+      const invoiceNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value > 0 AND line_attr_1='${licence}' AND new_licence = true`
       const newDebits = await db.query(invoiceNewStmt, values)
 
       if (newDebits.rowCount > 0) {

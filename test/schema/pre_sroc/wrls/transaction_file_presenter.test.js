@@ -112,4 +112,15 @@ describe('Transaction File Presenter (WRLS): presenter', () => {
     const data = mockStream.data.map(line => line.toString())
     expect(data.length).to.equal(2)
   })
+
+  it('body correctly excludes zero value transactions', async () => {
+    await addBillRunTransaction(regime, billRun, dummyCharge)
+    await addBillRunTransaction(regime, billRun, dummyCharge)
+    await addBillRunTransaction(regime, billRun, dummyCharge, { chargeValue: 0 })
+
+    await presenter.body(pool, mockStream)
+
+    const data = mockStream.data.map(line => line.toString())
+    expect(data.length).to.equal(2)
+  })
 })

@@ -13,12 +13,12 @@ async function call (regime, billRun) {
 
   // billRun cannot be already billed (or pending)
   if (billRun.isSent) {
-    throw Boom.badRequest(`Cannot send a Bill Run that has been billed`)
+    throw Boom.badRequest('Cannot send a Bill Run that has been billed')
   }
 
   // billRun must be approved
   if (!billRun.isApproved) {
-    throw Boom.badRequest(`Bill Run must be approved before it is sent`)
+    throw Boom.badRequest('Bill Run must be approved before it is sent')
   }
 
   // check that all transactions have been approved - should always be the case but possible to do this
@@ -36,6 +36,7 @@ async function call (regime, billRun) {
   try {
     await db.begin()
     // parse up existing summary and apply transaction refs etc.
+    // excluding zero value and deminimis transactions
     // for each customer summary
     // - for each financial year
     // - - look at sign of net_total (determines C or I for group)
@@ -49,7 +50,7 @@ async function call (regime, billRun) {
         const tType = s.net_total < 0 ? 'C' : 'I'
         const tRef = s.deminimis ? null : await billRun.generateTransactionRef(tType === 'C')
         const tIds = s.transactions.map(t => t.id).join("','")
-        const stmt = `UPDATE transactions SET transaction_type=$1,transaction_reference=$2 WHERE id IN ('${tIds}') AND deminimis=FALSE`
+        const stmt = `UPDATE transactions SET transaction_type=$1,transaction_reference=$2 WHERE id IN ('${tIds}') AND deminimis=FALSE AND charge_value!=0`
         await db.query(stmt, [tType, tRef])
       }
     }
@@ -57,12 +58,12 @@ async function call (regime, billRun) {
     const fileRef = await billRun.generateFileId()
     const fileName = billRun.filename
     const dateNow = utils.formatDate(new Date())
-    const updBillRun = `UPDATE bill_runs SET status='pending',file_reference=$1,transaction_filename=$2 WHERE id=$3`
+    const updBillRun = 'UPDATE bill_runs SET status=\'pending\',file_reference=$1,transaction_filename=$2 WHERE id=$3'
     await db.query(updBillRun, [fileRef, fileName, billRun.id])
     // update our local object
     billRun.status = 'pending'
 
-    const updTrans = `UPDATE transactions SET status='pending', transaction_date='${dateNow}', header_attr_1='${dateNow}' WHERE bill_run_id=$1 AND deminimis=FALSE`
+    const updTrans = `UPDATE transactions SET status='pending', transaction_date='${dateNow}', header_attr_1='${dateNow}' WHERE bill_run_id=$1 AND deminimis=FALSE AND charge_value!=0`
     await db.query(updTrans, [billRun.id])
     await db.commit()
   } catch (err) {
