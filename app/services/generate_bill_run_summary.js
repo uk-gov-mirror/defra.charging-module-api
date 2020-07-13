@@ -103,7 +103,7 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
   }, 0)
 
   // summarize debits at customer level (excluding new licences)
-  const invoiceStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value >= 0 AND new_licence = false`
+  const invoiceStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value > 0 AND new_licence = false`
   const debits = await db.query(invoiceStmt, values)
 
   summary.debit_line_count = debits.rowCount
@@ -139,7 +139,7 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
         summary.credit_line_value += creditValue
       }
 
-      const invoiceNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value >= 0 AND line_attr_1='${licence}' AND new_licence = true`
+      const invoiceNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value > 0 AND line_attr_1='${licence}' AND new_licence = true`
       const newDebits = await db.query(invoiceNewStmt, values)
 
       if (newDebits.rowCount > 0) {
@@ -171,13 +171,16 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
 
 async function calculateDeminimis (summary, db, where, values) {
   // Determine whether deminimis applies
-  const deminimis = summary.net_total >= 0 && summary.net_total < 500
+  const deminimis = summary.net_total > 0 && summary.net_total < 500
 
   // Add deminimis flag to each transaction
-  const transactions = summary.transactions.map(transaction => ({ ...transaction, deminimis }))
+  const transactions = summary.transactions.map(transaction => ({
+    ...transaction,
+    deminimis: transaction.charge_value > 0 ? deminimis : false
+  }))
 
   // Update deminimis flags in database
-  const updateDeminimis = `UPDATE transactions SET deminimis = ${deminimis} WHERE ${where}`
+  const updateDeminimis = `UPDATE transactions SET deminimis = ${deminimis} WHERE ${where} AND charge_value > 0`
   await db.query(updateDeminimis, values)
 
   // Return summary with updated transactions and deminimis flag

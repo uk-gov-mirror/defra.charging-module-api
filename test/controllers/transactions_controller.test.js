@@ -111,7 +111,7 @@ describe('Transactions controller: POST /v1/wrls/transaction', () => {
     expect(response.statusCode).to.equal(422)
   })
 
-  it('does not add a transaction that generates a zero charge', async () => {
+  it('does add a transaction that generates a zero charge', async () => {
     const options = {
       method: 'POST',
       url: '/v1/wrls/transactions',
@@ -150,9 +150,7 @@ describe('Transactions controller: POST /v1/wrls/transaction', () => {
     const stubCalled = stub.called
     stub.restore()
     expect(stubCalled).to.be.true()
-    expect(response.statusCode).to.equal(200)
-    const payload = JSON.parse(response.payload)
-    expect(payload.status).to.equal('Zero value charge calculated')
+    expect(response.statusCode).to.equal(201)
   })
 })
 

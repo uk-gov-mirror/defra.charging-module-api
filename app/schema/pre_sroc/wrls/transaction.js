@@ -227,7 +227,10 @@ class WrlsTransaction extends Transaction {
       t.approved_for_billing AS "approvedForBilling",
       t.deminimis,
       CASE
-        WHEN t.deminimis=TRUE
+        WHEN
+          t.deminimis=TRUE
+        OR
+          t.charge_value=0
         THEN
           NULL
         ELSE
