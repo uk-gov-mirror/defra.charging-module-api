@@ -47,6 +47,7 @@ class WrlsBillRun extends BillRun {
       region: this.region,
       status: this.status,
       approvedForBilling: this.approved_for_billing,
+      preSroc: this.pre_sroc,
       summary: {
         creditNoteCount: this.credit_count,
         creditNoteValue: this.credit_value,
@@ -235,6 +236,7 @@ class WrlsBillRun extends BillRun {
       to_char(file_created_at, 'DD-MON-YYYY') AS "transactionFileDate",
       status,
       approved_for_billing AS "approvedForBilling",
+      pre_sroc AS "preSroc",
       credit_count AS "creditCount",
       credit_value AS "creditValue",
       invoice_count AS "invoiceCount",
