@@ -35,6 +35,7 @@ describe('Generate Bill Run Summary', () => {
     expect(summary.billRunNumber).to.equal(br.bill_run_number)
     expect(summary.region).to.equal('A')
     expect(summary.approvedForBilling).to.be.false()
+    expect(summary.preSroc).to.be.true()
     expect(summary.summary.netTotal).to.equal(transaction.charge_value)
     expect(summary.customers[0].customerReference).to.equal(transaction.customerReference)
   })
