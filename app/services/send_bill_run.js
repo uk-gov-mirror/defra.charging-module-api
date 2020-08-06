@@ -50,8 +50,10 @@ async function call (regime, billRun) {
         const tType = s.net_total < 0 ? 'C' : 'I'
         const tRef = s.deminimis ? null : await billRun.generateTransactionRef(tType === 'C')
         const tIds = s.transactions.map(t => t.id).join("','")
-        const stmt = `UPDATE transactions SET transaction_type=$1,transaction_reference=$2 WHERE id IN ('${tIds}') AND deminimis=FALSE AND charge_value!=0`
-        await db.query(stmt, [tType, tRef])
+        if (tIds) {
+          const stmt = `UPDATE transactions SET transaction_type=$1,transaction_reference=$2 WHERE id IN ('${tIds}') AND deminimis=FALSE AND charge_value!=0`
+          await db.query(stmt, [tType, tRef])
+        }
       }
     }
 

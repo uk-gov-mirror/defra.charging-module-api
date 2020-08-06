@@ -47,4 +47,18 @@ describe('Send bill run', () => {
 
     await expect(SendBillRun.call(regime, reloadedBillRun)).to.reject(Error, 'No records found for bill run')
   })
+
+  it('handles case where a bill run group only contains zero value transactions', async () => {
+    const br = await CreateBillRun.call({ regimeId: regime.id, region: 'A' })
+    const billRun = await (schema.BillRun).find(regime.id, br.id)
+    await addBillRunTransaction(regime, billRun, { region: billRun.region }, { chargeValue: 0 })
+    // HACK: set approved_for_billing on billrun and transactions
+    await forceApproval(br.id, true)
+    // reload billRun
+    const reloadedBillRun = await (schema.BillRun).find(regime.id, billRun.id)
+
+    const sentBillRun = await SendBillRun.call(regime, reloadedBillRun)
+
+    expect(sentBillRun.invoice_count).to.equal(0)
+  })
 })
