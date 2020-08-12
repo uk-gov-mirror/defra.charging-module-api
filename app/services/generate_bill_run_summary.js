@@ -78,95 +78,117 @@ async function buildCustomerSummary (db, regime, billRun, customerRef, filter) {
 }
 
 async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
-  const summary = {
-    financial_year: year,
-    credit_line_count: 0,
-    credit_line_value: 0,
-    debit_line_count: 0,
-    debit_line_value: 0,
-    transactions: []
-  }
-
   // filter.charge_financial_year = year
   const { where, values } = utils.buildWhereClause({ charge_financial_year: year, ...filter })
 
   // assumption that 0 would be a invoice
   const attrs = ['id', 'charge_value', ...billRun.summaryAdditionalAttributes].join(',')
 
-  // summarize credits at customer level (excluding new licences)
+  const customerLevelStatement = (attrs, where, chargeCondition) => `SELECT ${attrs} FROM transactions WHERE ${where} AND ${chargeCondition} AND new_licence = false`
+
+  // summarise zero value charges (excluding new licences)
+  const zeroValueStmt = customerLevelStatement(attrs, where, 'charge_value = 0')
+  const { summary: zeroChargeSummary } = await createCustomerLevelSummary(zeroValueStmt, values, db)
+
+  // summarise credits (excluding new licences)
   const creditStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value < 0 AND new_licence = false`
-  const credits = await db.query(creditStmt, values)
-  summary.credit_line_count = credits.rowCount
-  summary.credit_line_value = credits.rows.reduce((total, row) => {
-    summary.transactions.push(row)
-    return total + row.charge_value
-  }, 0)
+  const { summary: creditSummary } = await createCustomerLevelSummary(creditStmt, values, db)
 
-  // summarize debits at customer level (excluding new licences)
+  // summarise debits (excluding new licences)
   const invoiceStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value > 0 AND new_licence = false`
-  const debits = await db.query(invoiceStmt, values)
+  const { summary: debitSummary } = await createCustomerLevelSummary(invoiceStmt, values, db)
 
-  summary.debit_line_count = debits.rowCount
-  summary.debit_line_value = debits.rows.reduce((total, row) => {
-    summary.transactions.push(row)
-    return total + row.charge_value
-  }, 0)
+  // Build summary from customer level summaries
+  const summary = {
+    financial_year: year,
+    credit_line_count: creditSummary.lineCount ? creditSummary.lineCount : 0,
+    credit_line_value: creditSummary.lineValue ? creditSummary.lineValue : 0,
+    debit_line_count: debitSummary.lineCount ? debitSummary.lineCount : 0,
+    debit_line_value: debitSummary.lineValue ? debitSummary.lineValue : 0,
+    zero_value_line_count: zeroChargeSummary.lineCount,
+    transactions: [...zeroChargeSummary.transactions, ...creditSummary.transactions, ...debitSummary.transactions]
+  }
 
   // new licences / minimum charge - handled at licence level
   const newLicStmt = `SELECT DISTINCT line_attr_1 FROM transactions WHERE ${where} AND new_licence = true`
   const newLicences = await db.query(newLicStmt, values)
 
-  if (newLicences.rowCount > 0) {
+  if (newLicences.rowCount) {
     for (const row of newLicences.rows) {
+      // Get the licence id and create credit and debit summaries at licence level
+
+      // TODO: createLicenceLevelSummary also applies minimum charge and creates adjustment transaction as appropriate
+      //  refactor to separate this out
+
       const licence = row.line_attr_1
-      const creditNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value < 0 AND line_attr_1='${licence}' AND new_licence = true`
-      const newCredits = await db.query(creditNewStmt, values)
-      if (newCredits.rowCount > 0) {
-        // we have some new licences / transfers so minimum charge rules apply
-        const creditValue = newCredits.rows.reduce((total, row) => {
-          summary.transactions.push(row)
-          return total + row.charge_value
-        }, 0)
 
-        const amount = -config.minimumChargeAmount - creditValue
-        if (amount < 0) {
-          const transaction = await addMinimumChargeAdjustment(db, regime, billRun, newCredits.rows[0].id, amount, attrs)
-          summary.transactions.push(transaction)
-          summary.credit_line_count++
-          summary.credit_line_value += amount
-        }
-        summary.credit_line_count += newCredits.rowCount
-        summary.credit_line_value += creditValue
-      }
+      const licenceLevelStatement = (attrs, where, licence, chargeCondition) => `SELECT ${attrs} FROM transactions WHERE ${where} AND ${chargeCondition} AND line_attr_1='${licence}' AND new_licence = true AND minimum_charge_adjustment = false`
 
-      const invoiceNewStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value > 0 AND line_attr_1='${licence}' AND new_licence = true`
-      const newDebits = await db.query(invoiceNewStmt, values)
+      const creditNewStmt = licenceLevelStatement(attrs, where, licence, 'charge_value < 0')
+      const newCredits = await createLicenceLevelSummary(db, creditNewStmt, values, regime, billRun, attrs)
+      summary.credit_line_count += newCredits.lineCount
+      summary.credit_line_value += newCredits.lineValue
+      summary.transactions = [...summary.transactions, ...newCredits.transactions]
 
-      if (newDebits.rowCount > 0) {
-        // we have some new licences / transfers so minimum charge rules apply
-        const debitValue = newDebits.rows.reduce((total, row) => {
-          summary.transactions.push(row)
-          return total + row.charge_value
-        }, 0)
-
-        const amount = config.minimumChargeAmount - debitValue
-        if (amount > 0) {
-          const transaction = await addMinimumChargeAdjustment(db, regime, billRun, newDebits.rows[0].id, amount, attrs)
-          summary.transactions.push(transaction)
-          summary.debit_line_count++
-          summary.debit_line_value += amount
-        }
-        summary.debit_line_count += newDebits.rowCount
-        summary.debit_line_value += debitValue
-      }
+      const invoiceNewStmt = licenceLevelStatement(attrs, where, licence, 'charge_value > 0')
+      const newDebits = await createLicenceLevelSummary(db, invoiceNewStmt, values, regime, billRun, attrs)
+      summary.debit_line_count += newDebits.lineCount
+      summary.debit_line_value += newDebits.lineValue
+      summary.transactions = [...summary.transactions, ...newDebits.transactions]
     }
   }
 
   summary.net_total = summary.credit_line_value + summary.debit_line_value
 
-  const deminimisSummary = calculateDeminimis(summary, db, where, values)
+  const deminimisSummary = await calculateDeminimis(summary, db, where, values)
 
   return deminimisSummary
+}
+
+// Create summary at licence level and apply minimum charge
+async function createLicenceLevelSummary (db, where, values, regime, billRun, attrs) {
+  const { summary, parentId } = await createCustomerLevelSummary(where, values, db)
+
+  // Return early if there are no new licence lines
+  if (!summary.lineCount) {
+    return summary
+  }
+
+  // Calculate the current value and the difference from the minimum charge amount
+  const currentValue = summary.lineValue
+  const amount = config.minimumChargeAmount - Math.abs(currentValue)
+
+  // Check if the difference is over 0 (ie. there is a shortfall)
+  // If there is, create a new minimum charge adjustment and adjust the summary
+  if (amount > 0) {
+    // Change sign of adjustment amount based on whether the value to correct is positive or negative
+    // This gives us the proper amount to correct by
+    const adjustmentAmount = amount * Math.sign(currentValue)
+    const transaction = await addMinimumChargeAdjustment(db, regime, billRun, parentId, adjustmentAmount, attrs)
+    summary.transactions.push(transaction)
+    summary.lineCount++
+    summary.lineValue += adjustmentAmount
+  }
+
+  return summary
+}
+
+// Return summary at customer level
+async function createCustomerLevelSummary (query, values, db) {
+  const results = await db.query(query, values)
+
+  // Calculate the number of lines and total value of all lines
+  // Use these to populate the summary along with the individual transactions
+  const summary = {
+    lineCount: results.rowCount,
+    lineValue: results.rows.reduce((total, row) => total + row.charge_value, 0),
+    transactions: results.rows
+  }
+
+  // parentId is taken from the transactions, or null if there are none
+  const parentId = results.rows.length ? results.rows[0].id : null
+
+  return { summary, parentId }
 }
 
 async function calculateDeminimis (summary, db, where, values) {

@@ -20,20 +20,24 @@ class WrlsBillRun extends BillRun {
     }
     this.summary_data.customers.push(summary)
     summary.summary = summary.summary.map(line => {
-      // Only update totals if this line isn't deminimis or zero value charge
-      if (!line.deminimis && line.net_total) {
+      // Only update totals if this line isn't deminimis
+      if (!line.deminimis) {
         this.credit_line_count += line.credit_line_count
         this.credit_line_value += line.credit_line_value
         this.debit_line_count += line.debit_line_count
         this.debit_line_value += line.debit_line_value
+        this.zero_value_line_count += line.zero_value_line_count
 
-        if (line.net_total >= 0) {
+        if (line.net_total > 0) {
           this.invoice_count++
           this.invoice_value += line.net_total
-        } else {
+        }
+
+        if (line.net_total < 0) {
           this.credit_count++
           this.credit_value += line.net_total
         }
+
         this.net_total += line.net_total
       }
       return line
@@ -57,6 +61,7 @@ class WrlsBillRun extends BillRun {
         creditLineValue: this.credit_line_value,
         debitLineCount: this.debit_line_count,
         debitLineValue: this.debit_line_value,
+        zeroValueLineCount: this.zero_value_line_count,
         netTotal: this.net_total,
         deminimis: this.deminimis
       },
@@ -90,6 +95,7 @@ class WrlsBillRun extends BillRun {
               creditLineValue: ss.credit_line_value,
               debitLineCount: ss.debit_line_count,
               debitLineValue: ss.debit_line_value,
+              zeroValueLineCount: ss.zero_value_line_count,
               netTotal: ss.net_total,
               deminimis: ss.deminimis,
               transactions: ss.transactions.map(t => {
@@ -245,6 +251,7 @@ class WrlsBillRun extends BillRun {
       credit_line_value AS "creditLineValue",
       debit_line_count AS "debitLineCount",
       debit_line_value AS "debitLineValue",
+      zero_value_line_count AS "zeroValueLineCount",
       net_total AS "netTotal"
       FROM bill_runs
     `
@@ -309,13 +316,18 @@ function recalculateCustomerTotals (c, licenceNumber) {
       credit_line_value: 0,
       debit_line_count: 0,
       debit_line_value: 0,
+      zero_value_line_count: 0,
       net_total: 0
     }
 
     s.transactions.forEach(t => {
       // Transactions with charge value <0 are credits
       // Transactions with charge value >0 are debits
-      // Zero value charge transactions don't count towards stats so no action is taken
+
+      if (t.charge_value === 0) {
+        s.zero_value_line_count++
+      }
+
       if (t.charge_value < 0) {
         s.credit_line_count++
         s.credit_line_value += t.charge_value

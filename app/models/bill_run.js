@@ -11,6 +11,7 @@ class BillRun {
     this.credit_line_value = 0
     this.debit_line_count = 0
     this.debit_line_value = 0
+    this.zero_value_line_count = 0
     this.net_total = 0
     this.filter = {}
     this.summary_data = null
@@ -37,11 +38,11 @@ class BillRun {
   }
 
   async billed (db) {
-    const result = await db.query(`UPDATE bill_runs SET status='billed',file_created_at=NOW() WHERE id=$1::uuid`, [this.id])
+    const result = await db.query('UPDATE bill_runs SET status=\'billed\',file_created_at=NOW() WHERE id=$1::uuid', [this.id])
     if (result.rowCount !== 1) {
       throw new Error('Could not update BillRun status to billed')
     }
-    const tResult = await db.query(`UPDATE transactions SET status='billed' WHERE bill_run_id=$1::uuid`, [this.id])
+    const tResult = await db.query('UPDATE transactions SET status=\'billed\' WHERE bill_run_id=$1::uuid', [this.id])
     if (tResult.rowCount < 1) {
       throw new Error('Could not update transaction status to billed')
     }
@@ -60,6 +61,7 @@ class BillRun {
       credit_line_value = 0,
       debit_line_count = 0,
       debit_line_value = 0,
+      zero_value_line_count = 0,
       net_total = 0,
       summary_data = NULL
       WHERE id=$1::uuid
@@ -96,7 +98,7 @@ class BillRun {
   }
 
   async checkTransactionsApproved () {
-    const stmt = `SELECT count(*)::int FROM transactions WHERE bill_run_id=$1::uuid AND approved_for_billing=false`
+    const stmt = 'SELECT count(*)::int FROM transactions WHERE bill_run_id=$1::uuid AND approved_for_billing=false'
     const result = await pool.query(stmt, [this.id])
     return result.rows[0].count === 0
   }
@@ -114,6 +116,7 @@ class BillRun {
         credit_line_value=${this.credit_line_value},
         debit_line_count=${this.debit_line_count},
         debit_line_value=${this.debit_line_value},
+        zero_value_line_count=${this.zero_value_line_count},
         net_total=${this.net_total},
         summary_data=$2
       WHERE id='${this.id}' AND regime_id='${this.regime_id}'
@@ -133,7 +136,7 @@ class BillRun {
   async remove () {
     // removes all associated transactions (cascade delete)
     if (this.id) {
-      const stmt = `DELETE FROM bill_runs WHERE id=$1::uuid`
+      const stmt = 'DELETE FROM bill_runs WHERE id=$1::uuid'
       const result = await pool.query(stmt, [this.id])
       return result.rowCount
     }
@@ -159,7 +162,7 @@ class BillRun {
   }
 
   static async findRaw (regimeId, billRunId) {
-    const stmt = this.rawQuery + ` WHERE id=$1::uuid AND regime_id=$2::uuid`
+    const stmt = this.rawQuery + ' WHERE id=$1::uuid AND regime_id=$2::uuid'
     const result = await pool.query(stmt, [billRunId, regimeId])
     if (result.rowCount !== 1) {
       return null

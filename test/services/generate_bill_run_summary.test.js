@@ -99,6 +99,38 @@ describe('Generate Bill Run Summary', () => {
     expect(summary.summary.netTotal).to.equal(minimumChargeAmount)
   })
 
+  it('correctly applies minimum charge for credits when newLicence is true', async () => {
+    await addBillRunTransaction(regime, billRun, { region: 'A', newLicence: true }, { chargeValue: -20 })
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+    const summary = br.summary()
+
+    expect(summary.summary.netTotal).to.equal(-minimumChargeAmount)
+  })
+
+  it('correctly applies minimum charge for mixed credits and debits below minimum charge when newLicence is true', async () => {
+    await addBillRunMinimumChargeTransaction(regime, billRun, { region: 'A', newLicence: true })
+    await addBillRunTransaction(regime, billRun, { region: 'A', newLicence: true }, { chargeValue: -20 })
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+    const summary = br.summary()
+
+    // Minimum charge is applied separately to a group of credits and a group of debits
+    // Therefore if minimum charge applies to both then they are both adjusted to the same value
+    // cancelling each other out so the net total is £0
+    expect(summary.summary.netTotal).to.equal(0)
+  })
+
+  it('correctly applies minimum charge for mixed credits and debits when newLicence is true', async () => {
+    await addBillRunMinimumChargeTransaction(regime, billRun, { region: 'A', newLicence: true })
+    await addBillRunTransaction(regime, billRun, { region: 'A', newLicence: true }, { chargeValue: -30 })
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+    const summary = br.summary()
+
+    // Minimum charge debit is rounded up to 2500
+    // Minimum charge credit is left at 3000
+    // Therefore expected net total is -500
+    expect(summary.summary.netTotal).to.equal(-500)
+  })
+
   it('correctly applies minimum charge when newLicence is false', async () => {
     const tId = await addBillRunMinimumChargeTransaction(regime, billRun, { region: 'A', newLicence: false })
     const transaction = await regime.schema.Transaction.find(regime.id, tId)
@@ -123,7 +155,7 @@ describe('Generate Bill Run Summary', () => {
     expect(summary.summary.netTotal).to.equal(transactionsTotal)
   })
 
-  it('excludes zero charge transactions from the summary count', async () => {
+  it('correctly calculates the summary counts', async () => {
     await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 200 })
     await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: -100 })
     await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 0 })
@@ -133,5 +165,21 @@ describe('Generate Bill Run Summary', () => {
 
     expect(summary.summary.creditLineCount).to.equal(1)
     expect(summary.summary.debitLineCount).to.equal(1)
+    expect(summary.summary.zeroValueLineCount).to.equal(1)
+  })
+
+  it('includes all transactions in the summary', async () => {
+    const chargeId = await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 200 })
+    const creditId = await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: -100 })
+    const zeroId = await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 0 })
+
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+    const summary = br.summary()
+    const { transactions } = summary.customers[0].summaryByFinancialYear[0]
+    const transactionIds = transactions.map(transaction => transaction.id)
+
+    expect(transactionIds).to.contain(chargeId)
+    expect(transactionIds).to.contain(creditId)
+    expect(transactionIds).to.contain(zeroId)
   })
 })
