@@ -1,59 +1,106 @@
-# Charging Module API
-This API provides an interface for calculating charges, queuing
-transactions and generating transaction files used to produce
-invoices.
+# SROC Charging Module API
 
-## Environment variables
-| name     | description      | required | default |            valid            | notes |
-|----------|------------------|:--------:|---------|:---------------------------:|-------|
-| NODE_ENV | Node environment |    no    |         | development,test,production |       |
-| PORT     | Port number      |    no    | 3000    |                             |       |
-| PGHOST   | Postgres host address |  yes  | | FQDN or IP address | |
-| PGUSER   | Postgres user | yes | |  | |
-| PGPASSWORD | Postgres user password | yes | | | |
-| PGDATABASE | Postgres database name | yes | | | |
-| PGPORT | Postgres port number | no | 5432 | | |
+This API provides an interface for calculating charges, queuing transactions and generating transaction files used to produce invoices.
 
 ## Prerequisites
 
-Node v10+
+Make sure you already have:
 
-Two (PostgreSQL) databases nameed `chargedb` and `chargedb_test`,
-each with `pgcrypto` enabled.
+- [Node.js v10.*](https://nodejs.org/en/)
+- [PostgreSQL v10](https://www.postgresql.org/)
 
-## Setup
+## Installation
 
-The following commands will set up the required local development
-and test databases:
-
-```bash
-$ createdb chargedb && createdb chargedb_test
-$ npm run migrate && npm run migrate-test
-```
-
-## Running the application
+First clone the repository and then drop into your new local repo
 
 ```bash
-$ npm start
+git clone https://github.com/DEFRA/charging-module-api.git && cd charging-module-api
 ```
 
+Next download and install the dependencies
 
-Run with live-reload on file updates:
-
+```bash
+npm install
 ```
+
+## Configuration
+
+Any configuration is expected to be driven by environment variables when the service is run in production as per [12 factor app](https://12factor.net/config).
+
+However when running locally in development mode or in test it makes use of the [Dotenv](https://github.com/motdotla/dotenv) package. This is a shim that will load values stored in a `.env` file into the environment which the service will then pick up as though they were there all along.
+
+Check out [.env.example](/.env.example) for details of the required things you'll need in your `.env` file.
+
+Refer to [config/config.js](config/config.js) to see all the environment variables that can be set and what their defaults are.
+
+## Databases
+
+First step is to create the databases; one for when running the app normally and one to support the unit tests
+
+```bash
+createdb chargedb
+createdb chargedb_test
+```
+
+You then need to run the migrations to update the schema to match what the app expects
+
+```bash
+npm run migrate
+npm run migrate-test
+```
+
+Finally, the [pgcrypto](https://www.postgresql.org/docs/10/pgcrypto.html) extension needs to be added. Having connected to PostgreSQL using [psql](https://www.postgresql.org/docs/10/app-psql.html) run
+
+```sql
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+```
+
+## Running the app
+
+To run the app use
+
+```bash
+npm start
+```
+
+To run with live-reload on file updates enabled use
+
+```bash
 npm run watch
 ```
 
-Run tests:
+## Testing the app
 
+To run the unit tests use
+
+```bash
+npm run unit-test
 ```
-npm run migrate-test
 
-npm test
+To check the code is written and formatted in a way that meets our [standard](https://github.com/DEFRA/software-development-standards/blob/master/standards/javascript_standards.md) use
+
+```bash
+npm run lint
 ```
 
-## DB and Migrations
+## Contributing to this project
 
-Enable `pgcrypto`, in psql:
-```
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+If you have an idea you'd like to contribute please log an issue.
+
+All contributions should be submitted via a pull request.
+
+## License
+
+THIS INFORMATION IS LICENSED UNDER THE CONDITIONS OF THE OPEN GOVERNMENT LICENCE found at:
+
+<http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3>
+
+The following attribution statement MUST be cited in your products and applications when using this information.
+
+>Contains public sector information licensed under the Open Government license v3
+
+### About the license
+
+The Open Government Licence (OGL) was developed by the Controller of Her Majesty's Stationery Office (HMSO) to enable information providers in the public sector to license the use and re-use of their information under a common open licence.
+
+It is designed to encourage use and re-use of information freely and flexibly, with only a few conditions.
