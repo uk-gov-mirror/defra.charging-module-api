@@ -57,8 +57,14 @@ async function call (regime, billRun) {
       }
     }
 
-    const fileRef = await billRun.generateFileId()
-    const fileName = billRun.filename
+    let fileRef, fileName
+
+    // Zero charge-only bill runs are not exported so no file reference should be generated
+    if (!billRun.isOnlyZeroCharge) {
+      fileRef = await billRun.generateFileId()
+      fileName = billRun.filename
+    }
+
     const dateNow = utils.formatDate(new Date())
     const updBillRun = 'UPDATE bill_runs SET status=\'pending\',file_reference=$1,transaction_filename=$2 WHERE id=$3'
     await db.query(updBillRun, [fileRef, fileName, billRun.id])

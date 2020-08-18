@@ -45,6 +45,25 @@ async function cleanBillRuns () {
   return pool.query('DELETE from bill_runs')
 }
 
+async function addTransctionsAndApprove (br, regime, schema, charges) {
+  const billRun = await (schema.BillRun).find(regime.id, br.id)
+  const tIds = []
+
+  // Use for instead of forEach as this supports await
+  for (const chargeValue of charges) {
+    const tId = await addBillRunTransaction(regime, billRun, { region: billRun.region }, { chargeValue })
+    tIds.push(tId)
+  }
+
+  // HACK: set approved_for_billing on billrun and transactions
+  await forceApproval(br.id, true)
+
+  // reload billRun
+  const reloadedBillRun = await (schema.BillRun).find(regime.id, billRun.id)
+
+  return { billRun: reloadedBillRun, tIds }
+}
+
 module.exports = {
   billRunCount,
   cleanBillRuns,
@@ -52,5 +71,6 @@ module.exports = {
   forceApproval,
   addBillRunTransaction,
   addBillRunDeminimisTransaction,
-  addBillRunMinimumChargeTransaction
+  addBillRunMinimumChargeTransaction,
+  addTransctionsAndApprove
 }

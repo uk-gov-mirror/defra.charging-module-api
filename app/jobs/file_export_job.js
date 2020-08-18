@@ -48,23 +48,23 @@ async function run () {
         if (!billRun) {
           throw new Error(`Cannot find BillRun with id: ${id}`)
         }
+
         // get the correct presenter for the regime
         // we need the regime and preSroc status
         const scheme = billRun.pre_sroc ? Schema.preSroc : Schema.sroc
         const br = new (scheme[regime.slug].BillRun)()
         Object.assign(br, billRun)
-        logger.info(`Generating transaction file '${br.filename}' for ${regime.slug.toUpperCase()}`)
 
-        // check for any awaiting customer files for the region and export
-        await ExportRegionCustomerFile.call(regime, br.region)
+        if (br.isOnlyZeroCharge) {
+          // If bill run contains only zero charge transactions then no file is created
+          // and the status is set to 'billing_not_required'
+          await handleZeroValueTransactionBillRuns(db, br, savepoint)
+        } else {
+          // Otherwise the transaction file is generated
+          // and the status set to 'billed'
+          await generateTransactionFile(db, br, regime, scheme, savepoint)
+        }
 
-        const presenter = new (scheme[regime.slug].TransactionFilePresenter)(br)
-        await CreateFile.call(db, presenter)
-        // copy transaction file to S3 and create archive copy
-        await MoveFileToS3.call(br, true)
-
-        // if success update bill run status
-        await br.billed(db)
         await db.releaseSavepoint(savepoint)
       } catch (err) {
         logger.error(err)
@@ -80,6 +80,26 @@ async function run () {
   }
   logger.info('file-export-job - done')
   return 0
+}
+
+async function generateTransactionFile (db, br, regime, scheme, savepoint) {
+  logger.info(`Generating transaction file '${br.filename}' for ${regime.slug.toUpperCase()}`)
+
+  // check for any awaiting customer files for the region and export
+  await ExportRegionCustomerFile.call(regime, br.region)
+
+  const presenter = new (scheme[regime.slug].TransactionFilePresenter)(br)
+  await CreateFile.call(db, presenter)
+  // copy transaction file to S3 and create archive copy
+  await MoveFileToS3.call(br, true)
+
+  // if success update bill run status
+  await br.billed(db)
+}
+
+async function handleZeroValueTransactionBillRuns (db, br, savepoint) {
+  logger.info(`Bill run ${br.id} contains only zero charge transactions`)
+  await br.billingNotRequired(db)
 }
 
 module.exports = {
