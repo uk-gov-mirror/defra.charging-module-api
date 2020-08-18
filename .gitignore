@@ -7,3 +7,5 @@ coverage.html
 lcov.info
 pgdata
 *.log
+scrap
+tmpfiles

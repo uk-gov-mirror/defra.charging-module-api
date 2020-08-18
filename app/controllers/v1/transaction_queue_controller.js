@@ -1,10 +1,14 @@
-const path = require('path')
+// Pre-SRoC Transaction Queue =====================
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
-const utils = require('../../lib/utils')
-const Security = require('../../lib/security')
-const TransactionQueue = require('../../services/transaction_queue')
+const Authorisation = require('../../lib/authorisation')
+const AddTransaction = require('../../services/add_transaction')
+const RemoveTransaction = require('../../services/remove_transaction')
+const Schema = require('../../schema/pre_sroc')
+const BulkApproval = require('../../services/bulk_approval')
+const BulkUnapproval = require('../../services/bulk_unapproval')
+const BulkRemoval = require('../../services/bulk_removal')
 
 const basePath = '/v1/{regime_id}/transaction_queue'
 
@@ -12,14 +16,22 @@ async function index (req, h) {
   try {
     // check regime valid and caller has access to regime
     // regime_id is part of routing so must be defined to get here
-    const regime = await Security.checkRegimeValid(req.params.regime_id)
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
-    if (Boom.isBoom(regime)) {
-      return regime
-    }
+    // load the correct schema for the regime
+    const Transaction = Schema[regime.slug].Transaction
 
-    // select all transactions matching search criteria for the regime
-    return TransactionQueue.search(regime, req.query)
+    const { page, perPage, sort, sortDir, ...q } = req.query
+
+    // translate params into DB naming
+    const params = Transaction.translate(q)
+    // force these criteria
+    params.status = 'unbilled'
+    params.regime_id = regime.id
+    params.pre_sroc = 'true'
+
+    // select all transactions matching search criteria for the regime (pre-sroc only)
+    return Transaction.search(params, page, perPage, sort, sortDir)
   } catch (err) {
     logger.error(err.stack)
     return Boom.boomify(err)
@@ -28,11 +40,7 @@ async function index (req, h) {
 
 async function create (req, h) {
   try {
-    const regime = await Security.checkRegimeValid(req.params.regime_id)
-
-    if (Boom.isBoom(regime)) {
-      return regime
-    }
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     // process and add transaction(s) in payload
     const payload = req.payload
@@ -40,72 +48,151 @@ async function create (req, h) {
       // return HTTP 400
       return Boom.badRequest('No payload')
     }
+    // load the correct schema for the regime
+    const schema = Schema[regime.slug]
 
-    // load the correct validator for the regime
-    const validator = require(path.resolve(__dirname, `../../schema/${regime.slug}_transaction.js`))
-    // validate the payload
-    const validData = validator.validate(payload)
+    // create Transaction object, validate and translate
+    const transaction = schema.Transaction.instanceFromRequest(payload)
 
-    if (validData.error) {
-      // get the better formatted message(s)
-      const msg = validData.error.details.map(e => e.message).join(', ')
+    // add transaction to the queue (create db record)
+    const tId = await AddTransaction.call(regime, transaction, schema)
 
-      // return HTTP 422
-      return Boom.badData(msg)
+    if (tId === 0) {
+      // zero charge - special case return HTTP 200
+      return h.response({ status: 'Zero value charge calculated' }).code(200)
+    } else {
+      // return HTTP 201 Created
+      const response = h.response({
+        transaction: {
+          id: tId
+        }
+      })
+      response.code(201)
+      response.header('Location', regimeTransactionPath(regime, tId))
+      return response
     }
-
-    // translate regime naming scheme into DB schema
-    const transData = validator.translate(validData)
-
-    // add the association to the regime
-    transData['regime_id'] = regime.id
-
-    // create the transaction
-    const tId = await TransactionQueue.addTransaction(transData)
-    const result = {
-      transaction: {
-        id: tId
-      }
-    }
-
-    // return HTTP 201 Created
-    const response = h.response(result)
-    response.code(201)
-    response.header('Location', regimeTransactionPath(regime, tId))
-    return response
   } catch (err) {
-    logger.error(err.stack)
-    return Boom.boomify(err)
+    if (Boom.isBoom(err)) {
+      // status 500 squashes error message for some reason
+      if (err.output.statusCode === 500) {
+        err.output.payload.message = err.message
+      }
+      return err
+    } else {
+      return Boom.boomify(err, { statusCode: err.statusCode || 500 })
+      // return Boom.boomify(err)
+    }
+  }
+}
+
+async function bulkApprove (req, h) {
+  try {
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+
+    const payload = req.payload
+    if (!payload) {
+      // return HTTP 400
+      return Boom.badRequest('No payload')
+    }
+
+    // load the correct schema for the regime
+    const schema = Schema[regime.slug]
+
+    // validate and translate request payload
+    const approvalRequest = await schema.ApprovalRequest.instanceFromRequest(regime.id, payload)
+
+    const summary = await BulkApproval.call(approvalRequest)
+
+    // return HTTP 200
+    return h.response(summary).code(200)
+  } catch (err) {
+    if (Boom.isBoom(err)) {
+      // status 500 squashes error message for some reason
+      if (err.output.statusCode === 500) {
+        err.output.payload.message = err.message
+      }
+      return err
+    } else {
+      return Boom.boomify(err)
+    }
+  }
+}
+
+async function bulkUnapprove (req, h) {
+  try {
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+
+    const payload = req.payload
+    if (!payload) {
+      // return HTTP 400
+      return Boom.badRequest('No payload')
+    }
+
+    // load the correct schema for the regime
+    const schema = Schema[regime.slug]
+
+    // validate and translate request payload
+    const approvalRequest = await schema.ApprovalRequest.instanceFromRequest(regime.id, payload)
+
+    const summary = await BulkUnapproval.call(approvalRequest)
+
+    // return HTTP 200
+    return h.response(summary).code(200)
+  } catch (err) {
+    if (Boom.isBoom(err)) {
+      // status 500 squashes error message for some reason
+      if (err.output.statusCode === 500) {
+        err.output.payload.message = err.message
+      }
+      return err
+    } else {
+      return Boom.boomify(err)
+    }
+  }
+}
+
+async function bulkRemove (req, h) {
+  try {
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+
+    const payload = req.payload
+    if (!payload) {
+      // return HTTP 400
+      return Boom.badRequest('No payload')
+    }
+
+    // load the correct schema for the regime
+    const schema = Schema[regime.slug]
+
+    // validate and translate request payload
+    const removalRequest = await schema.RemovalRequest.instanceFromRequest(regime.id, payload)
+
+    const summary = await BulkRemoval.call(removalRequest)
+
+    // return HTTP 200
+    return h.response(summary).code(200)
+  } catch (err) {
+    if (Boom.isBoom(err)) {
+      // status 500 squashes error message for some reason
+      if (err.output.statusCode === 500) {
+        err.output.payload.message = err.message
+      }
+      return err
+    } else {
+      return Boom.boomify(err)
+    }
   }
 }
 
 async function remove (req, h) {
   // remove (delete) transaction
   try {
-    const regime = await Security.checkRegimeValid(req.params.regime_id)
+    const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+    await RemoveTransaction.call(regime, req.params.id)
 
-    if (Boom.isBoom(regime)) {
-      return regime
-    }
-    const tId = req.params.id
-
-    // postgres explodes if we don't pass a valid uuid in a query
-    if (utils.isValidUUID(tId)) {
-      const result = await TransactionQueue.removeTransaction(regime, tId)
-      console.log(result)
-
-      if (result !== 1) {
-        // didn't remove a transaction matching the criteria
-        return Boom.notFound(`No queued transaction found with id '${tId}'`)
-      }
-
-      // HTTP 204 No Content
-      return h.response().code(204)
-    } else {
-      return Boom.notFound(`Transaction Id '${tId}' not found`)
-    }
+    // HTTP 204 No Content
+    return h.response().code(204)
   } catch (err) {
-    logger.error(err.stack)
     return Boom.boomify(err)
   }
 }
@@ -124,6 +211,21 @@ const routes = [
     method: 'POST',
     path: basePath,
     handler: create
+  },
+  {
+    method: 'PATCH',
+    path: `${basePath}/approve`,
+    handler: bulkApprove
+  },
+  {
+    method: 'PATCH',
+    path: `${basePath}/unapprove`,
+    handler: bulkUnapprove
+  },
+  {
+    method: 'POST',
+    path: `${basePath}/remove`,
+    handler: bulkRemove
   },
   {
     method: 'DELETE',

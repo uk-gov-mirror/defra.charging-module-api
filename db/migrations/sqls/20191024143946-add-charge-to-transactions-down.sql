@@ -1,0 +1,7 @@
+ALTER TABLE IF EXISTS transactions
+DROP COLUMN IF EXISTS charge_value,
+DROP COLUMN IF EXISTS regime_value_16,
+DROP COLUMN IF EXISTS regime_value_17,
+DROP COLUMN IF EXISTS regime_value_18,
+DROP COLUMN IF EXISTS regime_value_19,
+DROP COLUMN IF EXISTS regime_value_20;

@@ -11,6 +11,15 @@ const config = {
     serviceUrl: process.env.SERVICE_URL
   },
 
+  adminClientId: process.env.ADMIN_CLIENT_ID,
+
+  fileExportSchedule: process.env.FILE_EXPORT_SCHEDULE, // '*/1 * * * *', // every minute for testing
+  customerFileExportSchedule: process.env.CUSTOMER_FILE_EXPORT_SCHEDULE, // '*/1 * * * *', // every minute for testing
+  temporaryFilePath: process.env.TMPDIR,
+  removeTemporaryFiles: process.env.REMOVE_TMP_FILES,
+
+  minimumChargeAmount: 2500,
+
   server: {
     port: process.env.PORT,
     router: {
@@ -39,7 +48,8 @@ const config = {
 
   pagination: {
     page: 1,
-    perPage: 10
+    perPage: 50,
+    maxPerPage: 100
   },
 
   s3: {
@@ -65,6 +75,30 @@ const config = {
     host: process.env.AIRBRAKE_HOST,
     projectKey: process.env.AIRBRAKE_KEY,
     projectId: 1
+  },
+
+  decisionService: {
+    url: process.env.DECISION_SERVICE_URL,
+    username: process.env.DECISION_SERVICE_USER,
+    password: process.env.DECISION_SERVICE_PASSWORD,
+    endpoints: {
+      cfd: {
+        application: process.env.CFD_APP,
+        ruleset: process.env.CFD_RULESET
+      },
+      pas: {
+        application: process.env.PAS_APP,
+        ruleset: process.env.PAS_RULESET
+      },
+      wml: {
+        application: process.env.WML_APP,
+        ruleset: process.env.WML_RULESET
+      },
+      wrls: {
+        application: process.env.WRLS_APP,
+        ruleset: process.env.WRLS_RULESET
+      }
+    }
   }
 }
 
@@ -87,6 +121,12 @@ const schema = {
     production: joi.boolean().default(false),
     serviceUrl: joi.string().required()
   }),
+  adminClientId: joi.string().required(),
+  fileExportSchedule: joi.string().default('0,30 * * * *'), // default every 30 mins (on the hour and half past)
+  customerFileExportSchedule: joi.string().default('0 1 * * 6'), // default 01:00 on Saturday
+  temporaryFilePath: joi.string().default('/tmp/'),
+  removeTemporaryFiles: joi.boolean().default(true),
+  minimumChargeAmount: joi.number().required(),
   server: joi.object({
     port: joi.number().default(3000).required(),
     router: joi.object({
@@ -107,7 +147,8 @@ const schema = {
   }),
   pagination: joi.object({
     page: joi.number().default(1),
-    perPage: joi.number().default(10)
+    perPage: joi.number().default(50),
+    maxPerPage: joi.number().default(100)
   }),
   s3: joi.object({
     upload: bucketSchema,
@@ -117,6 +158,29 @@ const schema = {
     host: joi.string().required(),
     projectKey: joi.string().required(),
     projectId: joi.number().required()
+  }),
+  decisionService: joi.object({
+    url: joi.string().required(),
+    username: joi.string().required(),
+    password: joi.string().required(),
+    endpoints: joi.object({
+      cfd: {
+        application: joi.string().required(),
+        ruleset: joi.string().required()
+      },
+      pas: {
+        application: joi.string().required(),
+        ruleset: joi.string().required()
+      },
+      wml: {
+        application: joi.string().required(),
+        ruleset: joi.string().required()
+      },
+      wrls: {
+        application: joi.string().required(),
+        ruleset: joi.string().required()
+      }
+    })
   })
 }
 

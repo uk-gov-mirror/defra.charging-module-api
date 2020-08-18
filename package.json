@@ -12,12 +12,17 @@
   },
   "scripts": {
     "start": "npm run migrate && node index.js",
-    "migrate": "node node_modules/db-migrate/bin/db-migrate up -m db/migrations",
-    "migrate-test": "node node_modules/db-migrate/bin/db-migrate up -m db/migrations -e test",
+    "file-export-job": "node ./app/jobs/file_export_job.js",
+    "migrate": "./node_modules/db-migrate/bin/db-migrate up -m db/migrations",
+    "rollback": "./node_modules/db-migrate/bin/db-migrate down -m db/migrations",
+    "migrate-test": "./node_modules/db-migrate/bin/db-migrate up -m db/migrations -e test",
+    "rollback-test": "./node_modules/db-migrate/bin/db-migrate down -m db/migrations -e test",
     "seed": "node ./db/seeds/seeds.js",
     "lint": "eslint .",
-    "unit-test": "PGDATABASE=chargedb_test lab -c -r console -o stdout -r html -o coverage.html -r lcov -o lcov.info -v",
-    "test": "npm run lint && npm run unit-test"
+    "unit-test": "PGDATABASE=chargedb_test TMPDIR='./tmpfiles' REMOVE_TMP_FILES=false lab -c -r console -o stdout -r html -o coverage.html -r lcov -o lcov.info -v",
+    "test": "npm run lint && npm run migrate-test && npm run unit-test",
+    "qtest": "PGDATABASE=chargedb_test lab",
+    "watch": "./node_modules/nodemon/bin/nodemon.js --watch ./app --watch ./test --watch ./db -x node index.js"
   },
   "author": "Department for Environment, Food & Rural Affairs",
   "license": "SEE LICENSE IN LICENSE.md",
@@ -34,7 +39,11 @@
     "db-migrate": "^0.11.6",
     "db-migrate-pg": "^1.0.0",
     "dotenv": "^8.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "node-schedule": "^1.3.2",
     "pg": "^7.11.0",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.8",
     "winston": "^3.2.1"
   },
   "devDependencies": {
@@ -45,7 +54,10 @@
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-node": "^9.1.0",
     "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.0"
+    "eslint-plugin-standard": "^4.0.0",
+    "nodemon": "^2.0.4",
+    "sinon": "^7.5.0",
+    "stream-mock": "^2.0.5"
   },
   "standard": {
     "ignore": [
