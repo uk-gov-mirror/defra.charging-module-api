@@ -1,5 +1,12 @@
 # SROC Charging Module API
 
+[![Build Status](https://travis-ci.com/DEFRA/charging-module-api.svg?branch=master)](https://travis-ci.com/DEFRA/charging-module-api)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_charging-module-api&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=DEFRA_charging-module-api)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_charging-module-api&metric=coverage)](https://sonarcloud.io/dashboard?id=DEFRA_charging-module-api)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_charging-module-api&metric=sqale_index)](https://sonarcloud.io/dashboard?id=DEFRA_charging-module-api)
+[![Known Vulnerabilities](https://snyk.io/test/github/DEFRA/charging-module-api/badge.svg)](https://snyk.io/test/github/DEFRA/charging-module-api)
+[![Licence](https://img.shields.io/badge/Licence-OGLv3-blue.svg)](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3)
+
 This API provides an interface for calculating charges, queuing transactions and generating transaction files used to produce invoices.
 
 ## Prerequisites
