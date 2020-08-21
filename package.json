@@ -19,7 +19,7 @@
     "rollback-test": "./node_modules/db-migrate/bin/db-migrate down -m db/migrations -e test",
     "seed": "node ./db/seeds/seeds.js",
     "lint": "eslint .",
-    "unit-test": "PGDATABASE=chargedb_test TMPDIR='./tmpfiles' REMOVE_TMP_FILES=false lab",
+    "unit-test": "PGDATABASE=chargedb_test TMPDIR='./tmp' REMOVE_TMP_FILES=false lab",
     "test": "npm run lint && npm run migrate-test && npm run unit-test",
     "qtest": "PGDATABASE=chargedb_test lab",
     "watch": "./node_modules/nodemon/bin/nodemon.js --watch ./app --watch ./test --watch ./db -x node index.js"
