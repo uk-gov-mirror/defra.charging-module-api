@@ -182,4 +182,16 @@ describe('Generate Bill Run Summary', () => {
     expect(transactionIds).to.contain(creditId)
     expect(transactionIds).to.contain(zeroId)
   })
+
+  it('correctly updates the summary for zero value transactions when newLicence is true', async () => {
+    const zeroId = await addBillRunTransaction(regime, billRun, { region: 'A', newLicence: true }, { chargeValue: 0 })
+
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+    const summary = br.summary()
+    const { transactions } = summary.customers[0].summaryByFinancialYear[0]
+    const transactionIds = transactions.map(transaction => transaction.id)
+
+    expect(summary.summary.zeroValueLineCount).to.equal(1)
+    expect(transactionIds).to.contain(zeroId)
+  })
 })

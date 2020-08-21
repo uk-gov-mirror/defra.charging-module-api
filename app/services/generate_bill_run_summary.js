@@ -91,11 +91,11 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
   const { summary: zeroChargeSummary } = await createCustomerLevelSummary(zeroValueStmt, values, db)
 
   // summarise credits (excluding new licences)
-  const creditStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value < 0 AND new_licence = false`
+  const creditStmt = customerLevelStatement(attrs, where, 'charge_value < 0')
   const { summary: creditSummary } = await createCustomerLevelSummary(creditStmt, values, db)
 
   // summarise debits (excluding new licences)
-  const invoiceStmt = `SELECT ${attrs} FROM transactions WHERE ${where} AND charge_value > 0 AND new_licence = false`
+  const invoiceStmt = customerLevelStatement(attrs, where, 'charge_value > 0')
   const { summary: debitSummary } = await createCustomerLevelSummary(invoiceStmt, values, db)
 
   // Build summary from customer level summaries
@@ -124,6 +124,11 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
 
       const licenceLevelStatement = (attrs, where, licence, chargeCondition) => `SELECT ${attrs} FROM transactions WHERE ${where} AND ${chargeCondition} AND line_attr_1='${licence}' AND new_licence = true AND minimum_charge_adjustment = false`
 
+      const zeroValueNewStmt = licenceLevelStatement(attrs, where, licence, 'charge_value = 0')
+      const newZeroValue = await createLicenceLevelSummary(db, zeroValueNewStmt, values, regime, billRun, attrs)
+      summary.zero_value_line_count += newZeroValue.lineCount
+      summary.transactions = [...summary.transactions, ...newZeroValue.transactions]
+
       const creditNewStmt = licenceLevelStatement(attrs, where, licence, 'charge_value < 0')
       const newCredits = await createLicenceLevelSummary(db, creditNewStmt, values, regime, billRun, attrs)
       summary.credit_line_count += newCredits.lineCount
@@ -149,8 +154,16 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
 async function createLicenceLevelSummary (db, where, values, regime, billRun, attrs) {
   const { summary, parentId } = await createCustomerLevelSummary(where, values, db)
 
-  // Return early if there are no new licence lines
+  // Now that the summary is created we apply minimum charge logic
+
+  // Return early if there are no new licence lines as minimum charge does not apply
   if (!summary.lineCount) {
+    return summary
+  }
+
+  // Return early if all lines are zero value transactions as minimum charge does not apply
+  const zeroTransactions = summary.transactions.filter(transaction => transaction.charge_value === 0)
+  if (summary.transactions.length === zeroTransactions.length) {
     return summary
   }
 
