@@ -11,6 +11,7 @@ const billRunTransactions = require('../controllers/v1/billrun_transactions_cont
 const customerChanges = require('../controllers/v1/customer_changes_controller').routes
 const customerFiles = require('../controllers/v1/customer_files_controller').routes
 const authorisedSystems = require('../controllers/v1/authorised_systems_controller').routes()
+const config = require('../../config/config')
 
 const status = (request, h) => request.headers
 
@@ -46,11 +47,25 @@ const routes = [
   }
 ]
 
+// Returns true if route contains a tag in tagList
+// Also returns true if taglist contains '*' to match all endpoints
+function routeHasTag (route, tagList) {
+  return tagList.includes('*') || (route.options && route.options.tags && route.options.tags.some(tag => tagList.includes(tag)))
+}
+
 module.exports = {
   plugin: {
     name: 'router',
     register: (server, options) => {
-      server.route(routes)
+      // Allow routes, allow list and deny list to be passed through as options to help with testing
+      const routesToRegister = options && options.routes ? options.routes : routes
+      const routeTagAllowList = options && options.routeTagAllowList ? options.routeTagAllowList : config.routeTagAllowList
+      const routeTagDenyList = options && options.routeTagDenyList ? options.routeTagDenyList : config.routeTagDenyList
+
+      server.route(routesToRegister
+        .filter(route => routeHasTag(route, routeTagAllowList))
+        .filter(route => !routeHasTag(route, routeTagDenyList))
+      )
     }
   }
 }
