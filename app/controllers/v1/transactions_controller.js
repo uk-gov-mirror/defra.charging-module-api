@@ -186,12 +186,18 @@ class TransactionsController {
       {
         method: 'PATCH',
         path: basePath + '/{id}/approve',
-        handler: this.approve.bind(this)
+        handler: this.approve.bind(this),
+        options: {
+          tags: ['sroc']
+        }
       },
       {
         method: 'PATCH',
         path: basePath + '/{id}/unapprove',
-        handler: this.unapprove.bind(this)
+        handler: this.unapprove.bind(this),
+        options: {
+          tags: ['sroc']
+        }
       },
       {
         method: 'DELETE',

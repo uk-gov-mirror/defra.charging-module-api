@@ -64,12 +64,18 @@ const routes = [
   {
     method: 'GET',
     path: basePath,
-    handler: index
+    handler: index,
+    options: {
+      tags: ['sroc']
+    }
   },
   {
     method: 'GET',
     path: basePath + '/{id}',
-    handler: show
+    handler: show,
+    options: {
+      tags: ['sroc']
+    }
   }
 ]
 

@@ -117,17 +117,27 @@ const routes = [
   {
     method: 'GET',
     path: basePath,
-    handler: index
+    handler: index,
+    options: {
+      tags: ['sroc']
+    }
   },
   {
     method: 'POST',
     path: basePath,
-    handler: create
+    handler: create,
+    options: {
+      tags: ['sroc']
+    }
+
   },
   {
     method: 'DELETE',
     path: `${basePath}/{id}`,
-    handler: remove
+    handler: remove,
+    options: {
+      tags: ['sroc']
+    }
   }
 ]
 

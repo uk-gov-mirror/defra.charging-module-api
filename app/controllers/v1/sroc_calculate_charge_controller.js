@@ -59,7 +59,10 @@ const routes = [
   {
     method: 'POST',
     path: basePath,
-    handler: calculate
+    handler: calculate,
+    options: {
+      tags: ['sroc']
+    }
   }
 ]
 
