@@ -49,6 +49,12 @@ createdb chargedb
 createdb chargedb_test
 ```
 
+Create the required role
+
+```bash
+createuser -s charge
+```
+
 You then need to run the migrations to update the schema to match what the app expects
 
 ```bash
