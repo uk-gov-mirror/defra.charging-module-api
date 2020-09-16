@@ -129,6 +129,19 @@ class WrlsBillRun extends BillRun {
     return data
   }
 
+  // The status is hardcoded so it always returns 'generating_summary' for a holding response -- this.status isn't
+  // guaranteed to be the current status as it may have changed since the bill run was originally read from the db
+  get holdingResponse () {
+    return {
+      id: this.id,
+      billRunNumber: this.bill_run_number,
+      region: this.region,
+      status: 'generating_summary',
+      approvedForBilling: this.approved_for_billing,
+      preSroc: this.pre_sroc
+    }
+  }
+
   async generateBillRunId () {
     this.bill_run_number = await this.sequenceCounter.nextBillRunNumber()
     return this.bill_run_number

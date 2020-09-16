@@ -3,6 +3,7 @@ const GenerateBillRunSummary = require('./generate_bill_run_summary')
 const utils = require('../lib/utils')
 // const { pool } = require('../lib/connectors/db')
 const DBTransaction = require('../lib/db_transaction')
+const config = require('../../config/config')
 
 // Send a pre-sroc billRun
 async function call (regime, billRun) {
@@ -27,10 +28,34 @@ async function call (regime, billRun) {
     throw Boom.badRequest('Not all transactions in the Bill Run have been approved')
   }
 
-  if (!billRun.summary_data) {
-    billRun = await GenerateBillRunSummary.call(regime, billRun)
+  // If the bill run is currently generating the summary then immediately return a holding response
+  if (billRun.isGeneratingSummary) {
+    return billRun.holdingResponse
   }
 
+  // If the bill run has no summary data then we need to generate it
+  // We race two promises and return the holding response if the timeout promise resolves first
+  // This avoids timeout errors by returning a holding response if summary generation is taking too long
+  if (!billRun.summary_data) {
+    const result = await Promise.race([
+      generateSummaryPromise(regime, billRun),
+      timeoutPromise(config.billRunSummaryTimeout)
+    ])
+
+    // If result is false then the timeout came first so return the holding response
+    if (!result) {
+      return billRun.holdingResponse
+    }
+
+    // Otherwise, update billRun to the result of generateSummaryPromise
+    billRun = result
+  }
+
+  // If we get here then the bill run is ready to be sent, so update the bill run and return it
+  return updateBillRun(billRun)
+}
+
+async function updateBillRun (billRun) {
   const db = new DBTransaction()
 
   try {
@@ -82,6 +107,23 @@ async function call (regime, billRun) {
   }
 
   return billRun
+}
+
+// Generate summary and return it once completed
+async function generateSummaryPromise (regime, billRun) {
+  return new Promise(resolve => {
+    (async () => {
+      await GenerateBillRunSummary.call(regime, billRun)
+      resolve(billRun)
+    })()
+  })
+}
+
+// Return false after a set time
+async function timeoutPromise (timeout) {
+  return new Promise(resolve => {
+    setTimeout(() => resolve(false), timeout)
+  })
 }
 
 module.exports = {

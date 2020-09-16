@@ -37,6 +37,10 @@ class BillRun {
     return this.status === 'pending' || this.status === 'billed' || this.status === 'billing_not_required'
   }
 
+  get isGeneratingSummary () {
+    return this.status === 'generating_summary'
+  }
+
   // Return true if the bill run only contains zero value transactions
   get isOnlyZeroCharge () {
     return Boolean(!this.credit_line_count && !this.debit_line_count && this.zero_value_line_count)
@@ -62,6 +66,22 @@ class BillRun {
     const tResult = await db.query('UPDATE transactions SET status=\'billing_not_required\' WHERE bill_run_id=$1::uuid', [this.id])
     if (tResult.rowCount < 1) {
       throw new Error('Could not update transaction status to billing_not_required')
+    }
+    return 1
+  }
+
+  async generatingSummary (db) {
+    const result = await db.query('UPDATE bill_runs SET status=\'generating_summary\' WHERE id=$1::uuid', [this.id])
+    if (result.rowCount !== 1) {
+      throw new Error('Could not update BillRun status to generating_summary')
+    }
+    return 1
+  }
+
+  async setStatus (db, status) {
+    const result = await db.query(`UPDATE bill_runs SET status='${status}' WHERE id=$1::uuid`, [this.id])
+    if (result.rowCount !== 1) {
+      throw new Error(`Could not update BillRun status to ${status}`)
     }
     return 1
   }

@@ -33,9 +33,15 @@ async function call (regime, billRun) {
     const result = await db.query(stmt, values)
 
     if (result.rowCount === 0) {
-      // nothing to do
       throw Boom.badData('No records found for bill run')
     }
+
+    // Read the bill run status so we can restore it later
+    const billRunStatus = billRun.status
+
+    // Set the status to 'generating_summary'
+    await billRun.generatingSummary(db)
+    await db.commit()
 
     // now have a list of customer references for all of the transactions
     for (let n = 0; n < result.rowCount; n++) {
@@ -43,6 +49,9 @@ async function call (regime, billRun) {
       const summary = await buildCustomerSummary(db, regime, billRun, ref, filter)
       billRun.addSummary(summary)
     }
+
+    // Restore the original status
+    await billRun.setStatus(db, billRunStatus)
 
     await billRun.save(db)
     await db.commit()

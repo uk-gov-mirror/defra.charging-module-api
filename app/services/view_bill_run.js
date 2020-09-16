@@ -4,6 +4,7 @@ const Boom = require('@hapi/boom')
 // const utils = require('../../../lib/utils')
 // const Validations = require('./validations')
 const GenerateBillRunSummary = require('./generate_bill_run_summary')
+const config = require('../../config/config')
 
 async function call (request) {
   // retrieve billrun data
@@ -12,12 +13,41 @@ async function call (request) {
     throw Boom.notFound(`No BillRun found with id '${request.billRunId}'`)
   }
 
-  if (!billRun.summary_data) {
-    await GenerateBillRunSummary.call(request.regime, billRun)
+  // If the bill run is currently generating the summary then immediately return a holding response
+  if (billRun.isGeneratingSummary) {
+    return billRun.holdingResponse
   }
 
-  // pull out either customer summary or licence
-  return billRun.summary(request.searchParams)
+  // If the bill run already has a summary then return it
+  if (billRun.summary_data) {
+    // pull out either customer summary or licence
+    return billRun.summary(request.searchParams)
+  }
+
+  // Otherwise, the bill run has no summary data so we need to generate it
+  // We race two promises and return whichever finishes first
+  // This avoids timeout errors by returning a holding response if summary generation is taking too long
+  return Promise.race([
+    generateSummaryPromise(request, billRun),
+    summaryTimeoutPromise(billRun, config.billRunSummaryTimeout)
+  ])
+}
+
+// Generate summary and return it once completed
+async function generateSummaryPromise (request, billRun) {
+  return new Promise(resolve => {
+    (async () => {
+      await GenerateBillRunSummary.call(request.regime, billRun)
+      resolve(billRun.summary(request.searchParams))
+    })()
+  })
+}
+
+// Return holding summary after a set time
+async function summaryTimeoutPromise (billRun, timeout) {
+  return new Promise(resolve => {
+    setTimeout(() => resolve(billRun.holdingResponse), timeout)
+  })
 }
 
 // class WrlsViewBillRun {
