@@ -21,7 +21,7 @@ async function show (req, h) {
     Authorisation.assertAdminOnlyAccess(req.headers.authorization)
     const regime = await Regime.find(req.params.id)
     if (regime === null) {
-      return Boom.notFound(`No matching regime found`)
+      return Boom.notFound('No matching regime found')
     }
     return {
       regime: regime

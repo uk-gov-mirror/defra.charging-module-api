@@ -59,7 +59,7 @@ class AuthorisedSystem {
     await this.assertExists(systemId)
 
     // removes all associated authorisations
-    const stmt = `DELETE FROM authorised_systems WHERE id=$1`
+    const stmt = 'DELETE FROM authorised_systems WHERE id=$1'
     const result = await pool.query(stmt, [systemId])
     return result.rowCount
   }
@@ -176,7 +176,7 @@ class AuthorisedSystem {
 
   static async findRaw (systemId, db) {
     const cnx = db || pool
-    const stmt = this.rawQuery + ` WHERE id=$1`
+    const stmt = this.rawQuery + ' WHERE id=$1'
     const result = await cnx.query(stmt, [systemId])
     if (result.rowCount !== 1) {
       return null

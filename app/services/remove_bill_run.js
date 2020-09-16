@@ -20,7 +20,7 @@ async function call (regime, id) {
 
   // only remove the bill_run if it hasn't been billed
   if (billRun.isBilled) {
-    throw Boom.badRequest(`Cannot remove BillRun because it has been billed`)
+    throw Boom.badRequest('Cannot remove BillRun because it has been billed')
   }
 
   return billRun.remove()

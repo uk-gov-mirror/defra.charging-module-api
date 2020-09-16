@@ -3,7 +3,7 @@ const { pool } = require('../lib/connectors/db')
 // Add a new or update an existing customer change record
 async function call (regime, customerChange) {
   // check if a change is already present for this customer
-  const stmt = `SELECT id FROM customer_changes WHERE regime_id=$1::uuid AND region=$2 AND customer_reference=$3 AND status='initialised'`
+  const stmt = 'SELECT id FROM customer_changes WHERE regime_id=$1::uuid AND region=$2 AND customer_reference=$3 AND status=\'initialised\''
   const result = await pool.query(stmt, [regime.id, customerChange.region, customerChange.customer_reference])
 
   if (result.rowCount > 0) {

@@ -21,7 +21,7 @@ async function call (regime, id) {
 
   // only update the bill_run if it hasn't been sent/billed
   if (billRun.isSent) {
-    throw Boom.badRequest(`Cannot approve Bill Run because it has been billed`)
+    throw Boom.badRequest('Cannot approve Bill Run because it has been billed')
   }
 
   const db = new DBTransaction()

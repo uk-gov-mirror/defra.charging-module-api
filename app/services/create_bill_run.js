@@ -7,7 +7,7 @@ async function call (request) {
 
   const billRunNumber = await generateBillRunNumber(request.regimeId, request.region)
 
-  const stmt = `INSERT INTO bill_runs (regime_id, region, bill_run_number, pre_sroc) VALUES ($1,$2,$3,true) RETURNING id`
+  const stmt = 'INSERT INTO bill_runs (regime_id, region, bill_run_number, pre_sroc) VALUES ($1,$2,$3,true) RETURNING id'
 
   const result = await pool.query(stmt, [request.regimeId, request.region, billRunNumber])
 

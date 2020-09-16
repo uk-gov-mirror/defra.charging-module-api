@@ -15,7 +15,7 @@ class CustomerFile {
   }
 
   async setExported (db) {
-    const result = await db.query(`UPDATE customer_files SET status='exported' WHERE id=$1::uuid`, [this.id])
+    const result = await db.query('UPDATE customer_files SET status=\'exported\' WHERE id=$1::uuid', [this.id])
     if (result.rowCount !== 1) {
       throw new Error('Could not update CustomerFile status to exported')
     }
@@ -86,7 +86,7 @@ class CustomerFile {
   }
 
   static async findRaw (regimeId, billRunId) {
-    const stmt = this.rawQuery + ` WHERE id=$1::uuid AND regime_id=$2::uuid`
+    const stmt = this.rawQuery + ' WHERE id=$1::uuid AND regime_id=$2::uuid'
     const result = await pool.query(stmt, [billRunId, regimeId])
     if (result.rowCount !== 1) {
       return null

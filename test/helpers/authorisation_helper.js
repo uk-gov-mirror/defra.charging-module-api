@@ -20,7 +20,7 @@ async function addAuthorisedSystem (clientId, regimeList) {
 }
 
 async function cleanAuthorisedSystems () {
-  return pool.query(`DELETE FROM authorised_systems`)
+  return pool.query('DELETE FROM authorised_systems')
 }
 
 function makeAuthHeader (clientId) {

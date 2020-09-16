@@ -35,7 +35,7 @@ describe('Authorisation.assertAuthorisedForRegime', async () => {
 
   it('rejects tokens that are not authorised for the requested regime', async () => {
     const token = `bearer ${createToken('anotherkey')}`
-    await expect(Authorisation.assertAuthorisedForRegime('wrls', token)).to.reject(Error, `Unauthorised for regime 'wrls'`)
+    await expect(Authorisation.assertAuthorisedForRegime('wrls', token)).to.reject(Error, 'Unauthorised for regime \'wrls\'')
   })
 })
 

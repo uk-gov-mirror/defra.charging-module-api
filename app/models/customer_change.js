@@ -32,7 +32,7 @@ class CustomerChange {
   }
 
   static async findRaw (regimeId, customerChangeId) {
-    const stmt = this.rawQuery + ` WHERE id=$1::uuid AND regime_id=$2::uuid`
+    const stmt = this.rawQuery + ' WHERE id=$1::uuid AND regime_id=$2::uuid'
     const result = await pool.query(stmt, [customerChangeId, regimeId])
     if (result.rowCount !== 1) {
       return null
