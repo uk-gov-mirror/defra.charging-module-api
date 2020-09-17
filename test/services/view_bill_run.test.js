@@ -87,4 +87,11 @@ describe('View bill run', () => {
 
     expect(viewBillRun).to.equal(billRun.holdingResponse)
   })
+
+  it('returns appropriate error response if bill run contains no transactions', async () => {
+    const br = await CreateBillRun.call({ regimeId: regime.id, region: 'A' })
+    const request = new (regime.schema.BillRunViewRequest)(regime, br.id)
+
+    await expect(ViewBillRun.call(request)).to.reject(Error, 'No records found for bill run')
+  })
 })

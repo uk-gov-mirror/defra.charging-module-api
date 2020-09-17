@@ -35,11 +35,13 @@ async function call (request) {
 
 // Generate summary and return it once completed
 async function generateSummaryPromise (request, billRun) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     (async () => {
       await GenerateBillRunSummary.call(request.regime, billRun)
       resolve(billRun.summary(request.searchParams))
-    })()
+    })().catch((error) => {
+      reject(error)
+    })
   })
 }
 

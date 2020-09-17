@@ -111,11 +111,13 @@ async function updateBillRun (billRun) {
 
 // Generate summary and return it once completed
 async function generateSummaryPromise (regime, billRun) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     (async () => {
       await GenerateBillRunSummary.call(regime, billRun)
       resolve(billRun)
-    })()
+    })().catch((error) => {
+      reject(error)
+    })
   })
 }
 
