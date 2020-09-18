@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased](https://github.com/DEFRA/charging-module-api/tree/HEAD)
+## [v0.2.0](https://github.com/DEFRA/charging-module-api/tree/v0.2.0) (2020-09-18)
 
-[Full Changelog](https://github.com/DEFRA/charging-module-api/compare/v0.1.0...HEAD)
+[Full Changelog](https://github.com/DEFRA/charging-module-api/compare/v0.1.0...v0.2.0)
 
 **Implemented enhancements:**
 
@@ -11,6 +11,8 @@
 - Add filtering of routes based on tags [\#69](https://github.com/DEFRA/charging-module-api/pull/69) ([StuAA78](https://github.com/StuAA78))
 - Handle bill runs where all transactions have zero value [\#51](https://github.com/DEFRA/charging-module-api/pull/51) ([StuAA78](https://github.com/StuAA78))
 - Zero charge transaction summary info [\#50](https://github.com/DEFRA/charging-module-api/pull/50) ([StuAA78](https://github.com/StuAA78))
+- Add preSroc flag to bill run summary [\#48](https://github.com/DEFRA/charging-module-api/pull/48) ([StuAA78](https://github.com/StuAA78))
+- Transactions with zero charge [\#47](https://github.com/DEFRA/charging-module-api/pull/47) ([StuAA78](https://github.com/StuAA78))
 
 **Fixed bugs:**
 
@@ -52,19 +54,23 @@
 - Bump dotenv from 8.0.0 to 8.2.0 [\#55](https://github.com/DEFRA/charging-module-api/pull/55) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump blipp from 4.0.0 to 4.0.1 [\#53](https://github.com/DEFRA/charging-module-api/pull/53) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump eslint-plugin-import from 2.18.2 to 2.22.0 [\#52](https://github.com/DEFRA/charging-module-api/pull/52) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
-- Add preSroc flag to bill run summary [\#48](https://github.com/DEFRA/charging-module-api/pull/48) ([StuAA78](https://github.com/StuAA78))
-- Transactions with zero charge [\#47](https://github.com/DEFRA/charging-module-api/pull/47) ([StuAA78](https://github.com/StuAA78))
 
 ## [v0.1.0](https://github.com/DEFRA/charging-module-api/tree/v0.1.0) (2020-07-01)
 
 [Full Changelog](https://github.com/DEFRA/charging-module-api/compare/98f05b5f786ccb25eb50c4dfab2056c002668e01...v0.1.0)
 
-**Merged pull requests:**
+**Implemented enhancements:**
 
 - Consider "New Licence" flag when allocating transactions to a Minimum Charge group [\#46](https://github.com/DEFRA/charging-module-api/pull/46) ([StuAA78](https://github.com/StuAA78))
 - update schema to allow zero volume and add test [\#45](https://github.com/DEFRA/charging-module-api/pull/45) ([rudenoise](https://github.com/rudenoise))
-- bug fix for transaction file ref appearing in the view bill run trans… [\#44](https://github.com/DEFRA/charging-module-api/pull/44) ([rudenoise](https://github.com/rudenoise))
 - Exclude Invoices below De-Minimis Value from Bill Run [\#43](https://github.com/DEFRA/charging-module-api/pull/43) ([StuAA78](https://github.com/StuAA78))
+
+**Fixed bugs:**
+
+- bug fix for transaction file ref appearing in the view bill run trans… [\#44](https://github.com/DEFRA/charging-module-api/pull/44) ([rudenoise](https://github.com/rudenoise))
+
+**Merged pull requests:**
+
 - Clean up tests, fix minor defects [\#42](https://github.com/DEFRA/charging-module-api/pull/42) ([tonyheadford](https://github.com/tonyheadford))
 - Fixed spurious comma problem [\#41](https://github.com/DEFRA/charging-module-api/pull/41) ([tonyheadford](https://github.com/tonyheadford))
 - Fixed issue with status not being a query option [\#40](https://github.com/DEFRA/charging-module-api/pull/40) ([tonyheadford](https://github.com/tonyheadford))
