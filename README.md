@@ -1,4 +1,4 @@
-# SROC Charging Module API
+# Charging Module API
 
 [![Build Status](https://travis-ci.com/DEFRA/charging-module-api.svg?branch=master)](https://travis-ci.com/DEFRA/charging-module-api)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_charging-module-api&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=DEFRA_charging-module-api)
