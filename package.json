@@ -8,7 +8,7 @@
     "url": "https://github.com/DEFRA/charging-module-api.git"
   },
   "engines": {
-    "node": "10.x"
+    "node": "12.x"
   },
   "scripts": {
     "start": "npm run migrate && node index.js",
