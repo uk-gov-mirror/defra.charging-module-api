@@ -7,7 +7,7 @@ const createServer = require('../../app')
 const Regime = require('../../app/models/regime')
 const RuleService = require('../../app/lib/connectors/rules')
 const { dummyCharge } = require('../helpers/charge_helper')
-const { addTransaction, updateTransaction, cleanTransactions } = require('../helpers/transaction_helper')
+const { addTransaction, cleanTransactions } = require('../helpers/transaction_helper')
 const { makeAdminAuthHeader } = require('../helpers/authorisation_helper')
 
 describe('Transactions controller: GET /v1/wrls/transactions', () => {
@@ -194,71 +194,6 @@ describe('Transactions controller: GET /v1/wrls/transactions/id', () => {
     expect(response.headers['content-type']).to.include('application/json')
     const payload = JSON.parse(response.payload)
     expect(payload).to.include(['statusCode', 'error', 'message'])
-  })
-})
-
-describe('Transactions controller: PATCH /v1/wrls/transactions/id/approve', () => {
-  let server
-  let regime
-  let authToken
-
-  // Create server before the tests run
-  before(async () => {
-    server = await createServer()
-    regime = await Regime.find('wrls')
-    authToken = makeAdminAuthHeader()
-    await cleanTransactions()
-  })
-
-  it('sets the approved for billing flag', async () => {
-    const id = await addTransaction(regime)
-
-    const options = {
-      method: 'PATCH',
-      url: `/v1/${regime.slug}/transactions/${id}/approve`,
-      headers: { authorization: authToken }
-    }
-    const response = await server.inject(options)
-    expect(response.statusCode).to.equal(204)
-
-    const transaction = await regime.schema.Transaction.find(regime.id, id)
-    expect(transaction.approved_for_billing).to.be.true()
-  })
-})
-
-describe('Transactions controller: PATCH /v1/wrls/transactions/id/unapprove', () => {
-  let server
-  let regime
-  let authToken
-
-  // Create server before the tests run
-  before(async () => {
-    server = await createServer()
-    regime = await Regime.find('wrls')
-    authToken = makeAdminAuthHeader()
-    await cleanTransactions()
-  })
-
-  it('clears approved for billing flag', async () => {
-    const id = await addTransaction(regime)
-
-    // set the approved flag directly with the helper
-    await updateTransaction(id, { approved_for_billing: true })
-
-    const transaction = await regime.schema.Transaction.find(regime.id, id)
-    expect(transaction.approved_for_billing).to.be.true()
-
-    const options = {
-      method: 'PATCH',
-      url: `/v1/${regime.slug}/transactions/${id}/unapprove`,
-      headers: { authorization: authToken }
-    }
-
-    const response = await server.inject(options)
-    expect(response.statusCode).to.equal(204)
-
-    await transaction.reload() // = await Transaction.find(regime.id, id)
-    expect(transaction.approved_for_billing).to.be.false()
   })
 })
 

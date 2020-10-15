@@ -51,7 +51,7 @@ async function run () {
 
         // get the correct presenter for the regime
         // we need the regime and preSroc status
-        const scheme = billRun.pre_sroc ? Schema.preSroc : Schema.sroc
+        const scheme = Schema.preSroc
         const br = new (scheme[regime.slug].BillRun)()
         Object.assign(br, billRun)
 

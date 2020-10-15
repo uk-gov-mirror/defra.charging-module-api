@@ -26,10 +26,6 @@ class Regime {
     return Schema.preSroc[this.slug]
   }
 
-  get srocSchema () {
-    return Schema.sroc[this.slug]
-  }
-
   static build (params) {
     return new this(params)
   }

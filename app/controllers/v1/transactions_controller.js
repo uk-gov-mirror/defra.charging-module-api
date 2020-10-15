@@ -2,8 +2,6 @@ const Boom = require('@hapi/boom')
 const { logger } = require('../../lib/logger')
 const config = require('../../../config/config')
 const Authorisation = require('../../lib/authorisation')
-const ApproveTransaction = require('../../services/approve_transaction')
-const UnapproveTransaction = require('../../services/unapprove_transaction')
 const AddTransaction = require('../../services/add_transaction')
 const RemoveTransaction = require('../../services/remove_transaction')
 const { isValidUUID } = require('../../lib/utils')
@@ -126,42 +124,6 @@ class TransactionsController {
     }
   }
 
-  //
-  // PATCH /v1/{regime_id}/transactions/{id}/approve
-  //
-  static async approve (req, h) {
-    // approve transaction for billing
-    try {
-      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
-
-      await ApproveTransaction.call(regime, req.params.id)
-
-      // HTTP 204 No Content
-      return h.response().code(204)
-    } catch (err) {
-      logger.error(err.stack)
-      return Boom.boomify(err)
-    }
-  }
-
-  //
-  // PATCH /v1/{regime_id}/transactions/{id}/unapprove
-  //
-  static async unapprove (req, h) {
-    // unapprove/withhold transaction for billing
-    try {
-      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
-
-      await UnapproveTransaction.call(regime, req.params.id)
-
-      // HTTP 204 No Content
-      return h.response().code(204)
-    } catch (err) {
-      logger.error(err.stack)
-      return Boom.boomify(err)
-    }
-  }
-
   static regimeTransactionPath (regime, transactionId) {
     return `${config.environment.serviceUrl}/v1/${regime.slug}/transactions/${transactionId}`
   }
@@ -182,22 +144,6 @@ class TransactionsController {
         method: 'GET',
         path: basePath + '/{id}',
         handler: this.show.bind(this)
-      },
-      {
-        method: 'PATCH',
-        path: basePath + '/{id}/approve',
-        handler: this.approve.bind(this),
-        options: {
-          tags: ['sroc']
-        }
-      },
-      {
-        method: 'PATCH',
-        path: basePath + '/{id}/unapprove',
-        handler: this.unapprove.bind(this),
-        options: {
-          tags: ['sroc']
-        }
       },
       {
         method: 'DELETE',

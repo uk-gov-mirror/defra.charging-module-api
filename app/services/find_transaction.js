@@ -9,8 +9,6 @@ async function call (regime, id) {
     throw Boom.badRequest(`Invalid transaction id: '${id}'`)
   }
 
-  // we need to know whether this is a pre or post sroc transaction
-  // in order to correctly map the column names
   const stmt = 'select pre_sroc from transactions where id=$1::uuid AND regime_id=$2::uuid'
   const result = await pool.query(stmt, [id, regime.id])
 
@@ -18,8 +16,7 @@ async function call (regime, id) {
     throw Boom.notFound(`No transaction found with id '${id}'`)
   }
 
-  const isPreSroc = result.rows[0].pre_sroc
-  const Transaction = Schema[isPreSroc ? 'preSroc' : 'sroc'][regime.slug].Transaction
+  const Transaction = Schema.preSroc[regime.slug].Transaction
 
   // we don't need an object just the database result (transformed to the correct naming)
   return Transaction.findRaw(regime.id, id)
