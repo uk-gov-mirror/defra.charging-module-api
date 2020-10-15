@@ -42,10 +42,6 @@ class CustomerChange {
 
   static async search (params, page, perPage, sort, sortDir) {
     // paginated search returning collection of DB records (not class instances)
-    // const pagination = {
-    //   page: page || config.pagination.page,
-    //   perPage: perPage || config.pagination.perPage
-    // }
     const pagination = utils.validatePagination(page, perPage)
 
     const offset = (pagination.page - 1) * pagination.perPage
@@ -53,8 +49,6 @@ class CustomerChange {
 
     // build where clause
     // regime name, database name
-    // const transactions = require(`../schema/${regime.slug}_transaction`)
-    // const schema = Schema[regime.slug]
     const select = this.rawQuery
 
     // where clause uses DB names not mapped names
@@ -71,12 +65,7 @@ class CustomerChange {
         } else {
           where.push(`${col}=$${attrCount++}`)
         }
-        // if (val && val.indexOf('*') !== -1) {
-        //   val = val.replace(/\*/g, '%')
-        //   where.push(`${col} like $${attrCount++}`)
-        // } else {
-        //   where.push(`${col} = $${attrCount++}`)
-        // }
+
         values.push(val)
       }
     })

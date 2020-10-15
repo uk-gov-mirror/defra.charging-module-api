@@ -147,7 +147,6 @@ class WrlsTransactionsSearchRequest {
     // const order = []
     const defaultCols = ['customer_reference', 'line_attr_1', 'transaction_reference']
     let sortCols = []
-    // const sortDirection = this.sortDir
 
     if (this.sort) {
       let cols

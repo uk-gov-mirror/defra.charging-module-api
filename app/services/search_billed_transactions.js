@@ -1,7 +1,5 @@
 // search transaction queue
 const { pool } = require('../lib/connectors/db')
-// const config = require('../../config/config')
-// const Schema = require('../schema')
 
 async function call (searchRequest) {
   const promises = [
@@ -13,9 +11,6 @@ async function call (searchRequest) {
   const count = results[0]
   const pageTotal = Math.ceil(count / searchRequest.perPage)
   const rows = results[1].rows
-
-  // pagination.pageCount = pageTotal
-  // pagination.recordCount = count
 
   return {
     pagination: {

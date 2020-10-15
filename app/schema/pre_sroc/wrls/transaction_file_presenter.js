@@ -128,15 +128,6 @@ class WRLSTransactionFilePresenter {
   }
 
   async body (db, stream) {
-    // const stmt = `
-    //   SELECT * FROM transactions
-    //   WHERE bill_run_id=$1::uuid
-    //   ORDER BY
-    //   transaction_reference ASC,
-    //   line_attr_1 ASC,
-    //   regime_value_17 ASC,
-    //   minimum_charge_adjustment ASC`
-
     const stmt = `
       SELECT *,
         CASE WHEN charge_value < 0 THEN

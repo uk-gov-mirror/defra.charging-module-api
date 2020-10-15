@@ -158,7 +158,6 @@ class WrlsBillRun extends BillRun {
 
   // attributes returned for each trnasaction in the customer summary sections
   get summaryAdditionalAttributes () {
-    // line_attr_1 == licenceNumber
     return ['line_attr_1', 'minimum_charge_adjustment']
   }
 

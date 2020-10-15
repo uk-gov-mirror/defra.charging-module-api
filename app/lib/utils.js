@@ -78,7 +78,6 @@ function validateFinancialYear (data) {
   const sm = ps.getMonth()
 
   const efy = Date.UTC((sm < 3 ? sy : sy + 1), 2, 31)
-  // const efy = new Date(Date.UTC((sm < 3 ? sy : sy + 1), 2, 31))
 
   if (pe > efy) {
     // spoof a Joi style validation error message so we can be consistent

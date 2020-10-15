@@ -1,10 +1,6 @@
 module.exports = {
   plugin: require('@hapi/good'),
   options: {
-    // ops: {
-    //   // log ops stats every 30s
-    //   interval: 30000
-    // },
     reporters: {
       console: [
         {

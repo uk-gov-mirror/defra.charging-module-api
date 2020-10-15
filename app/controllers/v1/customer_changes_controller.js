@@ -12,7 +12,6 @@ async function index (req, h) {
   try {
     // check regime valid and caller has access to regime
     // regime_id is part of routing so must be defined to get here
-    // const regime = await SecurityCheckRegime.call(req.params.regime_id)
     const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
     // load the correct schema for the regime
@@ -21,7 +20,6 @@ async function index (req, h) {
     const { page, perPage, sort, sortDir, ...q } = req.query
 
     // translate params into DB naming
-    // const params = Transaction.translate(q)
     const params = q
     // force these criteria
     params.status = 'initialised'

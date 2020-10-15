@@ -15,8 +15,6 @@ async function run () {
   const regime = await Regime.find('wrls')
   const regions = ['A', 'B', 'E', 'N', 'S', 'T', 'W', 'Y']
 
-  // ['A', 'B', 'E', 'N', 'S', 'T', 'W', 'Y'].forEach(async (region) => exportByRegion(region))
-
   for (let n = 0; n < regions.length; n++) {
     try {
       // generate files for any pending changes

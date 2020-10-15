@@ -21,7 +21,6 @@ async function index (req, h) {
     const { page, perPage, sort, sortDir, ...q } = req.query
 
     // translate params into DB naming
-    // const params = Transaction.translate(q)
     const params = q
     // force these criteria
     params.regime_id = regime.id

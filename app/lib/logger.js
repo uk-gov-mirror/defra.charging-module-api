@@ -14,7 +14,6 @@ const logger = createLogger({
     myFormat
   ),
   transports: [
-    // new winston.transports.File({ filename: 'error.log', level: 'error' }),
     new transports.Console({
       level: 'info',
       silent: config.environment.test

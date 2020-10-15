@@ -146,7 +146,6 @@ class WrlsBilledTransactionsRequest {
     // const order = []
     const defaultCols = ['customer_reference', 'line_attr_1', 'transaction_reference']
     let sortCols = []
-    // const sortDirection = this.sortDir
 
     if (this.sort) {
       let cols
@@ -175,10 +174,6 @@ class WrlsBilledTransactionsRequest {
         return `t.${c} ${this.sortDir}`
       }
     })
-
-    // for (let i = 0; i < sortCols.length; i++) {
-    //   order.push(`${sortCols[i]} ${sortDirection}`)
-    // }
 
     // add additional sub-sort on customer reference
     if (!sortCols.includes('customer_reference')) {

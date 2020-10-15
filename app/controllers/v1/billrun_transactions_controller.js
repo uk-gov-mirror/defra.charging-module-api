@@ -3,9 +3,7 @@ const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
 const { logger } = require('../../lib/logger')
 const Authorisation = require('../../lib/authorisation')
-// const SearchCollection = require('../../services/search_collection')
 const { isValidUUID } = require('../../lib/utils')
-// const Schema = require('../../schema/pre_sroc')
 const AddBillRunTransaction = require('../../services/add_bill_run_transaction')
 const RemoveBillRunTransaction = require('../../services/remove_bill_run_transaction')
 const RemoveMatchingBillRunTransactions = require('../../services/remove_matching_bill_run_transactions')
@@ -27,7 +25,6 @@ class BillRunTransactionsController {
       const searchRequest = new (regime.schema.BillRunTransactionsSearchRequest)(regime.id, billRun.id, req.query)
 
       // select all transactions matching search criteria for the regime (pre-sroc only)
-      // return SearchCollection.call(searchRequest)
       return regime.schema.Transaction.search(searchRequest)
     } catch (err) {
       logger.error(err.stack)

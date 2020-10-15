@@ -87,7 +87,6 @@ async function buildCustomerSummary (db, regime, billRun, customerRef, filter) {
 }
 
 async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
-  // filter.charge_financial_year = year
   const { where, values } = utils.buildWhereClause({ charge_financial_year: year, ...filter })
 
   // assumption that 0 would be a invoice

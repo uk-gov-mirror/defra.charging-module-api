@@ -52,7 +52,6 @@ async function calculateCharge (regime, financialYear, chargeParams) {
 function makeRulesPath (regime, year) {
   // generate the url for the correct regime, year and ruleset
   const endpoint = config.decisionService.endpoints[regime.slug.toLowerCase()]
-  // const fy = '_' + year + '_' + (year + 1).toString().slice(2)
   const suffix = YEAR_SUFFIX[year]
 
   return (

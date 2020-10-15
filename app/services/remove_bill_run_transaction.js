@@ -18,8 +18,6 @@ async function call (regime, billRun, transaction) {
 
   if (result) {
     // invalidate any cached summary for the bill run
-    // await billRun.invalidateCache()
-    // await billRun.removeAdjustmentsForLicence(transaction.licenceNumber)
     await Promise.all([
       billRun.invalidateCache(),
       billRun.removeAdjustmentsForLicence(transaction.licenceNumber)

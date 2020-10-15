@@ -9,10 +9,8 @@ const ApproveBillRun = require('../../services/approve_bill_run')
 const UnapproveBillRun = require('../../services/unapprove_bill_run')
 const RemoveBillRun = require('../../services/remove_bill_run')
 const SendBillRun = require('../../services/send_bill_run')
-// const SearchCollection = require('../../services/search_collection')
 const GenerateRegionCustomerFile = require('../../services/generate_region_customer_file')
 const { isValidUUID } = require('../../lib/utils')
-// const Schema = require('../../schema/pre_sroc')
 
 const basePath = '/v1/{regime_id}/billruns'
 
@@ -22,15 +20,12 @@ class BillRunsController {
     try {
       // check regime valid and caller has access to regime
       // regime_id is part of routing so must be defined to get here
-      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
       const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
       // load the correct schema for the regime
       const searchRequest = new (regime.schema.BillRunSearchRequest)(regime, req.query)
 
       // select all transactions matching search criteria for the regime (pre-sroc only)
       return regime.schema.BillRun.search(searchRequest)
-
-      // return SearchCollection.call(searchRequest)
     } catch (err) {
       logger.error(err.stack)
       return Boom.boomify(err)
@@ -42,7 +37,6 @@ class BillRunsController {
     try {
       // check regime valid and caller has access to regime
       // regime_id is part of routing so must be defined to get here
-      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
       const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
 
       const id = req.params.id
@@ -66,7 +60,6 @@ class BillRunsController {
   static async send (req, h) {
     try {
       const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
-      // const regime = await SecurityCheckRegime.call(req.params.regime_id)
 
       const id = req.params.id
       if (!isValidUUID(id)) {

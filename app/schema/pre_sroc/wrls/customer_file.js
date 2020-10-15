@@ -67,7 +67,7 @@ class WrlsCustomerFile extends CustomerFile {
       }
 
       for (let i = 0; i < cols.length; i++) {
-        const col = cols[i] // CustomerAttributeMap[cols[i]]
+        const col = cols[i]
         if (col) {
           sortCols.push(col)
         }

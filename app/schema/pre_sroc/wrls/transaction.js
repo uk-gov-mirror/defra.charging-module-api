@@ -106,7 +106,6 @@ class WrlsTransaction extends Transaction {
 
   static validate (data) {
     const result = Joi.validate(data, this.schema, { abortEarly: false })
-    // const result = this.schema.validate(data, { abortEarly: false })
     if (result.error) {
       return result
     }

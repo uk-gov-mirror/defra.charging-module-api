@@ -1,6 +1,5 @@
 const hapi = require('@hapi/hapi')
 const config = require('../config/config')
-// const scheduler = require('./lib/scheduler')
 
 async function createServer () {
   // Create the hapi server
@@ -15,8 +14,6 @@ async function createServer () {
     await server.register(require('blipp'))
     await server.register(require('./plugins/logging'))
   }
-
-  // scheduler.start()
 
   return server
 }

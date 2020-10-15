@@ -77,12 +77,6 @@ class Calculation {
     } else {
       return this.calculation.abatementAdjustment
     }
-
-    // if (this.calculation.abatementAdjustment) {
-    //   return this.calculation.abatementAdjustment
-    // } else {
-    //   return this.calculation.s127Agreement
-    // }
   }
 
   /**
