@@ -100,12 +100,6 @@ const config = {
       }
     }
   },
-
-  // Reading from .env gives a string so we parse it as JSON to convert it to an array
-  // If the env variable doesn't exist it returns "undefined" which causes JSON.parse to fail so we check for it first
-  routeTagAllowList: process.env.ROUTE_TAG_ALLOW_LIST ? JSON.parse(process.env.ROUTE_TAG_ALLOW_LIST) : undefined,
-  routeTagDenyList: process.env.ROUTE_TAG_DENY_LIST ? JSON.parse(process.env.ROUTE_TAG_DENY_LIST) : undefined,
-
   billRunSummaryTimeout: process.env.BILL_RUN_SUMMARY_TIMEOUT
 }
 
@@ -189,8 +183,6 @@ const schema = {
       }
     })
   }),
-  routeTagAllowList: joi.array().default(['*']),
-  routeTagDenyList: joi.array().default(['']),
   billRunSummaryTimeout: joi.number().required()
 }
 
