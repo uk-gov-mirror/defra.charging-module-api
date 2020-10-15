@@ -2,9 +2,7 @@ const Boom = require('@hapi/boom')
 const regimes = require('../controllers/v1/regimes_controller').routes
 const transactions = require('../controllers/v1/transactions_controller').routes()
 const billedTransactions = require('../controllers/v1/billed_transactions_controller').routes
-const srocTransactionQueue = require('../controllers/v1/sroc_transaction_queue_controller').routes
 const calculateCharge = require('../controllers/v1/calculate_charge_controller').routes
-const srocCalculateCharge = require('../controllers/v1/sroc_calculate_charge_controller').routes
 const billRuns = require('../controllers/v1/billruns_controller').routes()
 const billRunTransactions = require('../controllers/v1/billrun_transactions_controller').routes()
 const customerChanges = require('../controllers/v1/customer_changes_controller').routes
@@ -18,9 +16,7 @@ const routes = [
   ...regimes,
   ...transactions,
   ...billedTransactions,
-  ...srocTransactionQueue,
   ...calculateCharge,
-  ...srocCalculateCharge,
   ...billRuns,
   ...billRunTransactions,
   ...customerChanges,
