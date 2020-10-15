@@ -1,11 +1,11 @@
 const Boom = require('@hapi/boom')
-const regimes = require('../controllers/v1/regimes_controller').routes
+const regimes = require('../controllers/v1/regimes_controller').routes()
 const transactions = require('../controllers/v1/transactions_controller').routes()
-const calculateCharge = require('../controllers/v1/calculate_charge_controller').routes
+const calculateCharge = require('../controllers/v1/calculate_charge_controller').routes()
 const billRuns = require('../controllers/v1/billruns_controller').routes()
 const billRunTransactions = require('../controllers/v1/billrun_transactions_controller').routes()
-const customerChanges = require('../controllers/v1/customer_changes_controller').routes
-const customerFiles = require('../controllers/v1/customer_files_controller').routes
+const customerChanges = require('../controllers/v1/customer_changes_controller').routes()
+const customerFiles = require('../controllers/v1/customer_files_controller').routes()
 const authorisedSystems = require('../controllers/v1/authorised_systems_controller').routes()
 const airbrake = require('../controllers/airbrake_controller').routes()
 
