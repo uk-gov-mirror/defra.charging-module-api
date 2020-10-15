@@ -7,6 +7,7 @@ const billRunTransactions = require('../controllers/v1/billrun_transactions_cont
 const customerChanges = require('../controllers/v1/customer_changes_controller').routes
 const customerFiles = require('../controllers/v1/customer_files_controller').routes
 const authorisedSystems = require('../controllers/v1/authorised_systems_controller').routes()
+const airbrake = require('../controllers/airbrake_controller').routes()
 
 const status = (request, h) => request.headers
 
@@ -19,6 +20,7 @@ const routes = [
   ...customerChanges,
   ...customerFiles,
   ...authorisedSystems,
+  ...airbrake,
   {
     method: 'GET',
     path: '/status',
