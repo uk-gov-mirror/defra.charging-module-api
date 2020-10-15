@@ -2,7 +2,6 @@ const Lab = require('@hapi/lab')
 const Code = require('@hapi/code')
 const { describe, it, before, beforeEach } = exports.lab = Lab.script()
 const { expect } = Code
-// const createServer = require('../../app')
 const Regime = require('../../app/models/regime')
 const { addTransaction, updateTransaction, cleanTransactions } = require('../helpers/transaction_helper')
 const BulkRemoval = require('../../app/services/bulk_removal')

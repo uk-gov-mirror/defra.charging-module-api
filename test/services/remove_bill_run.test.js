@@ -2,7 +2,6 @@ const Lab = require('@hapi/lab')
 const Code = require('@hapi/code')
 const { describe, it, before, beforeEach } = exports.lab = Lab.script()
 const { expect } = Code
-// const createServer = require('../../app')
 const Regime = require('../../app/models/regime')
 const { addBillRunTransaction, cleanBillRuns, forceStatus } = require('../helpers/bill_run_helper')
 const CreateBillRun = require('../../app/services/create_bill_run')

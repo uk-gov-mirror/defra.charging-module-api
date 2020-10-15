@@ -20,8 +20,6 @@ describe('Transaction model', () => {
     expect(id2).to.not.be.null()
 
     const searchRequest = new (regime.schema.TransactionSearchRequest)(regime.id, { licenceNumber: '123/ABC/33/%/0123/Z44' })
-    // const result = await Transaction.search({ line_attr_1: '123/ABC/33/%/0123/Z44' },
-    //   1, 10, 'customer_reference', 'asc')
     const result = await Transaction.search(searchRequest)
     expect(result.pagination.recordCount).to.equal(2)
   })

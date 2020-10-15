@@ -6,27 +6,6 @@ const createServer = require('../../app')
 const { cleanCustomerChanges } = require('../helpers/customer_helper')
 const { makeAdminAuthHeader } = require('../helpers/authorisation_helper')
 
-// describe('Customer changes controller: GET /v1/wrls/customer_changes', () => {
-//   let server
-
-//   // Create server before the tests run
-//   before(async () => {
-//     server = await createServer()
-//   })
-
-//   it('returns list of queued customer changes', async () => {
-//     const options = {
-//       method: 'GET',
-//       url: '/v1/wrls/customer_changes'
-//     }
-//     const response = await server.inject(options)
-//     expect(response.statusCode).to.equal(200)
-//     expect(response.headers['content-type']).to.include('application/json')
-//     const payload = JSON.parse(response.payload)
-//     expect(Object.keys(payload)).to.equal(['pagination', 'data'])
-//   })
-// })
-
 describe('Customer changes controller: POST /v1/wrls/customer_changes', () => {
   let server
   let authToken

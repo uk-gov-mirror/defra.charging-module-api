@@ -9,37 +9,9 @@ const { dummyCharge } = require('./charge_helper')
 async function addTransaction (regime, data = {}) {
   const schema = Schema[regime.slug]
 
-  // const payload = {
-  //   periodStart: '01-APR-2019',
-  //   periodEnd: '31-MAR-2020',
-  //   credit: false,
-  //   billableDays: 230,
-  //   authorisedDays: 240,
-  //   volume: '3.5865',
-  //   source: 'Supported',
-  //   season: 'Summer',
-  //   loss: 'Low',
-  //   twoPartTariff: false,
-  //   compensationCharge: false,
-  //   eiucSource: 'Tidal',
-  //   waterUndertaker: false,
-  //   regionalChargingArea: 'Anglian',
-  //   section127Agreement: false,
-  //   section130Agreement: false,
-  //   customerReference: 'TH12345678',
-  //   lineDescription: 'Drains within Littleport & Downham IDB',
-  //   licenceNumber: '123/456/26/*S/0453/R01',
-  //   chargePeriod: '01-APR-2018 - 31-MAR-2019',
-  //   chargeElementId: '',
-  //   batchNumber: 'TEST1',
-  //   region: 'A',
-  //   areaCode: 'ARCA'
-  // }
-
   const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(dummyCharge())
 
   // create Transaction object, validate and translate
-  // const transaction = schema.Transaction.instanceFromRequest(Object.assign(payload, data))
   const transaction = buildTransaction(regime, data)
 
   // add transaction to the queue (create db record)

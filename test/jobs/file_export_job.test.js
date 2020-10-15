@@ -3,7 +3,6 @@ const Code = require('@hapi/code')
 const Sinon = require('sinon')
 const { describe, it, before, beforeEach } = exports.lab = Lab.script()
 const { expect } = Code
-// const createServer = require('../../app')
 const Regime = require('../../app/models/regime')
 const { addTransctionsAndApprove, cleanBillRuns } = require('../helpers/bill_run_helper')
 const FileExportJob = require('../../app/jobs/file_export_job')
