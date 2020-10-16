@@ -26,12 +26,18 @@ const config = {
       isCaseSensitive: false,
       stripTrailingSlash: true
     },
+    // The routes section is used to set default configuration for every route
+    // in the app.
     routes: {
       validate: {
         options: {
           abortEarly: false
         }
-      }
+      },
+      // Have Hapi set a bunch of common security headers. See
+      // https://hapi.dev/api/?v=20.0.0#-routeoptionssecurity for details of
+      // what gets enabled
+      security: true
     }
   },
 
