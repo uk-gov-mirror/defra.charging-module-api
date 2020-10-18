@@ -11,7 +11,7 @@ class AirbrakeController {
     return [
       {
         method: 'GET',
-        path: '/status/airbrake',
+        path: '/health/airbrake',
         handler: this.index.bind(this)
       }
     ]

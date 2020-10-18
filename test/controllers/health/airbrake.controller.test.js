@@ -7,10 +7,10 @@ const { describe, it, before } = exports.lab = Lab.script()
 const { expect } = Code
 
 // For running our service
-const createServer = require('../../app')
+const createServer = require('../../../app')
 
 // Test helpers
-const { makeAdminAuthHeader } = require('../helpers/authorisation_helper')
+const { makeAdminAuthHeader } = require('../../helpers/authorisation_helper')
 
 // Things we need to stub
 const Airbrake = require('@airbrake/node')
@@ -27,7 +27,7 @@ describe('Airbrake controller: GET /status/airbrake', () => {
   it('returns a 500 error', async () => {
     const options = {
       method: 'GET',
-      url: '/status/airbrake',
+      url: '/health/airbrake',
       headers: { authorization: authToken }
     }
 
@@ -38,7 +38,7 @@ describe('Airbrake controller: GET /status/airbrake', () => {
   it('causes Airbrake to send a notification', async () => {
     const options = {
       method: 'GET',
-      url: '/status/airbrake',
+      url: '/health/airbrake',
       headers: { authorization: authToken }
     }
 
