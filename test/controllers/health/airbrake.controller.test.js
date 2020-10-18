@@ -53,4 +53,14 @@ describe('Airbrake controller: GET /status/airbrake', () => {
 
     airbrakeStub.restore()
   })
+
+  it('returns a 401 error without proper authentication', async () => {
+    const options = {
+      method: 'GET',
+      url: '/health/airbrake'
+    }
+
+    const response = await server.inject(options)
+    expect(response.statusCode).to.equal(401)
+  })
 })
