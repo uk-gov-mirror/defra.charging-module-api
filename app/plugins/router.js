@@ -1,6 +1,6 @@
 const Boom = require('@hapi/boom')
 
-const status = (request, h) => request.headers
+const status = (_request, _h) => ({ status: 'alive' })
 
 const regimes = require('../controllers/admin/regimes_controller').routes()
 const authorisedSystems = require('../controllers/admin/authorised_systems_controller').routes()
