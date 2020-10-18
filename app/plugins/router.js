@@ -6,6 +6,7 @@ const regimes = require('../controllers/admin/regimes_controller').routes()
 const authorisedSystems = require('../controllers/admin/authorised_systems_controller').routes()
 
 const airbrake = require('../controllers/admin/health/airbrake_controller').routes()
+const database = require('../controllers/admin/health/database_controller').routes()
 
 const transactions = require('../controllers/v1/transactions_controller').routes()
 const calculateCharge = require('../controllers/v1/calculate_charge_controller').routes()
@@ -18,6 +19,7 @@ const routes = [
   ...regimes,
   ...authorisedSystems,
   ...airbrake,
+  ...database,
   ...transactions,
   ...calculateCharge,
   ...billRuns,
