@@ -5,7 +5,7 @@ const status = (request, h) => request.headers
 const regimes = require('../controllers/admin/regimes_controller').routes()
 const authorisedSystems = require('../controllers/admin/authorised_systems_controller').routes()
 
-const airbrake = require('../controllers/health/airbrake_controller').routes()
+const airbrake = require('../controllers/admin/health/airbrake_controller').routes()
 
 const transactions = require('../controllers/v1/transactions_controller').routes()
 const calculateCharge = require('../controllers/v1/calculate_charge_controller').routes()

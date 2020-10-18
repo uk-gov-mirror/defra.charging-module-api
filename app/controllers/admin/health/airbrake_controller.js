@@ -1,6 +1,6 @@
 const Boom = require('@hapi/boom')
-const { logger } = require('../../lib/logger')
-const Authorisation = require('../../lib/authorisation')
+const { logger } = require('../../../lib/logger')
+const Authorisation = require('../../../lib/authorisation')
 
 class AirbrakeController {
   static async index (req, _h) {
@@ -25,7 +25,7 @@ class AirbrakeController {
     return [
       {
         method: 'GET',
-        path: '/health/airbrake',
+        path: '/admin/health/airbrake',
         handler: this.index.bind(this)
       }
     ]
