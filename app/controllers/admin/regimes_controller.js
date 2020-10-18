@@ -3,7 +3,7 @@ const Regime = require('../../models/regime')
 const { logger } = require('../../lib/logger')
 const Authorisation = require('../../lib/authorisation')
 
-const basePath = '/v1/regimes'
+const basePath = '/admin/regimes'
 
 class RegimesController {
   // GET /v1/regimes

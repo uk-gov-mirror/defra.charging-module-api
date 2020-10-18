@@ -6,7 +6,7 @@ const Authorisation = require('../../lib/authorisation')
 const { dbError } = require('../../lib/db_error')
 const AuthorisedSystem = require('../../models/authorised_system')
 
-const basePath = '/v1/authorised_systems'
+const basePath = '/admin/authorised_systems'
 
 class AuthorisedSystemsController {
   // GET /v1/authorised_systems

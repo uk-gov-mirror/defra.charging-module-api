@@ -2,9 +2,9 @@ const Lab = require('@hapi/lab')
 const Code = require('@hapi/code')
 const { describe, it, before } = exports.lab = Lab.script()
 const { expect } = Code
-const createServer = require('../../app')
-const Regime = require('../../app/models/regime')
-const { makeAdminAuthHeader } = require('../helpers/authorisation_helper')
+const createServer = require('../../../app')
+const Regime = require('../../../app/models/regime')
+const { makeAdminAuthHeader } = require('../../helpers/authorisation_helper')
 
 describe('Regimes controller: GET /v1/regimes', async () => {
   let server
@@ -24,7 +24,7 @@ describe('Regimes controller: GET /v1/regimes', async () => {
   it('returns regimes', async () => {
     const options = {
       method: 'GET',
-      url: '/v1/regimes',
+      url: '/admin/regimes',
       headers: { authorization: authToken }
     }
     const response = await server.inject(options)
@@ -55,7 +55,7 @@ describe('Regimes controller: GET /v1/regimes/{id}', async () => {
       const regime = mappedRegimes[i]
       const options = {
         method: 'GET',
-        url: `/v1/regimes/${regime.slug}`,
+        url: `/admin/regimes/${regime.slug}`,
         headers: { authorization: authToken }
       }
       const response = await server.inject(options)
@@ -70,7 +70,7 @@ describe('Regimes controller: GET /v1/regimes/{id}', async () => {
   it('returns status 404 when id not found', async () => {
     const options = {
       method: 'GET',
-      url: '/v1/regimes/wigwam',
+      url: '/admin/regimes/wigwam',
       headers: { authorization: authToken }
     }
     const response = await server.inject(options)
