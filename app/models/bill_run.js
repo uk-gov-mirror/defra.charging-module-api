@@ -17,7 +17,18 @@ class BillRun {
     this.summary_data = null
 
     if (params) {
-      Object.assign(this, params)
+      Object.assign(this, this.convertBigInts(params))
+    }
+  }
+
+  convertBigInts (params) {
+    return {
+      ...params,
+      credit_value: parseInt(params.credit_value),
+      invoice_value: parseInt(params.invoice_value),
+      credit_line_value: parseInt(params.credit_line_value),
+      debit_line_value: parseInt(params.debit_line_value),
+      net_total: parseInt(params.net_total)
     }
   }
 

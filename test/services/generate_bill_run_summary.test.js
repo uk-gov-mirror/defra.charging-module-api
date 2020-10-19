@@ -40,6 +40,21 @@ describe('Generate Bill Run Summary', () => {
     expect(summary.customers[0].customerReference).to.equal(transaction.customerReference)
   })
 
+  it('can generate bill runs with totals bigger than a PostgreSQL integer', async () => {
+    const transactions = [
+      await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 11070005 }),
+      await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 11070005 })
+    ]
+    const resolvedTransactions = await Promise.all(transactions.map(tId => regime.schema.Transaction.find(regime.id, tId)))
+    const transactionsTotal = resolvedTransactions.reduce((sum, transaction) => sum + transaction.charge_value, 0)
+
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+    const summary = br.summary()
+
+    expect(summary.summary.netTotal).to.equal(transactionsTotal)
+    expect(summary.summary.netTotal).to.be.above(2147483647)
+  })
+
   it('sets deminimis to false if payment is over 500', async () => {
     const tId = await addBillRunTransaction(regime, billRun, { region: 'A' })
     const transaction = await regime.schema.Transaction.find(regime.id, tId)
