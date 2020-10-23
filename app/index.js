@@ -9,6 +9,7 @@ async function createServer () {
   await server.register(require('./plugins/router'))
   await server.register(require('./plugins/airbrake'))
   await server.register(require('./plugins/disinfect'))
+  await server.register(require('./plugins/unescape'))
   await server.register(require('./plugins/scheduler'))
 
   if (config.environment.development) {
