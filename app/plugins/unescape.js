@@ -33,7 +33,6 @@ const Sanitizer = require('sanitizer')
 const unescapeObj = obj =>
   Object.fromEntries(
     Object.entries(obj).map(([key, val]) => {
-      console.log(`key=${key} value=${val}`)
       if (val && typeof val === 'object') {
         // The property is another object so use recursion and pass it back into this function
         return [key, unescapeObj(val)]
