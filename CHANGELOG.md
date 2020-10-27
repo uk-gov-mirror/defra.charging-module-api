@@ -1,5 +1,59 @@
 # Changelog
 
+## [v0.3.0](https://github.com/DEFRA/charging-module-api/tree/v0.3.0) (2020-10-27)
+
+[Full Changelog](https://github.com/DEFRA/charging-module-api/compare/v0.2.0...v0.3.0)
+
+**Implemented enhancements:**
+
+- Add database health check controller [\#126](https://github.com/DEFRA/charging-module-api/pull/126) ([Cruikshanks](https://github.com/Cruikshanks))
+
+**Fixed bugs:**
+
+- Fix authentication in airbrake controller [\#123](https://github.com/DEFRA/charging-module-api/pull/123) ([Cruikshanks](https://github.com/Cruikshanks))
+- Fix issue with blown integers [\#120](https://github.com/DEFRA/charging-module-api/pull/120) ([Cruikshanks](https://github.com/Cruikshanks))
+- Update and fix Airbrake [\#113](https://github.com/DEFRA/charging-module-api/pull/113) ([Cruikshanks](https://github.com/Cruikshanks))
+
+**Security fixes:**
+
+- Add disinfect plugin to santize inputs to the API [\#119](https://github.com/DEFRA/charging-module-api/pull/119) ([Cruikshanks](https://github.com/Cruikshanks))
+- Enable setting common security headers [\#118](https://github.com/DEFRA/charging-module-api/pull/118) ([Cruikshanks](https://github.com/Cruikshanks))
+
+**Merged pull requests:**
+
+- Replace Good logging with Hapi-pino [\#137](https://github.com/DEFRA/charging-module-api/pull/137) ([Cruikshanks](https://github.com/Cruikshanks))
+- Bump aws-sdk from 2.777.0 to 2.779.0 [\#136](https://github.com/DEFRA/charging-module-api/pull/136) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Add check for use of `only\(\)` in tests to travis [\#134](https://github.com/DEFRA/charging-module-api/pull/134) ([Cruikshanks](https://github.com/Cruikshanks))
+- Unescape santized html characters [\#133](https://github.com/DEFRA/charging-module-api/pull/133) ([Cruikshanks](https://github.com/Cruikshanks))
+- Bump aws-sdk from 2.774.0 to 2.777.0 [\#132](https://github.com/DEFRA/charging-module-api/pull/132) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump aws-sdk from 2.773.0 to 2.774.0 [\#129](https://github.com/DEFRA/charging-module-api/pull/129) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump nodemon from 2.0.5 to 2.0.6 [\#128](https://github.com/DEFRA/charging-module-api/pull/128) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump aws-sdk from 2.772.0 to 2.773.0 [\#127](https://github.com/DEFRA/charging-module-api/pull/127) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Update status handler to return simple response [\#125](https://github.com/DEFRA/charging-module-api/pull/125) ([Cruikshanks](https://github.com/Cruikshanks))
+- Move /health under /admin [\#124](https://github.com/DEFRA/charging-module-api/pull/124) ([Cruikshanks](https://github.com/Cruikshanks))
+- Move Airbrake controller to health path [\#122](https://github.com/DEFRA/charging-module-api/pull/122) ([Cruikshanks](https://github.com/Cruikshanks))
+- Create an `/admin` root path [\#121](https://github.com/DEFRA/charging-module-api/pull/121) ([Cruikshanks](https://github.com/Cruikshanks))
+- Bump aws-sdk from 2.771.0 to 2.772.0 [\#117](https://github.com/DEFRA/charging-module-api/pull/117) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Create Dependabot config file [\#116](https://github.com/DEFRA/charging-module-api/pull/116) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Use classes for controllers consistently [\#115](https://github.com/DEFRA/charging-module-api/pull/115) ([Cruikshanks](https://github.com/Cruikshanks))
+- Bump @hapi/hapi from 20.0.0 to 20.0.1 [\#112](https://github.com/DEFRA/charging-module-api/pull/112) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- More SROC cleansing from project [\#111](https://github.com/DEFRA/charging-module-api/pull/111) ([Cruikshanks](https://github.com/Cruikshanks))
+- Remove unused transaction queue controller [\#110](https://github.com/DEFRA/charging-module-api/pull/110) ([Cruikshanks](https://github.com/Cruikshanks))
+- Remove endpoint suppression [\#109](https://github.com/DEFRA/charging-module-api/pull/109) ([Cruikshanks](https://github.com/Cruikshanks))
+- Delete billed transactions endpoint [\#108](https://github.com/DEFRA/charging-module-api/pull/108) ([Cruikshanks](https://github.com/Cruikshanks))
+- Run npm audit fix against the project [\#107](https://github.com/DEFRA/charging-module-api/pull/107) ([Cruikshanks](https://github.com/Cruikshanks))
+- Bump @hapi/hapi from 18.4.0 to 20.0.0 [\#106](https://github.com/DEFRA/charging-module-api/pull/106) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Delete 'unused' test code [\#105](https://github.com/DEFRA/charging-module-api/pull/105) ([Cruikshanks](https://github.com/Cruikshanks))
+- Delete redundant SROC code [\#104](https://github.com/DEFRA/charging-module-api/pull/104) ([Cruikshanks](https://github.com/Cruikshanks))
+- Delete 'unused' code [\#103](https://github.com/DEFRA/charging-module-api/pull/103) ([Cruikshanks](https://github.com/Cruikshanks))
+- Bump nodemon from 2.0.4 to 2.0.5 [\#102](https://github.com/DEFRA/charging-module-api/pull/102) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Upgrade solution to use Node v12 [\#101](https://github.com/DEFRA/charging-module-api/pull/101) ([Cruikshanks](https://github.com/Cruikshanks))
+- Bump aws-sdk from 2.768.0 to 2.771.0 [\#100](https://github.com/DEFRA/charging-module-api/pull/100) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump aws-sdk from 2.767.0 to 2.768.0 [\#98](https://github.com/DEFRA/charging-module-api/pull/98) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump aws-sdk from 2.762.0 to 2.767.0 [\#97](https://github.com/DEFRA/charging-module-api/pull/97) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump aws-sdk from 2.761.0 to 2.762.0 [\#95](https://github.com/DEFRA/charging-module-api/pull/95) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump aws-sdk from 2.754.0 to 2.761.0 [\#94](https://github.com/DEFRA/charging-module-api/pull/94) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+
 ## [v0.2.0](https://github.com/DEFRA/charging-module-api/tree/v0.2.0) (2020-09-18)
 
 [Full Changelog](https://github.com/DEFRA/charging-module-api/compare/v0.1.0...v0.2.0)
