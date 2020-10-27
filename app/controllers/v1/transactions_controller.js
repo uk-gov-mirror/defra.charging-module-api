@@ -1,5 +1,4 @@
 const Boom = require('@hapi/boom')
-const { logger } = require('../../lib/logger')
 const config = require('../../../config/config')
 const Authorisation = require('../../lib/authorisation')
 const AddTransaction = require('../../services/add_transaction')
@@ -21,7 +20,7 @@ class TransactionsController {
 
       return regime.schema.Transaction.search(searchRequest)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -47,7 +46,7 @@ class TransactionsController {
         transaction: transaction
       }
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -119,7 +118,7 @@ class TransactionsController {
       // HTTP 204 No Content
       return h.response().code(204)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }

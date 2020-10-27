@@ -1,24 +1,46 @@
-const { createLogger, format, transports } = require('winston')
-const { combine, timestamp, printf } = format
+'use strict'
+
+const Pino = require('pino')()
 const config = require('../../config/config')
 
-const myFormat = printf(({ level, message, timestamp, service }) => {
-  return `${timestamp} ${service} [${level}]: ${message}`
-})
+class Logger {
+  static trace (data) {
+    if (this._enabled()) {
+      this._log('trace', data)
+    }
+  }
 
-const logger = createLogger({
-  level: 'info',
-  defaultMeta: { service: 'charging-module-api' },
-  format: combine(
-    timestamp(),
-    myFormat
-  ),
-  transports: [
-    new transports.Console({
-      level: 'info',
-      silent: config.environment.test
-    })
-  ]
-})
+  static debug (data) {
+    if (this._enabled()) {
+      this._log('debug', data)
+    }
+  }
 
-module.exports.logger = logger
+  static info (data) {
+    if (this._enabled()) {
+      this._log('info', data)
+    }
+  }
+
+  static warn (data) {
+    if (this._enabled()) {
+      this._log('warn', data)
+    }
+  }
+
+  static error (data) {
+    if (this._enabled()) {
+      this._log('error', data)
+    }
+  }
+
+  static _log (level, data) {
+    Pino[level](data)
+  }
+
+  static _enabled () {
+    return (process.env.NODE_ENV !== 'test' || config.logInTest)
+  }
+}
+
+module.exports = Logger

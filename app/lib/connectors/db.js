@@ -1,5 +1,5 @@
 const { Pool } = require('pg')
-const { logger } = require('../logger')
+const logger = require('../logger')
 const config = require('../../../config/config')
 
 const pool = new Pool(config.db)

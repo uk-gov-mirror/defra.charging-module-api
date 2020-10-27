@@ -1,5 +1,4 @@
 const Boom = require('@hapi/boom')
-const { logger } = require('../../../lib/logger')
 const Authorisation = require('../../../lib/authorisation')
 const { pool } = require('../../../lib/connectors/db')
 
@@ -21,7 +20,7 @@ class DatabaseController {
         tableStats: result.rows
       }
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }

@@ -6,7 +6,7 @@
 const GenerateRegionCustomerFile = require('../services/generate_region_customer_file')
 const ExportRegionCustomerFile = require('../services/export_region_customer_file')
 const Regime = require('../models/regime')
-const { logger } = require('../lib/logger')
+const logger = require('../lib/logger')
 
 async function run () {
   logger.info('customer-file-export-job - checking for work ...')

@@ -106,7 +106,8 @@ const config = {
       }
     }
   },
-  billRunSummaryTimeout: process.env.BILL_RUN_SUMMARY_TIMEOUT
+  billRunSummaryTimeout: process.env.BILL_RUN_SUMMARY_TIMEOUT,
+  logInTest: (String(process.env.LOG_IN_TEST) === 'true') || false
 }
 
 // Define config schema
@@ -189,7 +190,8 @@ const schema = {
       }
     })
   }),
-  billRunSummaryTimeout: joi.number().required()
+  billRunSummaryTimeout: joi.number().required(),
+  logInTest: joi.boolean().default(false)
 }
 
 // Validate config

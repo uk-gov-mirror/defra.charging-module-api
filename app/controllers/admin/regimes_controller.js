@@ -1,6 +1,5 @@
 const Boom = require('@hapi/boom')
 const Regime = require('../../models/regime')
-const { logger } = require('../../lib/logger')
 const Authorisation = require('../../lib/authorisation')
 
 const basePath = '/admin/regimes'
@@ -13,7 +12,7 @@ class RegimesController {
       const regimes = await Regime.all()
       return regimes
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -30,7 +29,7 @@ class RegimesController {
         regime: regime
       }
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }

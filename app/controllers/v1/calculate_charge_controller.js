@@ -1,5 +1,4 @@
 const Boom = require('@hapi/boom')
-const { logger } = require('../../lib/logger')
 const Authorisation = require('../../lib/authorisation')
 const CalculateCharge = require('../../services/calculate_charge')
 const Schema = require('../../schema/pre_sroc')
@@ -30,7 +29,7 @@ class CalculateChargeController {
       // return result with status HTTP 200 OK
       return calc.payload
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       if (Boom.isBoom(err)) {
         if (err.output.statusCode === 500) {
           err.output.payload.message = err.message

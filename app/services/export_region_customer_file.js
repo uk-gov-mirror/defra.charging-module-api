@@ -3,7 +3,7 @@ const scheme = require('../schema/pre_sroc')
 const CustomerFile = require('../models/customer_file')
 const CreateFile = require('../services/create_file')
 const MoveFileToS3 = require('../services/move_file_to_s3')
-const { logger } = require('../lib/logger')
+const logger = require('../lib/logger')
 
 async function call (regime, region) {
   const db = new DBTransaction()

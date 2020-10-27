@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken')
 const Regime = require('../models/regime')
 const config = require('../../config/config')
 const { pool } = require('./connectors/db')
-const { logger } = require('./logger')
+const logger = require('../lib/logger')
 
 class Authorisation {
   static async assertAuthorisedForRegime (slug, token) {

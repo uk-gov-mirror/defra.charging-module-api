@@ -9,7 +9,7 @@ const Regime = require('../models/regime')
 const ExportRegionCustomerFile = require('../services/export_region_customer_file')
 const CreateFile = require('../services/create_file')
 const MoveFileToS3 = require('../services/move_file_to_s3')
-const { logger } = require('../lib/logger')
+const logger = require('../lib/logger')
 
 async function run () {
   logger.info('file-export-job - checking for work ...')

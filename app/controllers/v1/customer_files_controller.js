@@ -1,7 +1,6 @@
 // Customer Files =====================
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
-const { logger } = require('../../lib/logger')
 const Authorisation = require('../../lib/authorisation')
 const GenerateCustomerFile = require('../../services/generate_customer_file')
 const ExportRegionCustomerFile = require('../../services/export_region_customer_file')
@@ -30,7 +29,7 @@ class CustomerFilesController {
       // select all customer changes matching search criteria for the regime
       return CustomerFile.search(params, page, perPage, sort, sortDir)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -56,7 +55,7 @@ class CustomerFilesController {
         customerFile: customerFile
       }
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -93,7 +92,7 @@ class CustomerFilesController {
 
       return response
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       if (Boom.isBoom(err)) {
         // status 500 squashes error message for some reason
         if (err.output.statusCode === 500) {

@@ -1,5 +1,4 @@
 const Boom = require('@hapi/boom')
-const { logger } = require('../../../lib/logger')
 const Authorisation = require('../../../lib/authorisation')
 
 class AirbrakeController {
@@ -8,7 +7,7 @@ class AirbrakeController {
     try {
       Authorisation.assertAdminOnlyAccess(req.headers.authorization)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
 

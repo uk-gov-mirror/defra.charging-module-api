@@ -7,6 +7,7 @@ async function createServer () {
 
   // Register the plugins
   await server.register(require('./plugins/router'))
+  await server.register(require('./plugins/hapi_pino')(config.logInTest))
   await server.register(require('./plugins/airbrake'))
   await server.register(require('./plugins/disinfect'))
   await server.register(require('./plugins/unescape'))
@@ -14,7 +15,6 @@ async function createServer () {
 
   if (config.environment.development) {
     await server.register(require('blipp'))
-    await server.register(require('./plugins/logging'))
   }
 
   return server

@@ -1,7 +1,6 @@
 // Customer changes Queue =====================
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
-const { logger } = require('../../lib/logger')
 const Authorisation = require('../../lib/authorisation')
 const AddCustomerChange = require('../../services/add_customer_change')
 const Schema = require('../../schema/pre_sroc')
@@ -30,7 +29,7 @@ class CustomerChangesController {
       // select all customer changes matching search criteria for the regime
       return CustomerChange.search(params, page, perPage, sort, sortDir)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -54,7 +53,7 @@ class CustomerChangesController {
         customerChange: customerChange
       }
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }

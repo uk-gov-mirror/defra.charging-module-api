@@ -1,7 +1,6 @@
 // Pre-SRoC Bill Runs =====================
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
-const { logger } = require('../../lib/logger')
 const Authorisation = require('../../lib/authorisation')
 const CreateBillRun = require('../../services/create_bill_run')
 const ViewBillRun = require('../../services/view_bill_run')
@@ -27,7 +26,7 @@ class BillRunsController {
       // select all transactions matching search criteria for the regime (pre-sroc only)
       return regime.schema.BillRun.search(searchRequest)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -51,7 +50,7 @@ class BillRunsController {
         billRun: await ViewBillRun.call(request)
       }
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -85,7 +84,7 @@ class BillRunsController {
         billRun: sentBillRun
       }
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       if (Boom.isBoom(err)) {
         // status 500 squashes error message for some reason
         if (err.output.statusCode === 500) {
@@ -125,7 +124,7 @@ class BillRunsController {
       response.header('Location', this.regimeBillRunPath(regime, result.id))
       return response
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       if (Boom.isBoom(err)) {
         // status 500 squashes error message for some reason
         if (err.output.statusCode === 500) {
@@ -158,7 +157,7 @@ class BillRunsController {
       // HTTP 204 No Content
       return h.response().code(204)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -181,7 +180,7 @@ class BillRunsController {
       // HTTP 204 No Content
       return h.response().code(204)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -204,7 +203,7 @@ class BillRunsController {
       // HTTP 204 No Content
       return h.response().code(204)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }

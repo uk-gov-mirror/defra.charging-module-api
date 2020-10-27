@@ -1,7 +1,6 @@
 // Pre-SRoC Bill Runs =====================
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
-const { logger } = require('../../lib/logger')
 const Authorisation = require('../../lib/authorisation')
 const { dbError } = require('../../lib/db_error')
 const AuthorisedSystem = require('../../models/authorised_system')
@@ -21,7 +20,7 @@ class AuthorisedSystemsController {
         authorisedSystems: result
       }
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -38,7 +37,7 @@ class AuthorisedSystemsController {
         authorisedSystem: authSys
       }
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -66,7 +65,7 @@ class AuthorisedSystemsController {
       response.header('Location', this.authorisedSystemPath(id))
       return response
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       if (Boom.isBoom(err)) {
         // status 500 squashes error message for some reason
         if (err.output.statusCode === 500) {
@@ -106,7 +105,7 @@ class AuthorisedSystemsController {
       // HTTP 204 No Content
       return h.response().code(204)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -121,7 +120,7 @@ class AuthorisedSystemsController {
       // HTTP 204 No Content
       return h.response().code(204)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }

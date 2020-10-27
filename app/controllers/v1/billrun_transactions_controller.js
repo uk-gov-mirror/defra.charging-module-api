@@ -1,7 +1,6 @@
 // Pre-SRoC Bill Run Nested Transactions =====================
 const Boom = require('@hapi/boom')
 const config = require('../../../config/config')
-const { logger } = require('../../lib/logger')
 const Authorisation = require('../../lib/authorisation')
 const { isValidUUID } = require('../../lib/utils')
 const AddBillRunTransaction = require('../../services/add_bill_run_transaction')
@@ -27,7 +26,7 @@ class BillRunTransactionsController {
       // select all transactions matching search criteria for the regime (pre-sroc only)
       return regime.schema.Transaction.search(searchRequest)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -53,7 +52,7 @@ class BillRunTransactionsController {
         transaction: result
       }
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -149,7 +148,7 @@ class BillRunTransactionsController {
       // HTTP 204 No Content
       return h.response().code(204)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
@@ -171,7 +170,7 @@ class BillRunTransactionsController {
       // HTTP 204 No Content
       return h.response().code(204)
     } catch (err) {
-      logger.error(err.stack)
+      req.log(['ERROR'], err.stack)
       return Boom.boomify(err)
     }
   }
