@@ -72,6 +72,11 @@ class BillRunsController {
 
       const sentBillRun = await SendBillRun.call(regime, billRun)
 
+      // if the summary is being generated then return the holding response straight away
+      if (sentBillRun.status === 'generating_summary') {
+        return sentBillRun
+      }
+
       // check if any customer changes are waiting to be exported for this region
       const customerFile = await GenerateRegionCustomerFile.call(regime, billRun.region)
       if (customerFile.changesCount > 0) {
