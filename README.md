@@ -1,6 +1,6 @@
 # Charging Module API
 
-[![Build Status](https://travis-ci.com/DEFRA/charging-module-api.svg?branch=main)](https://travis-ci.com/DEFRA/charging-module-api)
+![Build Status](https://github.com/DEFRA/charging-module-api/workflows/CI/badge.svg?branch=main)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_charging-module-api&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=DEFRA_charging-module-api)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_charging-module-api&metric=coverage)](https://sonarcloud.io/dashboard?id=DEFRA_charging-module-api)
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_charging-module-api&metric=sqale_index)](https://sonarcloud.io/dashboard?id=DEFRA_charging-module-api)
