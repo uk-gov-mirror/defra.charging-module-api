@@ -8,56 +8,6 @@ const Schema = require('../../schema/pre_sroc')
 const basePath = '/v1/{regime_id}/customer_changes'
 
 class CustomerChangesController {
-  // GET /v1/{regime_id}/customer_changes
-  static async index (req, h) {
-    try {
-      // check regime valid and caller has access to regime
-      // regime_id is part of routing so must be defined to get here
-      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
-
-      // load the correct schema for the regime
-      const CustomerChange = Schema[regime.slug].CustomerChange
-
-      const { page, perPage, sort, sortDir, ...q } = req.query
-
-      // translate params into DB naming
-      const params = q
-      // force these criteria
-      params.status = 'initialised'
-      params.regime_id = regime.id
-
-      // select all customer changes matching search criteria for the regime
-      return CustomerChange.search(params, page, perPage, sort, sortDir)
-    } catch (err) {
-      req.log(['ERROR'], err.stack)
-      return Boom.boomify(err)
-    }
-  }
-
-  // GET /v1/{regime_id}/customer_changes/{id}
-  static async show (req, h) {
-    try {
-      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
-
-      const id = req.params.id
-
-      // load the correct schema for the regime
-      const schema = Schema[regime.slug]
-      const customerChange = await schema.CustomerChange.findRaw(regime.id, id)
-
-      if (customerChange === null) {
-        return Boom.notFound(`No customer change found with id '${id}'`)
-      }
-
-      return {
-        customerChange: customerChange
-      }
-    } catch (err) {
-      req.log(['ERROR'], err.stack)
-      return Boom.boomify(err)
-    }
-  }
-
   // POST /v1/{regime_id}/customer_changes
   static async create (req, h) {
     try {
@@ -107,19 +57,9 @@ class CustomerChangesController {
   static routes () {
     return [
       {
-        method: 'GET',
-        path: basePath,
-        handler: this.index.bind(this)
-      },
-      {
         method: 'POST',
         path: basePath,
         handler: this.create.bind(this)
-      },
-      {
-        method: 'GET',
-        path: `${basePath}/{id}`,
-        handler: this.show.bind(this)
       }
     ]
   }

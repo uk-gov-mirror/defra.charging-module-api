@@ -11,7 +11,6 @@ module.exports = {
   CustomerFilePresenter: require('./customer_file_presenter'),
   BillRunCreateRequest: require('./bill_run_create_request'),
   BillRunViewRequest: require('./bill_run_view_request'),
-  BillRunSearchRequest: require('./bill_run_search_request'),
   BillRunTransactionsSearchRequest: require('./bill_run_transactions_search_request'),
   BillRunTransactionsRemoveRequest: require('./bill_run_transactions_remove_request'),
   TransactionSearchRequest: require('./transaction_search_request')

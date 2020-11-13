@@ -4,6 +4,27 @@ const RuleService = require('../../app/lib/connectors/rules')
 const Schema = require('../../app/schema/pre_sroc')
 const AddTransaction = require('../../app/services/add_transaction')
 const { dummyCharge } = require('./charge_helper')
+const { StandardTransactionRequest } = require('../fixtures/transaction_requests')
+const { StandardTransaction } = require('../fixtures/transactions')
+
+async function createTransaction (regimeId, isCredit, alternateData = {}) {
+  const transaction = StandardTransaction(regimeId, isCredit, alternateData)
+
+  const names = []
+  const values = []
+  const data = []
+  let attrCount = 1
+
+  Object.keys(transaction).forEach((k) => {
+    names.push(k)
+    values.push(`$${attrCount++}`)
+    data.push(transaction[k])
+  })
+
+  const stmt = `INSERT INTO transactions (${names.join(',')}) VALUES (${values.join(',')}) RETURNING id`
+  const result = await pool.query(stmt, data)
+  return result.rows[0].id
+}
 
 // TODO: move to test_utils.js or similar
 async function addTransaction (regime, data = {}) {
@@ -23,32 +44,7 @@ async function addTransaction (regime, data = {}) {
 }
 
 function buildTransaction (regime, data = {}) {
-  const payload = {
-    periodStart: '01-APR-2019',
-    periodEnd: '31-MAR-2020',
-    credit: false,
-    billableDays: 230,
-    authorisedDays: 240,
-    volume: '3.5865',
-    source: 'Supported',
-    season: 'Summer',
-    loss: 'Low',
-    twoPartTariff: false,
-    compensationCharge: false,
-    eiucSource: 'Tidal',
-    waterUndertaker: false,
-    regionalChargingArea: 'Anglian',
-    section127Agreement: false,
-    section130Agreement: false,
-    customerReference: 'TH12345678',
-    lineDescription: 'Drains within Littleport & Downham IDB',
-    licenceNumber: '123/456/26/*S/0453/R01',
-    chargePeriod: '01-APR-2018 - 31-MAR-2019',
-    chargeElementId: '',
-    batchNumber: 'TEST1',
-    region: 'A',
-    areaCode: 'ARCA'
-  }
+  const payload = StandardTransactionRequest()
   return (Schema[regime.slug].Transaction).instanceFromRequest(Object.assign(payload, data))
 }
 
@@ -68,9 +64,17 @@ async function updateTransaction (id, params) {
   return pool.query(stmt, vals)
 }
 
+async function findTransaction (id) {
+  const result = await pool.query(`SELECT * FROM transactions WHERE id = '${id}'`)
+
+  return result.rows[0]
+}
+
 module.exports = {
   addTransaction,
   buildTransaction,
-  updateTransaction,
-  cleanTransactions
+  cleanTransactions,
+  createTransaction,
+  findTransaction,
+  updateTransaction
 }

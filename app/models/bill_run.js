@@ -218,56 +218,6 @@ class BillRun {
     return result.rows[0]
   }
 
-  static async search (searchRequest, db) {
-    const select = this.rawQuery
-
-    const cnx = db || pool
-
-    // where clause uses DB names not mapped names
-    const where = []
-    const values = []
-    let attrCount = 1
-
-    const params = searchRequest.searchParams
-
-    Object.keys(params).forEach(col => {
-      if (col) {
-        const val = params[col]
-        if (val && typeof val === 'string' && val.indexOf('%') !== -1) {
-          where.push(`${col} like $${attrCount++}`)
-        } else {
-          where.push(`${col} = $${attrCount++}`)
-        }
-        values.push(val)
-      }
-    })
-
-    const whr = where.join(' AND ')
-    const order = this.orderSearchQuery(searchRequest.sort, searchRequest.sortDir)
-    const stmt = `${select} WHERE ${whr} ORDER BY ${order.join(',')} OFFSET $${attrCount++} LIMIT $${attrCount++}`
-    const promises = [
-      cnx.query(`SELECT count(*) FROM bill_runs WHERE ${whr}`, values),
-      cnx.query(stmt, [...values, searchRequest.offset, searchRequest.limit])
-    ]
-
-    const results = await Promise.all(promises)
-    const count = parseInt(results[0].rows[0].count)
-    const pageTotal = Math.ceil(count / searchRequest.limit)
-    const rows = results[1].rows
-
-    return {
-      pagination: {
-        page: searchRequest.page,
-        perPage: searchRequest.perPage,
-        pageCount: pageTotal,
-        recordCount: count
-      },
-      data: {
-        billRuns: rows
-      }
-    }
-  }
-
   static get rawQuery () {
     return 'select * from bill_runs'
   }

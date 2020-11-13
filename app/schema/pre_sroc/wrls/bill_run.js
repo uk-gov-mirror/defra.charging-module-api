@@ -269,45 +269,6 @@ class WrlsBillRun extends BillRun {
     `
   }
 
-  static orderSearchQuery (sort, sortDir) {
-    const defaultCols = ['region', 'bill_run_number']
-    let sortCols = []
-
-    let sortDirection = 'asc'
-
-    if (sortDir && sortDir.toUpperCase() === 'DESC') {
-      sortDirection = 'desc'
-    }
-
-    if (sort) {
-      let cols
-      if (sort instanceof Array) {
-        cols = sort
-      } else {
-        cols = sort.split(',')
-      }
-
-      for (let i = 0; i < cols.length; i++) {
-        const col = AttributeMap[cols[i]]
-        if (col) {
-          sortCols.push(col)
-        }
-      }
-    }
-
-    if (sortCols.length === 0) {
-      sortCols = defaultCols
-    }
-
-    const order = sortCols.map(c => {
-      return `${c} ${sortDirection}`
-    })
-
-    order.push(`created_at ${sortDirection}`)
-
-    return order
-  }
-
   toJSON () {
     return this.summary()
   }

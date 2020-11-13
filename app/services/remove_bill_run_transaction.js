@@ -3,7 +3,7 @@ const Boom = require('@hapi/boom')
 // Add a new transaction record to the queue
 async function call (regime, billRun, transaction) {
   if (billRun.isBilled) {
-    throw Boom.badRequest('Cannot remove transactions from a sent Bill Run')
+    throw Boom.badRequest('Cannot remove transactions from a billed Bill Run')
   }
 
   if (transaction.bill_run_id !== billRun.id) {

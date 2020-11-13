@@ -1,13 +1,10 @@
 const Lab = require('@hapi/lab')
 const Code = require('@hapi/code')
-const Sinon = require('sinon')
 const { describe, it, before } = exports.lab = Lab.script()
 const { expect } = Code
 const createServer = require('../../app')
 const Regime = require('../../app/models/regime')
-const RuleService = require('../../app/lib/connectors/rules')
-const { dummyCharge } = require('../helpers/charge_helper')
-const { addTransaction, cleanTransactions } = require('../helpers/transaction_helper')
+const { createTransaction, cleanTransactions } = require('../helpers/transaction_helper')
 const { makeAdminAuthHeader } = require('../helpers/authorisation_helper')
 
 describe('Transactions controller: GET /v1/wrls/transactions', () => {
@@ -35,125 +32,6 @@ describe('Transactions controller: GET /v1/wrls/transactions', () => {
   })
 })
 
-describe('Transactions controller: POST /v1/wrls/transaction', () => {
-  let server
-  let authToken
-
-  // Create server before the tests run
-  before(async () => {
-    server = await createServer()
-    authToken = makeAdminAuthHeader()
-    await cleanTransactions()
-  })
-
-  it('adds a transaction', async () => {
-    const options = {
-      method: 'POST',
-      url: '/v1/wrls/transactions',
-      headers: { authorization: authToken },
-      payload: {
-        periodStart: '01-APR-2019',
-        periodEnd: '31-MAR-2020',
-        credit: false,
-        billableDays: 230,
-        authorisedDays: 240,
-        volume: '3.5865',
-        source: 'Supported',
-        season: 'Summer',
-        loss: 'Low',
-        twoPartTariff: false,
-        compensationCharge: true,
-        eiucSource: 'Tidal',
-        waterUndertaker: false,
-        regionalChargingArea: 'Anglian',
-        section127Agreement: false,
-        section130Agreement: false,
-        customerReference: 'TH12345678',
-        lineDescription: 'Drains within Littleport & Downham IDB',
-        licenceNumber: '123/456/26/*S/0453/R01',
-        chargePeriod: '01-APR-2018 - 31-MAR-2019',
-        chargeElementId: '',
-        batchNumber: 'TEST-Transaction',
-        region: 'A',
-        areaCode: 'ARCA'
-      }
-    }
-
-    const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(dummyCharge())
-    const response = await server.inject(options)
-
-    const stubCalled = stub.called
-    stub.restore()
-    expect(stubCalled).to.be.true()
-    expect(response.statusCode).to.equal(201)
-  })
-
-  it('does not add a transaction with invalid data', async () => {
-    const options = {
-      method: 'POST',
-      url: '/v1/wrls/transactions',
-      headers: { authorization: authToken },
-      payload: {
-        transaction_date: '20-Jul-2018',
-        invoice_date: '20-Jul-2018',
-        line_description: 'Drains within Littleport & Downham IDB',
-        licence_number: '6/33/26/*S/0453/R01',
-        charge_period: '01-APR-2018 - 31-MAR-2019',
-        prorata_days: '214/214',
-        batch_number: 'B1',
-        volume: '3.5865 Ml',
-        region: 'A',
-        area_code: 'ARCA',
-        credit: true
-      }
-    }
-    const response = await server.inject(options)
-    expect(response.statusCode).to.equal(422)
-  })
-
-  it('does add a transaction that generates a zero charge', async () => {
-    const options = {
-      method: 'POST',
-      url: '/v1/wrls/transactions',
-      headers: { authorization: authToken },
-      payload: {
-        periodStart: '01-APR-2019',
-        periodEnd: '31-MAR-2020',
-        credit: false,
-        billableDays: 230,
-        authorisedDays: 240,
-        volume: '3.5865',
-        source: 'Supported',
-        season: 'Summer',
-        loss: 'Low',
-        twoPartTariff: false,
-        compensationCharge: true,
-        eiucSource: 'Tidal',
-        waterUndertaker: false,
-        regionalChargingArea: 'Midlands',
-        section127Agreement: false,
-        section130Agreement: false,
-        customerReference: 'TH12345678',
-        lineDescription: 'Drains within Littleport & Downham IDB',
-        licenceNumber: '123/456/26/*S/0453/R01',
-        chargePeriod: '01-APR-2018 - 31-MAR-2019',
-        chargeElementId: '',
-        batchNumber: 'TEST-Transaction-Queue',
-        region: 'B',
-        areaCode: 'ARCA'
-      }
-    }
-
-    const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(dummyCharge({ chargeValue: 0 }))
-    const response = await server.inject(options)
-
-    const stubCalled = stub.called
-    stub.restore()
-    expect(stubCalled).to.be.true()
-    expect(response.statusCode).to.equal(201)
-  })
-})
-
 describe('Transactions controller: GET /v1/wrls/transactions/id', () => {
   let server
   let regime
@@ -168,7 +46,7 @@ describe('Transactions controller: GET /v1/wrls/transactions/id', () => {
   })
 
   it('returns transaction', async () => {
-    const id = await addTransaction(regime)
+    const id = await createTransaction(regime.id, false)
 
     const options = {
       method: 'GET',
@@ -194,33 +72,5 @@ describe('Transactions controller: GET /v1/wrls/transactions/id', () => {
     expect(response.headers['content-type']).to.include('application/json')
     const payload = JSON.parse(response.payload)
     expect(payload).to.include(['statusCode', 'error', 'message'])
-  })
-})
-
-describe('Transactions controller: DELETE /v1/wrls/transactions', () => {
-  let server
-  let regime
-  let authToken
-
-  // Create server before the tests run
-  before(async () => {
-    server = await createServer()
-    regime = await Regime.find('wrls')
-    authToken = makeAdminAuthHeader()
-    await cleanTransactions()
-  })
-
-  it('removes specified transaction', async () => {
-    const id = await addTransaction(regime)
-
-    expect(id).to.not.be.null()
-    const opts = {
-      method: 'DELETE',
-      url: `/v1/wrls/transactions/${id}`,
-      headers: { authorization: authToken }
-    }
-
-    const response = await server.inject(opts)
-    expect(response.statusCode).to.equal(204)
   })
 })

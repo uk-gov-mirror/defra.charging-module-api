@@ -5,7 +5,6 @@ const Authorisation = require('../../lib/authorisation')
 const CreateBillRun = require('../../services/create_bill_run')
 const ViewBillRun = require('../../services/view_bill_run')
 const ApproveBillRun = require('../../services/approve_bill_run')
-const UnapproveBillRun = require('../../services/unapprove_bill_run')
 const RemoveBillRun = require('../../services/remove_bill_run')
 const SendBillRun = require('../../services/send_bill_run')
 const GenerateRegionCustomerFile = require('../../services/generate_region_customer_file')
@@ -14,23 +13,6 @@ const { isValidUUID } = require('../../lib/utils')
 const basePath = '/v1/{regime_id}/billruns'
 
 class BillRunsController {
-  // GET /v1/{regime_id}/bill_runs?param1=xyz
-  static async index (req, h) {
-    try {
-      // check regime valid and caller has access to regime
-      // regime_id is part of routing so must be defined to get here
-      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
-      // load the correct schema for the regime
-      const searchRequest = new (regime.schema.BillRunSearchRequest)(regime, req.query)
-
-      // select all transactions matching search criteria for the regime (pre-sroc only)
-      return regime.schema.BillRun.search(searchRequest)
-    } catch (err) {
-      req.log(['ERROR'], err.stack)
-      return Boom.boomify(err)
-    }
-  }
-
   // GET /v1/{regime_id}/bill_runs/{id}?param1=xyz
   static async show (req, h) {
     try {
@@ -162,29 +144,6 @@ class BillRunsController {
     }
   }
 
-  // PATCH /v1/{regime_id}/bill_runs/{id}/unapprove
-  static async unapprove (req, h) {
-    try {
-      // check regime valid and caller has access to regime
-      // regime_id is part of routing so must be defined to get here
-      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
-
-      const id = req.params.id
-      if (!isValidUUID(id)) {
-        return Boom.badRequest('Bill Run id is not a valid UUID')
-      }
-
-      // mustn't be billed - updates billrun and all assoc. transactions
-      await UnapproveBillRun.call(regime, id)
-
-      // HTTP 204 No Content
-      return h.response().code(204)
-    } catch (err) {
-      req.log(['ERROR'], err.stack)
-      return Boom.boomify(err)
-    }
-  }
-
   // DELETE /v1/{regime_id}/bill_runs/{id}
   static async remove (req, h) {
     try {
@@ -216,11 +175,6 @@ class BillRunsController {
     return [
       {
         method: 'GET',
-        path: basePath,
-        handler: this.index.bind(this)
-      },
-      {
-        method: 'GET',
         path: `${basePath}/{id}`,
         handler: this.show.bind(this)
       },
@@ -233,11 +187,6 @@ class BillRunsController {
         method: 'PATCH',
         path: `${basePath}/{id}/approve`,
         handler: this.approve.bind(this)
-      },
-      {
-        method: 'PATCH',
-        path: `${basePath}/{id}/unapprove`,
-        handler: this.unapprove.bind(this)
       },
       {
         method: 'POST',
