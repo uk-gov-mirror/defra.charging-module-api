@@ -1,20 +1,22 @@
 // Customer Files =====================
 const Boom = require('@hapi/boom')
-const config = require('../../../config/config')
-const Authorisation = require('../../lib/authorisation')
-const GenerateCustomerFile = require('../../services/generate_customer_file')
-const ExportRegionCustomerFile = require('../../services/export_region_customer_file')
-const Schema = require('../../schema/pre_sroc')
+const config = require('../../../../config/config')
+const Authorisation = require('../../../lib/authorisation')
+const Regime = require('../../../models/regime')
+const GenerateCustomerFile = require('../../../services/generate_customer_file')
+const ExportRegionCustomerFile = require('../../../services/export_region_customer_file')
+const Schema = require('../../../schema/pre_sroc')
 
-const basePath = '/v1/{regime_id}/customer_files'
+const basePath = '/admin/test/{regime_id}/customer_files'
 
 class CustomerFilesController {
-  // GET /v1/{regime_id}/customer_files
+  // GET /admin/test/{regime_id}/customer_files
   static async index (req, h) {
     try {
-      // check regime valid and caller has access to regime
-      // regime_id is part of routing so must be defined to get here
-      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      // check caller is authenticated as admin
+      Authorisation.assertAdminOnlyAccess(req.headers.authorization)
+
+      const regime = await Regime.find(req.params.regime_id)
 
       // load the correct schema for the regime
       const CustomerFile = Schema[regime.slug].CustomerFile
@@ -34,10 +36,13 @@ class CustomerFilesController {
     }
   }
 
-  // GET /v1/{regime_id}/customer_files{id}
+  // GET /admin/test/{regime_id}/customer_files{id}
   static async show (req, h) {
     try {
-      const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
+      // check caller is authenticated as admin
+      Authorisation.assertAdminOnlyAccess(req.headers.authorization)
+
+      const regime = await Regime.find(req.params.regime_id)
 
       const id = req.params.id
 
@@ -108,7 +113,7 @@ class CustomerFilesController {
   }
 
   static regimeCustomerFilePath (regime, customerFileId) {
-    return `${config.environment.serviceUrl}/v1/${regime.slug}/customer_files/${customerFileId}`
+    return `${config.environment.serviceUrl}/admin/test/${regime.slug}/customer_files/${customerFileId}`
   }
 
   static routes () {
