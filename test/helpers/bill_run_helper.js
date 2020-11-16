@@ -1,52 +1,20 @@
-const { pool } = require('../../app/lib/connectors/db')
 const Sinon = require('sinon')
 const RuleService = require('../../app/lib/connectors/rules')
-const SequenceCounter = require('../../app/models/sequence_counter')
 const AddBillRunTransaction = require('../../app/services/add_bill_run_transaction')
+const { DatabaseHelper, pool } = require('./database_helper')
 const { buildTransaction } = require('./transaction_helper')
 const { dummyCharge } = require('./charge_helper')
+const { InitialisedBillRun } = require('../fixtures/bill_runs')
 
-async function createBillRun (regimeId, region, data = {}) {
-  const sequenceCounter = new SequenceCounter(regimeId, region)
-  const billRunNumber = await sequenceCounter.nextBillRunNumber()
+async function createBillRun (regimeId, region, alternateData = {}) {
+  const billrun = await InitialisedBillRun(regimeId, region, alternateData)
+  const result = await DatabaseHelper.createRecord('bill_runs', billrun)
 
-  const stmt = 'INSERT INTO bill_runs (regime_id, region, bill_run_number, status, pre_sroc, approved_for_billing) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id'
-
-  const params = {
-    regime: regimeId,
-    region: region,
-    number: billRunNumber,
-    status: 'initialised',
-    preSroc: true,
-    approved: false,
-    ...data
-  }
-
-  const result = await pool.query(
-    stmt,
-    [
-      params.regime,
-      params.region,
-      params.number,
-      params.status,
-      params.preSroc,
-      params.approved
-    ]
-  )
-
-  return {
-    id: result.rows[0].id,
-    billRunNumber
-  }
+  return result.id
 }
 
 async function cleanBillRuns () {
-  return pool.query('DELETE from bill_runs')
-}
-
-async function billRunCount () {
-  const result = await pool.query('SELECT count(*)::int from bill_runs')
-  return result.rows[0].count
+  await DatabaseHelper.cleanRecords('bill_runs')
 }
 
 async function addBillRunTransaction (regime, billRun, transactionData = {}, chargeData = {}) {
@@ -99,17 +67,9 @@ async function addTransctionsAndApprove (br, regime, schema, charges) {
   return { billRun: reloadedBillRun, tIds }
 }
 
-async function findBillRun (id) {
-  const result = await pool.query(`SELECT * FROM bill_runs WHERE id = '${id}'`)
-
-  return result.rows[0]
-}
-
 module.exports = {
-  billRunCount,
   cleanBillRuns,
   createBillRun,
-  findBillRun,
   forceStatus,
   forceApproval,
   addBillRunTransaction,

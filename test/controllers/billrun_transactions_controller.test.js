@@ -59,39 +59,39 @@ describe('Bullrun Transactions controller', () => {
 
     it('adds a transaction', async () => {
       const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(dummyCharge())
-      const billRun = await createBillRun(regime.id, 'A')
-      const response = await server.inject(options(billRun.id, StandardTransactionRequest(), authToken))
+      const billRunId = await createBillRun(regime.id, 'A')
+      const response = await server.inject(options(billRunId, StandardTransactionRequest(), authToken))
 
       expect(stub.called).to.be.true()
       expect(response.statusCode).to.equal(201)
     })
 
     it('will not add a transaction with invalid data', async () => {
-      const billRun = await createBillRun(regime.id, 'A')
-      const response = await server.inject(options(billRun.id, InvalidTransactionRequest(), authToken))
+      const billRunId = await createBillRun(regime.id, 'A')
+      const response = await server.inject(options(billRunId, InvalidTransactionRequest(), authToken))
 
       expect(response.statusCode).to.equal(422)
     })
 
     it('will add a transaction that generates a zero charge', async () => {
       const stub = Sinon.stub(RuleService, 'calculateCharge').resolves(dummyCharge({ chargeValue: 0 }))
-      const billRun = await createBillRun(regime.id, 'A')
-      const response = await server.inject(options(billRun.id, StandardTransactionRequest(), authToken))
+      const billRunId = await createBillRun(regime.id, 'A')
+      const response = await server.inject(options(billRunId, StandardTransactionRequest(), authToken))
 
       expect(stub.called).to.be.true()
       expect(response.statusCode).to.equal(201)
     })
 
     it("will not add a transaction where the region doesn't match the bill run", async () => {
-      const billRun = await createBillRun(regime.id, 'B')
-      const response = await server.inject(options(billRun.id, StandardTransactionRequest(), authToken))
+      const billRunId = await createBillRun(regime.id, 'B')
+      const response = await server.inject(options(billRunId, StandardTransactionRequest(), authToken))
 
       expect(response.statusCode).to.equal(422)
     })
 
     it("will not add a transaction where the bill run is 'sent'", async () => {
-      const billRun = await createBillRun(regime.id, 'A', { status: 'pending' })
-      const response = await server.inject(options(billRun.id, StandardTransactionRequest(), authToken))
+      const billRunId = await createBillRun(regime.id, 'A', { status: 'pending' })
+      const response = await server.inject(options(billRunId, StandardTransactionRequest(), authToken))
 
       expect(response.statusCode).to.equal(400)
     })
@@ -107,22 +107,22 @@ describe('Bullrun Transactions controller', () => {
     }
 
     it('will delete the transaction', async () => {
-      const billRun = await createBillRun(regime.id, 'A')
-      const transactionId = await createTransaction(regime.id, false, { bill_run_id: billRun.id })
-      const response = await server.inject(options(billRun.id, transactionId, authToken))
+      const billRunId = await createBillRun(regime.id, 'A')
+      const transactionId = await createTransaction(regime.id, false, { bill_run_id: billRunId })
+      const response = await server.inject(options(billRunId, transactionId, authToken))
 
       expect(response.statusCode).to.equal(204)
     })
 
     it("will not delete a transaction where the bill run ID's don't match", async () => {
-      const billRun = await createBillRun(regime.id, 'A')
+      const billRunId = await createBillRun(regime.id, 'A')
 
       // Try to insert the transaction with a bill run ID that does not exist will cause a foreign key constraint error.
       // So we need to create a second bill run just to get a valid ID we can use for this test.
-      const wrongBillRun = await createBillRun(regime.id, 'B')
-      const transactionId = await createTransaction(regime.id, false, { bill_run_id: wrongBillRun.id })
+      const wrongBillRunId = await createBillRun(regime.id, 'B')
+      const transactionId = await createTransaction(regime.id, false, { bill_run_id: wrongBillRunId })
 
-      const response = await server.inject(options(billRun.id, transactionId, authToken))
+      const response = await server.inject(options(billRunId, transactionId, authToken))
 
       expect(response.statusCode).to.equal(404)
     })
