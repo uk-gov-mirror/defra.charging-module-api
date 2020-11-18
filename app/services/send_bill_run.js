@@ -73,10 +73,13 @@ async function updateBillRun (billRun) {
     for (const c of billRun.summary_data.customers) {
       for (const s of c.summary) {
         const tType = s.net_total < 0 ? 'C' : 'I'
-        const tRef = s.deminimis ? null : await billRun.generateTransactionRef(tType === 'C')
+        // Don't generate a transaction reference if this is deminimis or zero value invoice
+        const generateRef = !s.deminimis && !s.net_zero_value_invoice
+        const tRef = generateRef ? await billRun.generateTransactionRef(tType === 'C') : null
         const tIds = s.transactions.map(t => t.id).join("','")
         if (tIds) {
-          const stmt = `UPDATE transactions SET transaction_type=$1,transaction_reference=$2 WHERE id IN ('${tIds}') AND deminimis=FALSE AND charge_value!=0`
+          const stmt = 'UPDATE transactions SET transaction_type=$1,transaction_reference=$2' +
+            `WHERE id IN ('${tIds}') AND deminimis=FALSE AND net_zero_value_invoice=FALSE AND charge_value!=0`
           await db.query(stmt, [tType, tRef])
         }
       }
@@ -96,7 +99,8 @@ async function updateBillRun (billRun) {
     // update our local object
     billRun.status = 'pending'
 
-    const updTrans = `UPDATE transactions SET status='pending', transaction_date='${dateNow}', header_attr_1='${dateNow}' WHERE bill_run_id=$1 AND deminimis=FALSE AND charge_value!=0`
+    const updTrans = `UPDATE transactions SET status='pending', transaction_date='${dateNow}', header_attr_1='${dateNow}'` +
+      'WHERE bill_run_id=$1 AND deminimis=FALSE AND net_zero_value_invoice=FALSE AND charge_value!=0'
     await db.query(updTrans, [billRun.id])
     await db.commit()
   } catch (err) {

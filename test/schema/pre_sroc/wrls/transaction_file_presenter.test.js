@@ -123,4 +123,20 @@ describe('Transaction File Presenter (WRLS): presenter', () => {
     const data = mockStream.data.map(line => line.toString())
     expect(data.length).to.equal(2)
   })
+
+  it('body correctly excludes zero value invoice transactions', async () => {
+    const tr1 = await addBillRunTransaction(regime, billRun, dummyCharge)
+    const tr2 = await addBillRunTransaction(regime, billRun, dummyCharge)
+    const tr3 = await addBillRunTransaction(regime, billRun, dummyCharge)
+
+    // Manually set zero value invoice flags
+    await updateTransaction(tr1, { net_zero_value_invoice: true })
+    await updateTransaction(tr2, { net_zero_value_invoice: false })
+    await updateTransaction(tr3, { net_zero_value_invoice: false })
+
+    await presenter.body(pool, mockStream)
+
+    const data = mockStream.data.map(line => line.toString())
+    expect(data.length).to.equal(2)
+  })
 })

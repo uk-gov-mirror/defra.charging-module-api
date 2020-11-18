@@ -98,13 +98,15 @@ class WrlsBillRun extends BillRun {
               zeroValueLineCount: ss.zero_value_line_count,
               netTotal: ss.net_total,
               deminimis: ss.deminimis,
+              netZeroValueInvoice: ss.net_zero_value_invoice,
               transactions: ss.transactions.map(t => {
                 return {
                   id: t.id,
                   chargeValue: t.charge_value,
                   licenceNumber: t.line_attr_1,
                   minimumChargeAdjustment: t.minimum_charge_adjustment,
-                  deminimis: t.deminimis
+                  deminimis: t.deminimis,
+                  netZeroValueInvoice: t.net_zero_value_invoice
                 }
               })
             }

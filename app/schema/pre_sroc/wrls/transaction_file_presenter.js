@@ -150,6 +150,8 @@ class WRLSTransactionFilePresenter {
       AND
         deminimis=FALSE
       AND
+        net_zero_value_invoice=FALSE
+      AND
         charge_value!=0
       ORDER BY
         transaction_reference ASC,

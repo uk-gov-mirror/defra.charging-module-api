@@ -225,6 +225,7 @@ class WrlsTransaction extends Transaction {
       t.minimum_charge_adjustment AS "minimumChargeAdjustment",
       t.approved_for_billing AS "approvedForBilling",
       t.deminimis,
+      t.net_zero_value_invoice AS "netZeroValueInvoice",
       CASE
         WHEN
           t.deminimis=TRUE

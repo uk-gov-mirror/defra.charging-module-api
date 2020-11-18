@@ -71,6 +71,18 @@ describe('File export job', () => {
     expect(transaction.transaction_date).to.equal(null)
   })
 
+  it('doesn\'t assign transaction reference or date to net zero value transactions', async () => {
+    const br = await CreateBillRun.call({ regimeId: regime.id, region: 'A' })
+    const { billRun, tIds } = await addTransctionsAndApprove(br, regime, schema, [50, -50])
+
+    await SendBillRun.call(regime, billRun)
+    await FileExportJob.run()
+
+    const transaction = await (schema.Transaction).find(regime.id, tIds[0])
+    expect(transaction.transaction_reference).to.equal(null)
+    expect(transaction.transaction_date).to.equal(null)
+  })
+
   it('generates a file if the bill run contains regular transactions', async () => {
     const br = await CreateBillRun.call({ regimeId: regime.id, region: 'A' })
     const { billRun } = await addTransctionsAndApprove(br, regime, schema, [50])

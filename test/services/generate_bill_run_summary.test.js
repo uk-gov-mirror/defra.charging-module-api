@@ -209,4 +209,44 @@ describe('Generate Bill Run Summary', () => {
     expect(summary.summary.zeroValueLineCount).to.equal(1)
     expect(transactionIds).to.contain(zeroId)
   })
+
+  it('sets netZeroValueInvoice flag to true if net total is 0', async () => {
+    await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 200 })
+    await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: -200 })
+
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+
+    const summary = br.summary()
+    const { transactions } = summary.customers[0].summaryByFinancialYear[0]
+
+    expect(transactions[0].netZeroValueInvoice).to.equal(true)
+    expect(transactions[1].netZeroValueInvoice).to.equal(true)
+  })
+
+  it('sets netZeroValueInvoice flag to false if net total is not 0', async () => {
+    await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 200 })
+    await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: -100 })
+
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+
+    const summary = br.summary()
+    const { transactions } = summary.customers[0].summaryByFinancialYear[0]
+
+    expect(transactions[0].netZeroValueInvoice).to.equal(false)
+    expect(transactions[1].netZeroValueInvoice).to.equal(false)
+  })
+
+  it('calculates credit and debit totals and counts as 0 for net zero value invoices', async () => {
+    await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 200 })
+    await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: -200 })
+
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+
+    const { summary } = br.summary()
+
+    expect(summary.creditLineCount).to.equal(0)
+    expect(summary.debitLineCount).to.equal(0)
+    expect(summary.creditLineValue).to.equal(0)
+    expect(summary.debitLineValue).to.equal(0)
+  })
 })

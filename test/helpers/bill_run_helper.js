@@ -53,8 +53,13 @@ async function addTransctionsAndApprove (br, regime, schema, charges) {
   const tIds = []
 
   // Use for instead of forEach as this supports await
-  for (const chargeValue of charges) {
-    const tId = await addBillRunTransaction(regime, billRun, { region: billRun.region }, { chargeValue })
+  for (const value of charges) {
+    // This transaction is a credit if we're passed a value < 0
+    const credit = value < 0
+    // Transactions are always added with a positive amount
+    const chargeValue = Math.abs(value)
+
+    const tId = await addBillRunTransaction(regime, billRun, { region: billRun.region, credit }, { chargeValue })
     tIds.push(tId)
   }
 

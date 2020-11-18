@@ -153,9 +153,9 @@ async function buildFinancialYearSummary (db, regime, billRun, year, filter) {
 
   summary.net_total = summary.credit_line_value + summary.debit_line_value
 
-  const deminimisSummary = await calculateDeminimis(summary, db, where, values)
-
-  return deminimisSummary
+  // Calculate deminimis and zero value invoice flags and return the result
+  const deminimisSummary = await handleDeminimis(summary, db, where, values)
+  return handleNetZeroValueInvoice(deminimisSummary, db, where, values)
 }
 
 // Create summary at licence level and apply minimum charge
@@ -212,7 +212,7 @@ async function createCustomerLevelSummary (query, values, db) {
   return { summary, parentId }
 }
 
-async function calculateDeminimis (summary, db, where, values) {
+async function handleDeminimis (summary, db, where, values) {
   // Determine whether deminimis applies
   const deminimis = summary.net_total > 0 && summary.net_total < 500
 
@@ -222,12 +222,38 @@ async function calculateDeminimis (summary, db, where, values) {
     deminimis: transaction.charge_value > 0 ? deminimis : false
   }))
 
-  // Update deminimis flags in database
-  const updateDeminimis = `UPDATE transactions SET deminimis = ${deminimis} WHERE ${where} AND charge_value > 0`
-  await db.query(updateDeminimis, values)
+  // Update flag in database
+  const deminimisUpdate = `UPDATE transactions SET deminimis = ${deminimis} WHERE ${where} AND charge_value > 0`
+  await db.query(deminimisUpdate, values)
 
   // Return summary with updated transactions and deminimis flag
   return { ...summary, transactions, deminimis }
+}
+
+async function handleNetZeroValueInvoice (summary, db, where, values) {
+  // Determine whether zero value invoice applies
+  const netZeroValueInvoice = summary.net_total === 0
+
+  // Add deminimis and zero value invoice flags to each transaction
+  const transactions = summary.transactions.map(transaction => ({
+    ...transaction,
+    net_zero_value_invoice: netZeroValueInvoice
+  }))
+
+  // Update flag in database
+  const netZeroValueInvoiceUpdate = `UPDATE transactions SET net_zero_value_invoice = ${netZeroValueInvoice} WHERE ${where}`
+  await db.query(netZeroValueInvoiceUpdate, values)
+
+  // if zero value invoice applies then clear the totals
+  if (netZeroValueInvoice) {
+    summary.credit_line_count = 0
+    summary.credit_line_value = 0
+    summary.debit_line_count = 0
+    summary.debit_line_value = 0
+  }
+
+  // Return summary with updated transactions and zero value invoice flag
+  return { ...summary, transactions, net_zero_value_invoice: netZeroValueInvoice }
 }
 
 async function addMinimumChargeAdjustment (db, regime, billRun, parentId, amount, returnAttrs) {

@@ -113,6 +113,7 @@ describe('PreSRoC Transaction (WRLS)', () => {
       newLicence: Joi.boolean().required(),
       minimumChargeAdjustment: Joi.boolean().required(),
       deminimis: Joi.boolean().required(),
+      netZeroValueInvoice: Joi.boolean().required(),
       transactionFileReference: Joi.string().allow(null),
       calculation: Joi.object()
     }
