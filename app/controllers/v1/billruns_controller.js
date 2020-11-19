@@ -38,6 +38,7 @@ class BillRunsController {
   }
 
   // POST /v1/{regime_id}/bill_runs/{id}
+  // PATCH /v1/{regime_id}/bill_runs/{id}
   static async send (req, h) {
     try {
       const regime = await Authorisation.assertAuthorisedForRegime(req.params.regime_id, req.headers.authorization)
@@ -190,6 +191,11 @@ class BillRunsController {
       },
       {
         method: 'POST',
+        path: `${basePath}/{id}/send`,
+        handler: this.send.bind(this)
+      },
+      {
+        method: 'PATCH',
         path: `${basePath}/{id}/send`,
         handler: this.send.bind(this)
       },
