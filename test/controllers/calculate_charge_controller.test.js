@@ -9,7 +9,7 @@ const Regime = require('../../app/models/regime')
 const { dummyCharge } = require('../helpers/charge_helper')
 const { makeAdminAuthHeader } = require('../helpers/authorisation_helper')
 
-describe('Calculate Charge controller: POST /v1/wrls/calculate_charge', () => {
+describe('Calculate Charge controller: POST /v1/wrls/calculate-charge', () => {
   let server
   let regime
   let ruleStub
@@ -30,7 +30,7 @@ describe('Calculate Charge controller: POST /v1/wrls/calculate_charge', () => {
   it('returns a charge', async () => {
     const options = {
       method: 'POST',
-      url: `/v1/${regime.slug}/calculate_charge`,
+      url: `/v1/${regime.slug}/calculate-charge`,
       headers: { authorization: authToken },
       payload: {
         periodStart: '01-APR-2019',
@@ -60,7 +60,7 @@ describe('Calculate Charge controller: POST /v1/wrls/calculate_charge', () => {
   it('returns 400 error when no payload supplied', async () => {
     const options = {
       method: 'POST',
-      url: `/v1/${regime.slug}/calculate_charge`,
+      url: `/v1/${regime.slug}/calculate-charge`,
       headers: { authorization: authToken }
     }
     const response = await server.inject(options)
@@ -70,7 +70,7 @@ describe('Calculate Charge controller: POST /v1/wrls/calculate_charge', () => {
   it('returns 422 error when payload schema is invalid', async () => {
     const options = {
       method: 'POST',
-      url: `/v1/${regime.slug}/calculate_charge`,
+      url: `/v1/${regime.slug}/calculate-charge`,
       headers: { authorization: authToken },
       payload: {
         periodStart: '01-APR-2019',

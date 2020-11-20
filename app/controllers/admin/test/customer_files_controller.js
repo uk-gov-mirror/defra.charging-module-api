@@ -7,7 +7,7 @@ const GenerateCustomerFile = require('../../../services/generate_customer_file')
 const ExportRegionCustomerFile = require('../../../services/export_region_customer_file')
 const Schema = require('../../../schema/pre_sroc')
 
-const basePath = '/admin/test/{regime_id}/customer_files'
+const basePath = '/admin/test/{regime_id}/customer-files'
 
 class CustomerFilesController {
   // GET /admin/test/{regime_id}/customer_files
@@ -113,7 +113,7 @@ class CustomerFilesController {
   }
 
   static regimeCustomerFilePath (regime, customerFileId) {
-    return `${config.environment.serviceUrl}/admin/test/${regime.slug}/customer_files/${customerFileId}`
+    return `${config.environment.serviceUrl}/admin/test/${regime.slug}/customer-files/${customerFileId}`
   }
 
   static routes () {

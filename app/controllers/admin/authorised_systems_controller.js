@@ -5,7 +5,7 @@ const Authorisation = require('../../lib/authorisation')
 const { dbError } = require('../../lib/db_error')
 const AuthorisedSystem = require('../../models/authorised_system')
 
-const basePath = '/admin/authorised_systems'
+const basePath = '/admin/authorised-systems'
 
 class AuthorisedSystemsController {
   // GET /v1/authorised_systems
@@ -126,7 +126,7 @@ class AuthorisedSystemsController {
   }
 
   static authorisedSystemPath (systemId) {
-    return `${config.environment.serviceUrl}/v1/authorised_systems/${systemId}`
+    return `${config.environment.serviceUrl}/v1/authorised-systems/${systemId}`
   }
 
   static routes () {
