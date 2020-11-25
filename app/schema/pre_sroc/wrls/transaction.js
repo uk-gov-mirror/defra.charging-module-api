@@ -173,6 +173,7 @@ class WrlsTransaction extends Transaction {
       areaCode: areaCodeValidator.required(),
       lineDescription: stringValidator.max(240).required(),
       newLicence: Joi.boolean().default(false),
+      clientId: stringValidator.allow('', null),
       ...Charge.schema
     }
   }
@@ -226,6 +227,7 @@ class WrlsTransaction extends Transaction {
       t.approved_for_billing AS "approvedForBilling",
       t.deminimis,
       t.net_zero_value_invoice AS "netZeroValueInvoice",
+      t.client_id AS "clientId",
       CASE
         WHEN
           t.deminimis=TRUE

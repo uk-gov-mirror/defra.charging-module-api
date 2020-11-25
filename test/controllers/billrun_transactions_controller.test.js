@@ -16,7 +16,8 @@ const RuleService = require('../../app/lib/connectors/rules')
 
 // Test helpers
 const Regime = require('../../app/models/regime')
-const { createTransaction, cleanTransactions } = require('../helpers/transaction_helper')
+const Schema = require('../../app/schema/pre_sroc')
+const { addTransaction, createTransaction, cleanTransactions } = require('../helpers/transaction_helper')
 const { createBillRun, cleanBillRuns } = require('../helpers/bill_run_helper')
 const { makeAdminAuthHeader } = require('../helpers/authorisation_helper')
 
@@ -27,13 +28,15 @@ const {
   InvalidTransactionRequest
 } = require('../fixtures/transaction_requests')
 
-describe('Bullrun Transactions controller', () => {
+describe('Billrun Transactions controller', () => {
   let server
   let authToken
   let regime
+  let schema
 
   before(async () => {
     regime = await Regime.find('wrls')
+    schema = Schema[regime.slug]
     server = await createServer()
     authToken = makeAdminAuthHeader()
   })
@@ -94,6 +97,46 @@ describe('Bullrun Transactions controller', () => {
       const response = await server.inject(options(billRunId, StandardTransactionRequest(), authToken))
 
       expect(response.statusCode).to.equal(400)
+    })
+
+    it('populates and returns client_id if no transaction with this id exists', async () => {
+      Sinon.stub(RuleService, 'calculateCharge').resolves(dummyCharge())
+      const clientId = 'abc123'
+      const billRunId = await createBillRun(regime.id, 'A')
+
+      const response = await server.inject(options(billRunId, StandardTransactionRequest({ clientId }), authToken))
+      // Reload transaction from database
+      const payload = JSON.parse(response.payload)
+      const transaction = await (schema.Transaction).find(regime.id, payload.transaction.id)
+
+      expect(transaction.client_id).to.equal(clientId)
+      expect(payload.transaction.clientId).to.equal(clientId)
+    })
+
+    it("leaves client_id database field empty and doesn't return anything for it if it is not specified", async () => {
+      Sinon.stub(RuleService, 'calculateCharge').resolves(dummyCharge())
+      const billRunId = await createBillRun(regime.id, 'A')
+
+      const response = await server.inject(options(billRunId, StandardTransactionRequest(), authToken))
+      const payload = JSON.parse(response.payload)
+      // Reload transaction from database
+      const transaction = await (schema.Transaction).find(regime.id, payload.transaction.id)
+
+      expect(transaction.client_id).to.equal(null)
+      expect(payload.transaction.clientId).to.not.exist()
+    })
+
+    it('returns 409 response if client_id is specified and exists', async () => {
+      const clientId = 'abc123'
+      const billRunId = await createBillRun(regime.id, 'A')
+      const tId = await addTransaction(regime, { clientId })
+
+      const response = await server.inject(options(billRunId, StandardTransactionRequest({ clientId }), authToken))
+      const payload = JSON.parse(response.payload)
+
+      expect(response.statusCode).to.equal(409)
+      expect(payload.id).to.equal(tId)
+      expect(payload.clientId).to.equal(clientId)
     })
   })
 

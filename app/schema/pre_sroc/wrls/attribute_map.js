@@ -53,5 +53,6 @@ module.exports = {
   billRunNumber: 'bill_run_number',
   calculation: 'charge_calculation',
   newLicence: 'new_licence',
-  status: 'status'
+  status: 'status',
+  clientId: 'client_id'
 }

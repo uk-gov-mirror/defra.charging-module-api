@@ -115,7 +115,8 @@ describe('PreSRoC Transaction (WRLS)', () => {
       deminimis: Joi.boolean().required(),
       netZeroValueInvoice: Joi.boolean().required(),
       transactionFileReference: Joi.string().allow(null),
-      calculation: Joi.object()
+      calculation: Joi.object(),
+      clientId: Joi.string().allow(null)
     }
     const result = Joi.validate(transaction, outputSchema)
     expect(result.error).to.not.exist()

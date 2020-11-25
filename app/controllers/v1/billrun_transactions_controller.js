@@ -6,6 +6,7 @@ const { isValidUUID } = require('../../lib/utils')
 const AddBillRunTransaction = require('../../services/add_bill_run_transaction')
 const RemoveBillRunTransaction = require('../../services/remove_bill_run_transaction')
 const RemoveMatchingBillRunTransactions = require('../../services/remove_matching_bill_run_transactions')
+const FindTransactionByClientId = require('../../services/find_transaction_by_client_id')
 
 const basePath = '/v1/{regime_id}/billruns/{billrun_id}/transactions'
 
@@ -88,6 +89,20 @@ class BillRunTransactionsController {
         return Boom.badRequest('No payload')
       }
 
+      // Call existingTransaction service if clientId is populated
+      const { clientId } = payload
+      const existingTransaction = clientId ? await FindTransactionByClientId.call(regime, clientId) : null
+
+      // Return transaction details if it exsists
+      if (existingTransaction) {
+        return h.response({
+          id: existingTransaction.id,
+          clientId: existingTransaction.clientId
+        })
+          .code(409)
+          .header('Location', this.regimeBillRunTransactionPath(regime, billRunId, existingTransaction.id))
+      }
+
       // create Transaction object, validate and translate
       const transaction = regime.schema.Transaction.instanceFromRequest(payload)
 
@@ -99,14 +114,15 @@ class BillRunTransactionsController {
         return h.response({ status: 'Zero value charge calculated' }).code(200)
       } else {
         // return HTTP 201 Created
-        const response = h.response({
+        // '...clientId && { clientId }' means we only add clientId to the response object if it exists
+        return h.response({
           transaction: {
-            id: tId
+            id: tId,
+            ...clientId && { clientId }
           }
         })
-        response.code(201)
-        response.header('Location', this.regimeBillRunTransactionPath(regime, billRunId, tId))
-        return response
+          .code(201)
+          .header('Location', this.regimeBillRunTransactionPath(regime, billRunId, tId))
       }
     } catch (err) {
       if (Boom.isBoom(err)) {
