@@ -77,6 +77,51 @@ describe('Generate Bill Run Summary', () => {
     expect(summary.customers[0].summaryByFinancialYear[0].transactions[0].deminimis).to.equal(true)
   })
 
+  it('correctly sets deminimis flags to true where a credit exists in an invoice <£5', async () => {
+    // Confirmed that deminimis flag should be true for all transactions when deminimis applies to the invoice
+    // https://trello.com/c/C4XqrqWr/328-316-observation-credit-transaction-is-labelled-as-de-minimis-if-part-of-a-positive-invoice-where-de-minimis-transaction-is-inclu
+    await addBillRunDeminimisTransaction(regime, billRun, { region: 'A' })
+    await addBillRunDeminimisTransaction(regime, billRun, { region: 'A', credit: true })
+    await addBillRunDeminimisTransaction(regime, billRun, { region: 'A' })
+
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+    const summary = br.summary()
+
+    expect(summary.customers[0].summaryByFinancialYear[0].deminimis).to.equal(true)
+    summary.customers[0].summaryByFinancialYear[0].transactions.forEach(transaction => {
+      expect(transaction.deminimis).to.equal(true)
+    })
+  })
+
+  it('correctly sets deminimis flags to false where a credit exists in an invoice >£5', async () => {
+    await addBillRunTransaction(regime, billRun, { region: 'A' })
+    await addBillRunTransaction(regime, billRun, { region: 'A', credit: true })
+    await addBillRunTransaction(regime, billRun, { region: 'A' })
+
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+    const summary = br.summary()
+
+    expect(summary.customers[0].summaryByFinancialYear[0].deminimis).to.equal(false)
+    summary.customers[0].summaryByFinancialYear[0].transactions.forEach(transaction => {
+      expect(transaction.deminimis).to.equal(false)
+    })
+  })
+
+  it('correctly sets deminimis flags to true for zero value transactions in a deminimis invoice', async () => {
+    await addBillRunTransaction(regime, billRun, { region: 'A' })
+    await addBillRunTransaction(regime, billRun, { region: 'A', credit: true })
+    await addBillRunDeminimisTransaction(regime, billRun, { region: 'A' })
+    await addBillRunTransaction(regime, billRun, { region: 'A' }, { chargeValue: 0 })
+
+    const br = await GenerateBillRunSummary.call(regime, billRun)
+    const summary = br.summary()
+
+    expect(summary.customers[0].summaryByFinancialYear[0].deminimis).to.equal(true)
+    summary.customers[0].summaryByFinancialYear[0].transactions.forEach(transaction => {
+      expect(transaction.deminimis).to.equal(true)
+    })
+  })
+
   it('correctly calculates invoiceValue with 2 transactions', async () => {
     const transactions = [
       await addBillRunTransaction(regime, billRun, { region: 'A' }),

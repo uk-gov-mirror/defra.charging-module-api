@@ -217,10 +217,7 @@ async function handleDeminimis (summary, db, where, values) {
   const deminimis = summary.net_total > 0 && summary.net_total < 500
 
   // Add deminimis flag to each transaction
-  const transactions = summary.transactions.map(transaction => ({
-    ...transaction,
-    deminimis: transaction.charge_value > 0 ? deminimis : false
-  }))
+  const transactions = summary.transactions.map(transaction => ({ ...transaction, deminimis }))
 
   // Update flag in database
   const deminimisUpdate = `UPDATE transactions SET deminimis = ${deminimis} WHERE ${where} AND charge_value > 0`
