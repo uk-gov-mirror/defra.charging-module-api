@@ -13,16 +13,16 @@
   "scripts": {
     "start": "npm run migrate && node index.js",
     "file-export-job": "node ./app/jobs/file_export_job.js",
-    "migrate": "./node_modules/db-migrate/bin/db-migrate up -m db/migrations",
-    "rollback": "./node_modules/db-migrate/bin/db-migrate down -m db/migrations",
-    "migrate-test": "./node_modules/db-migrate/bin/db-migrate up -m db/migrations -e test",
-    "rollback-test": "./node_modules/db-migrate/bin/db-migrate down -m db/migrations -e test",
+    "migrate": "db-migrate up -m db/migrations",
+    "rollback": "db-migrate down -m db/migrations",
+    "migrate-test": "db-migrate up -m db/migrations -e test",
+    "rollback-test": "db-migrate down -m db/migrations -e test",
     "seed": "node ./db/seeds/seeds.js",
     "lint": "standard",
     "unit-test": "PGDATABASE=chargedb_test TMPDIR='./tmp' REMOVE_TMP_FILES=false lab --silent-skips",
     "test": "npm run lint && npm run migrate-test && npm run unit-test",
     "qtest": "PGDATABASE=chargedb_test lab",
-    "watch": "./node_modules/nodemon/bin/nodemon.js --watch ./app --watch ./test --watch ./db -x node index.js"
+    "watch": "nodemon.js --watch ./app --watch ./test --watch ./db -x node index.js"
   },
   "author": "Department for Environment, Food & Rural Affairs",
   "license": "SEE LICENSE IN LICENSE.md",

@@ -24,77 +24,62 @@ First clone the repository and then drop into your new local repo
 git clone https://github.com/DEFRA/charging-module-api.git && cd charging-module-api
 ```
 
-Next download and install the dependencies
-
-```bash
-npm install
-```
+Our preference is to run the database and API within Docker, so [install Docker](https://docs.docker.com/get-docker/) if you don't already have it.
 
 ## Configuration
 
 Any configuration is expected to be driven by environment variables when the service is run in production as per [12 factor app](https://12factor.net/config).
 
-However when running locally in development mode or in test it makes use of the [Dotenv](https://github.com/motdotla/dotenv) package. This is a shim that will load values stored in a `.env` file into the environment which the service will then pick up as though they were there all along.
+However, when running locally in development mode or in test it makes use of the [Dotenv](https://github.com/motdotla/dotenv) package. This is a shim that will load values stored in a `.env` file into the environment which the service will then pick up as though they were there all along.
 
 Check out [.env.example](/.env.example) for details of the required things you'll need in your `.env` file.
 
 Refer to [config/config.js](config/config.js) to see all the environment variables that can be set and what their defaults are.
 
-## Databases
+## Docker
 
-First step is to create the databases; one for when running the app normally and one to support the unit tests
+As [Docker](https://www.docker.com/) is our chosen solution for deploying and managing the app in production we also use it for local development. The following will get an environment up and running quickly ready for development. It assumes 2 things
 
-```bash
-createdb chargedb
-createdb chargedb_test
-```
+- you have Docker installed
+- you are using [VSCode](https://code.visualstudio.com/) for development
 
-Create the required role
+### Initial build
 
-```bash
-createuser -s charge
-```
+Open the project in VSCode and then use the [Command palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) to access the tasks we have provided in [tasks.json](.vscode/tasks.json)
 
-You then need to run the migrations to update the schema to match what the app expects
+With the palette open search for **Run test task** and once highlighted select it. From the list that's presented select **Start CHA environment**
 
-```bash
-npm run migrate
-npm run migrate-test
-```
+You should see a new terminal open up and [Docker Compose](https://docs.docker.com/compose/) begin to start building the images. Once that is done it will switch to running the API in docker.
 
-Finally, the [pgcrypto](https://www.postgresql.org/docs/10/pgcrypto.html) extension needs to be added. Having connected to PostgreSQL using [psql](https://www.postgresql.org/docs/10/app-psql.html) run
+### Prep the database
 
-```sql
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-```
+The database is automatically created but you still need to run migrations. Again, using the command palette and the **Run test task** option, find and select **Run CHA dev migrations**.
 
-## Running the app
+The API should now be ready to use.
 
-To run the app use
+### Prep for testing
 
-```bash
-npm start
-```
+Before we can run any tests the 'test' database needs to be created and migrations run against it. Using the command palette and the **Run test task** option, find and select
 
-To run with live-reload on file updates enabled use
+- **Prepare CHA test db**
 
-```bash
-npm run watch
-```
+This will both create the test database and run migrations against it. It is also safe to run repeatedly should you need to run new migrations.
+
+### Non-vscode users
+
+If you are not a VSCode user it does not mean you cannot use Docker. Refer to [tasks.json](.vscode/tasks.json) for the commands being run and implement them in your preferred tool.
 
 ## Testing the app
 
-To run the unit tests use
+To run lint checks use the command palette and the **Run test task** option to find and select
 
-```bash
-npm run unit-test
-```
+- **Run CHA lint checks**
 
-To check the code is written and formatted in a way that meets our [standard](https://github.com/DEFRA/software-development-standards/blob/master/standards/javascript_standards.md) use
+To run unit tests find and select
 
-```bash
-npm run lint
-```
+- **Run CHA unit tests**
+
+Check out the `scripts` in [package.json](package.json) if you intend to run things locally.
 
 ## Contributing to this project
 
