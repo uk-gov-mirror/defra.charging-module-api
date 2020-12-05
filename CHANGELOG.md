@@ -1,5 +1,47 @@
 # Changelog
 
+## [v0.4.0](https://github.com/DEFRA/charging-module-api/tree/v0.4.0) (2020-12-05)
+
+[Full Changelog](https://github.com/DEFRA/charging-module-api/compare/v0.3.0...v0.4.0)
+
+**Implemented enhancements:**
+
+- Prevent duplicate transactions [\#172](https://github.com/DEFRA/charging-module-api/pull/172) ([StuAA78](https://github.com/StuAA78))
+- Exclude net zero value invoices from transaction files [\#162](https://github.com/DEFRA/charging-module-api/pull/162) ([StuAA78](https://github.com/StuAA78))
+
+**Fixed bugs:**
+
+- Fix defect 338 discovered during net zero value testing [\#173](https://github.com/DEFRA/charging-module-api/pull/173) ([StuAA78](https://github.com/StuAA78))
+- Fix array and boolean true handling by plugins [\#166](https://github.com/DEFRA/charging-module-api/pull/166) ([Cruikshanks](https://github.com/Cruikshanks))
+
+**Merged pull requests:**
+
+- Bump aws-sdk from 2.800.0 to 2.803.0 [\#177](https://github.com/DEFRA/charging-module-api/pull/177) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Add support for using Docker for local development [\#175](https://github.com/DEFRA/charging-module-api/pull/175) ([Cruikshanks](https://github.com/Cruikshanks))
+- Bump aws-sdk from 2.799.0 to 2.800.0 [\#174](https://github.com/DEFRA/charging-module-api/pull/174) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump aws-sdk from 2.796.0 to 2.799.0 [\#171](https://github.com/DEFRA/charging-module-api/pull/171) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump @hapi/hapi from 20.0.2 to 20.0.3 [\#170](https://github.com/DEFRA/charging-module-api/pull/170) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump blipp from 4.0.1 to 4.0.2 [\#168](https://github.com/DEFRA/charging-module-api/pull/168) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump aws-sdk from 2.795.0 to 2.796.0 [\#165](https://github.com/DEFRA/charging-module-api/pull/165) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Underscores in urls? Oh my! [\#164](https://github.com/DEFRA/charging-module-api/pull/164) ([Cruikshanks](https://github.com/Cruikshanks))
+- Bump aws-sdk from 2.794.0 to 2.795.0 [\#163](https://github.com/DEFRA/charging-module-api/pull/163) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump aws-sdk from 2.793.0 to 2.794.0 [\#161](https://github.com/DEFRA/charging-module-api/pull/161) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Hide skipped tests [\#160](https://github.com/DEFRA/charging-module-api/pull/160) ([StuAA78](https://github.com/StuAA78))
+- Bump aws-sdk from 2.791.0 to 2.793.0 [\#159](https://github.com/DEFRA/charging-module-api/pull/159) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Refactor billrun & transaction tests helpers [\#157](https://github.com/DEFRA/charging-module-api/pull/157) ([Cruikshanks](https://github.com/Cruikshanks))
+- Create a PATCH version of billrun send endpoint [\#156](https://github.com/DEFRA/charging-module-api/pull/156) ([Cruikshanks](https://github.com/Cruikshanks))
+- Move customer file endpoints to /admin/test [\#155](https://github.com/DEFRA/charging-module-api/pull/155) ([Cruikshanks](https://github.com/Cruikshanks))
+- Bump aws-sdk from 2.790.0 to 2.791.0 [\#154](https://github.com/DEFRA/charging-module-api/pull/154) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Remove unused endpoints [\#153](https://github.com/DEFRA/charging-module-api/pull/153) ([Cruikshanks](https://github.com/Cruikshanks))
+- Bump aws-sdk from 2.789.0 to 2.790.0 [\#152](https://github.com/DEFRA/charging-module-api/pull/152) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Add back check for use of `only\(\)` in tests to CI [\#151](https://github.com/DEFRA/charging-module-api/pull/151) ([Cruikshanks](https://github.com/Cruikshanks))
+- Bump @hapi/hapi from 20.0.1 to 20.0.2 [\#150](https://github.com/DEFRA/charging-module-api/pull/150) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump aws-sdk from 2.788.0 to 2.789.0 [\#149](https://github.com/DEFRA/charging-module-api/pull/149) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Switch to using GitHub actions for CI [\#148](https://github.com/DEFRA/charging-module-api/pull/148) ([Cruikshanks](https://github.com/Cruikshanks))
+- Bump aws-sdk from 2.786.0 to 2.788.0 [\#147](https://github.com/DEFRA/charging-module-api/pull/147) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump aws-sdk from 2.780.0 to 2.786.0 [\#145](https://github.com/DEFRA/charging-module-api/pull/145) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump aws-sdk from 2.779.0 to 2.780.0 [\#138](https://github.com/DEFRA/charging-module-api/pull/138) ([dependabot[bot]](https://github.com/apps/dependabot))
+
 ## [v0.3.0](https://github.com/DEFRA/charging-module-api/tree/v0.3.0) (2020-10-27)
 
 [Full Changelog](https://github.com/DEFRA/charging-module-api/compare/v0.2.0...v0.3.0)
@@ -24,7 +66,6 @@
 - Replace Good logging with Hapi-pino [\#137](https://github.com/DEFRA/charging-module-api/pull/137) ([Cruikshanks](https://github.com/Cruikshanks))
 - Bump aws-sdk from 2.777.0 to 2.779.0 [\#136](https://github.com/DEFRA/charging-module-api/pull/136) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Add check for use of `only\(\)` in tests to travis [\#134](https://github.com/DEFRA/charging-module-api/pull/134) ([Cruikshanks](https://github.com/Cruikshanks))
-- Unescape santized html characters [\#133](https://github.com/DEFRA/charging-module-api/pull/133) ([Cruikshanks](https://github.com/Cruikshanks))
 - Bump aws-sdk from 2.774.0 to 2.777.0 [\#132](https://github.com/DEFRA/charging-module-api/pull/132) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Bump aws-sdk from 2.773.0 to 2.774.0 [\#129](https://github.com/DEFRA/charging-module-api/pull/129) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Bump nodemon from 2.0.5 to 2.0.6 [\#128](https://github.com/DEFRA/charging-module-api/pull/128) ([dependabot[bot]](https://github.com/apps/dependabot))
@@ -38,7 +79,6 @@
 - Use classes for controllers consistently [\#115](https://github.com/DEFRA/charging-module-api/pull/115) ([Cruikshanks](https://github.com/Cruikshanks))
 - Bump @hapi/hapi from 20.0.0 to 20.0.1 [\#112](https://github.com/DEFRA/charging-module-api/pull/112) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - More SROC cleansing from project [\#111](https://github.com/DEFRA/charging-module-api/pull/111) ([Cruikshanks](https://github.com/Cruikshanks))
-- Remove unused transaction queue controller [\#110](https://github.com/DEFRA/charging-module-api/pull/110) ([Cruikshanks](https://github.com/Cruikshanks))
 - Remove endpoint suppression [\#109](https://github.com/DEFRA/charging-module-api/pull/109) ([Cruikshanks](https://github.com/Cruikshanks))
 - Delete billed transactions endpoint [\#108](https://github.com/DEFRA/charging-module-api/pull/108) ([Cruikshanks](https://github.com/Cruikshanks))
 - Run npm audit fix against the project [\#107](https://github.com/DEFRA/charging-module-api/pull/107) ([Cruikshanks](https://github.com/Cruikshanks))
@@ -73,6 +113,7 @@
 - Corrected error handling for bill runs without transactions [\#89](https://github.com/DEFRA/charging-module-api/pull/89) ([StuAA78](https://github.com/StuAA78))
 - Fixed zero value transactions not being added to summary when newLicence is true [\#70](https://github.com/DEFRA/charging-module-api/pull/70) ([StuAA78](https://github.com/StuAA78))
 - Add check for groups with only zero value charge transactions [\#49](https://github.com/DEFRA/charging-module-api/pull/49) ([StuAA78](https://github.com/StuAA78))
+- bug fix for transaction file ref appearing in the view bill run trans… [\#44](https://github.com/DEFRA/charging-module-api/pull/44) ([rudenoise](https://github.com/rudenoise))
 
 **Security fixes:**
 
@@ -118,10 +159,6 @@
 - Consider "New Licence" flag when allocating transactions to a Minimum Charge group [\#46](https://github.com/DEFRA/charging-module-api/pull/46) ([StuAA78](https://github.com/StuAA78))
 - update schema to allow zero volume and add test [\#45](https://github.com/DEFRA/charging-module-api/pull/45) ([rudenoise](https://github.com/rudenoise))
 - Exclude Invoices below De-Minimis Value from Bill Run [\#43](https://github.com/DEFRA/charging-module-api/pull/43) ([StuAA78](https://github.com/StuAA78))
-
-**Fixed bugs:**
-
-- bug fix for transaction file ref appearing in the view bill run trans… [\#44](https://github.com/DEFRA/charging-module-api/pull/44) ([rudenoise](https://github.com/rudenoise))
 
 **Merged pull requests:**
 
